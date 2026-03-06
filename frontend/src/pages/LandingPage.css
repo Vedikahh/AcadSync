@@ -1,0 +1,360 @@
+.landing {
+  min-height: 100vh;
+  font-family: inherit;
+}
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  padding: 5rem 5vw 4rem;
+  background: linear-gradient(135deg, #f8f7ff 0%, #f0fffe 100%);
+  min-height: calc(100vh - 64px);
+}
+
+.hero-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #ede9fe, #d1faf5);
+  color: #6c63ff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #111;
+  margin: 0 0 1.25rem;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #6c63ff, #48c9b0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.05rem;
+  color: #555;
+  line-height: 1.7;
+  margin: 0 0 2rem;
+  max-width: 520px;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+
+.cta-primary {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  background: linear-gradient(135deg, #6c63ff, #48c9b0);
+  color: #fff;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.cta-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.cta-secondary {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  border: 2px solid #6c63ff;
+  color: #6c63ff;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.cta-secondary:hover {
+  background: #6c63ff;
+  color: #fff;
+}
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #222;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background: #ddd;
+}
+
+/* Hero visual */
+.hero-visual {
+  position: relative;
+  height: 380px;
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .hero-visual { display: block; }
+}
+
+.visual-card {
+  position: absolute;
+  background: #fff;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  min-width: 230px;
+}
+
+.primary-card {
+  top: 20px;
+  left: 20px;
+  border-left: 4px solid #48c9b0;
+  animation: float 3s ease-in-out infinite;
+}
+
+.secondary-card {
+  top: 130px;
+  right: 10px;
+  border-left: 4px solid #6c63ff;
+  animation: float 3.5s ease-in-out infinite 0.5s;
+}
+
+.tertiary-card {
+  bottom: 40px;
+  left: 60px;
+  border-left: 4px solid #f6a623;
+  animation: float 4s ease-in-out infinite 1s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.card-icon {
+  font-size: 1.8rem;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #222;
+}
+
+.card-sub {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.card-badge.approved {
+  background: #e0f7f4;
+  color: #00897b;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* ── Features ──────────────────────────────────────────── */
+.features {
+  padding: 5rem 5vw;
+  background: #fff;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-header h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: #111;
+  margin: 0 0 0.5rem;
+}
+
+.section-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.feature-card {
+  background: #fafafe;
+  border: 1px solid #ede9fe;
+  border-radius: 16px;
+  padding: 1.75rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(108, 99, 255, 0.1);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.feature-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 0.5rem;
+}
+
+.feature-card p {
+  font-size: 0.88rem;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── How it works ──────────────────────────────────────── */
+.how-it-works {
+  padding: 5rem 5vw;
+  background: linear-gradient(135deg, #f8f7ff, #f0fffe);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.step {
+  text-align: center;
+  padding: 2rem;
+}
+
+.step-number {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #6c63ff, #48c9b0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.75rem;
+}
+
+.step h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 0.4rem;
+}
+
+.step p {
+  font-size: 0.88rem;
+  color: #666;
+  margin: 0;
+}
+
+/* ── CTA Banner ────────────────────────────────────────── */
+.cta-banner {
+  text-align: center;
+  padding: 5rem 2rem;
+  background: linear-gradient(135deg, #6c63ff, #48c9b0);
+  color: #fff;
+}
+
+.cta-banner h2 {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 800;
+  margin: 0 0 0.75rem;
+}
+
+.cta-banner p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0 0 2rem;
+}
+
+.cta-banner .cta-primary {
+  background: #fff;
+  color: #6c63ff;
+}
+
+.cta-banner .cta-primary:hover {
+  opacity: 0.95;
+}
+
+/* ── Footer ────────────────────────────────────────────── */
+.footer {
+  background: #111;
+  color: #aaa;
+  padding: 2rem 5vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.brand-name-footer {
+  font-weight: 700;
+  color: #fff;
+}
+
+.footer-copy {
+  margin: 0;
+  font-size: 0.85rem;
+}
