@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events — AcadSync AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body data-page="events">
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span>🎓</span>
+        <h2>AcadSync AI</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">
+          <span class="nav-icon">📊</span> Dashboard
+        </a>
+        <a href="events.html" class="active">
+          <span class="nav-icon">📅</span> Events
+        </a>
+        <a href="#">
+          <span class="nav-icon">🔔</span> Notifications
+        </a>
+        <a href="#">
+          <span class="nav-icon">📚</span> Academics
+        </a>
+        <a href="#">
+          <span class="nav-icon">⚙️</span> Settings
+        </a>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar">U</div>
+        <div class="user-info">
+          <div class="user-name">User</div>
+          <div class="user-role">Student</div>
+        </div>
+        <button onclick="logout()" title="Logout" style="background:none;color:#94a3b8;font-size:1.125rem;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <h1>Campus Events</h1>
+          <p>Discover and register for upcoming events across campus.</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('new-event-modal')">+ New Event</button>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="events-toolbar">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="event-search" placeholder="Search events...">
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="academic">Academic</button>
+          <button class="filter-tab" data-filter="cultural">Cultural</button>
+          <button class="filter-tab" data-filter="workshop">Workshop</button>
+          <button class="filter-tab" data-filter="sports">Sports</button>
+        </div>
+      </div>
+
+      <!-- Events Grid -->
+      <div id="events-grid" class="events-grid">
+        <!-- Populated by JS -->
+      </div>
+    </main>
+  </div>
+
+  <!-- New Event Modal -->
+  <div class="modal-overlay" id="new-event-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Submit New Event</h3>
+        <button class="modal-close" onclick="closeModal('new-event-modal')">&times;</button>
+      </div>
+      <form onsubmit="handleEventSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="event-title">Event Title</label>
+            <input type="text" id="event-title" class="form-control" placeholder="Enter event title" required>
+          </div>
+          <div class="form-group">
+            <label for="event-type">Event Type</label>
+            <select id="event-type" class="form-control" required>
+              <option value="">Select type</option>
+              <option value="Academic">Academic</option>
+              <option value="Cultural">Cultural</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Sports">Sports</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="event-date">Date</label>
+            <input type="date" id="event-date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="event-time">Time</label>
+            <input type="time" id="event-time" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="event-location">Location</label>
+            <input type="text" id="event-location" class="form-control" placeholder="Enter venue" required>
+          </div>
+          <div class="form-group">
+            <label for="event-description">Description</label>
+            <textarea id="event-description" class="form-control" rows="3" placeholder="Describe the event..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('new-event-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Submit Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sidebar Toggle for Mobile -->
+  <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

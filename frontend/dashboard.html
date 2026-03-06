@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — AcadSync AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body data-page="dashboard">
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span>🎓</span>
+        <h2>AcadSync AI</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="active">
+          <span class="nav-icon">📊</span> Dashboard
+        </a>
+        <a href="events.html">
+          <span class="nav-icon">📅</span> Events
+        </a>
+        <a href="#">
+          <span class="nav-icon">🔔</span> Notifications
+        </a>
+        <a href="#">
+          <span class="nav-icon">📚</span> Academics
+        </a>
+        <a href="#">
+          <span class="nav-icon">⚙️</span> Settings
+        </a>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar">S</div>
+        <div class="user-info">
+          <div class="user-name">Student</div>
+          <div class="user-role">Student</div>
+        </div>
+        <button onclick="logout()" title="Logout" style="background:none;color:#94a3b8;font-size:1.125rem;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <h1>Student Dashboard</h1>
+          <p>Welcome back! Here's what's happening on campus.</p>
+        </div>
+        <a href="events.html" class="btn btn-primary btn-sm">Browse Events</a>
+      </div>
+
+      <!-- Stats -->
+      <div id="stats-grid" class="stats-grid"></div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Upcoming Events -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📅 Upcoming Events</h3>
+            <a href="events.html" class="btn btn-outline btn-sm">View All</a>
+          </div>
+          <div class="card-body" id="upcoming-events">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="card">
+          <div class="card-header">
+            <h3>🔔 Recent Notifications</h3>
+            <button class="btn btn-outline btn-sm">Mark All Read</button>
+          </div>
+          <div class="card-body" id="notifications-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Sidebar Toggle for Mobile -->
+  <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
