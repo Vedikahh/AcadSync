@@ -1,0 +1,332 @@
+/* ================================================================
+   CalendarView – Google Calendar / FullCalendar inspired styles
+   ================================================================ */
+
+.calendar-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-family: inherit;
+}
+
+/* ---- Header --------------------------------------------------- */
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.cal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.cal-today-btn {
+  padding: 0.25rem 0.75rem;
+  border: 1.5px solid #d0d0e0;
+  border-radius: 6px;
+  background: #fff;
+  color: #6c63ff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.cal-today-btn:hover {
+  background: #f0eeff;
+  border-color: #6c63ff;
+}
+
+.cal-nav-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  line-height: 1;
+}
+
+.cal-nav-btn:hover {
+  background: #f0eeff;
+  color: #6c63ff;
+}
+
+/* ---- Day labels ----------------------------------------------- */
+.cal-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 2px;
+}
+
+.cal-day-label {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #aaa;
+  padding: 0.35rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Calendar grid -------------------------------------------- */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  background: #e8e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cal-cell {
+  background: #fff;
+  min-height: 72px;
+  padding: 0.4rem 0.35rem 0.35rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  position: relative;
+}
+
+.cal-cell:hover {
+  background: #f8f7ff;
+}
+
+.cal-cell-empty {
+  background: #fafafa;
+  cursor: default;
+}
+
+.cal-cell-today .cal-date-num {
+  background: #6c63ff;
+  color: #fff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.cal-cell-selected {
+  background: #f0eeff !important;
+  outline: 2px solid #6c63ff;
+  outline-offset: -2px;
+}
+
+.cal-date-num {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #444;
+  line-height: 1;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Event pills inside cells --------------------------------- */
+.cal-event-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.cal-event-pill {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+}
+
+.cal-event-more {
+  font-size: 0.6rem;
+  color: #888;
+  font-weight: 600;
+  padding-left: 2px;
+}
+
+/* ---- Day detail panel ----------------------------------------- */
+.cal-day-detail {
+  background: #fff;
+  border: 1.5px solid #e8e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  margin-top: 0.75rem;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cal-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.cal-detail-date {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.cal-detail-close {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: #f5f5f5;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+  transition: background 0.15s;
+}
+
+.cal-detail-close:hover {
+  background: #e0e0e0;
+}
+
+.cal-no-events {
+  color: #aaa;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 0.75rem 0;
+  margin: 0;
+}
+
+.cal-detail-events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cal-detail-event-item {
+  background: #fafafa;
+  border-left: 3px solid #48c9b0;
+  border-radius: 0 8px 8px 0;
+  padding: 0.55rem 0.85rem;
+}
+
+.cal-detail-event-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 0.3rem;
+}
+
+.cal-detail-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.76rem;
+  color: #777;
+  align-items: center;
+}
+
+/* status badges */
+.cal-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+
+.cal-status-approved {
+  background: #e8faf5;
+  color: #2aab87;
+}
+
+.cal-status-pending {
+  background: #fff8e6;
+  color: #d48a06;
+}
+
+.cal-status-rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* ---- Legend --------------------------------------------------- */
+.cal-legend {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 0.5rem 0.25rem 0;
+  flex-wrap: wrap;
+}
+
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: #777;
+  font-weight: 600;
+}
+
+.cal-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ---- Responsive ----------------------------------------------- */
+@media (max-width: 600px) {
+  .cal-cell {
+    min-height: 52px;
+    padding: 0.3rem 0.2rem;
+  }
+
+  .cal-event-pill {
+    display: none; /* too tight – show only dots on mobile */
+  }
+
+  .cal-cell-has-events::after {
+    content: "";
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6c63ff;
+    margin: 2px auto 0;
+  }
+}

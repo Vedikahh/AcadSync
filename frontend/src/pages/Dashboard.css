@@ -180,3 +180,167 @@
   margin: 0;
   font-size: 0.9rem;
 }
+
+/* ---- View toggle (List / Calendar) ---------------------------- */
+.view-toggle-group {
+  display: flex;
+  gap: 0.3rem;
+  background: #f5f5f5;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.view-toggle-btn {
+  padding: 0.3rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #666;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.view-toggle-btn.active {
+  background: #fff;
+  color: #6c63ff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ================================================================
+   Admin Table — Notion-inspired structured data view
+   ================================================================ */
+
+.admin-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1.5px solid #e8e8f0;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.admin-table thead tr {
+  background: #f9f9fb;
+  border-bottom: 1.5px solid #e8e8f0;
+}
+
+.admin-table th {
+  padding: 0.65rem 1rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid #f0f0f5;
+  transition: background 0.15s;
+}
+
+.admin-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.admin-table tbody tr:hover {
+  background: #f8f7ff;
+}
+
+.admin-table td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.tbl-event-title {
+  font-weight: 700;
+  color: #222;
+  font-size: 0.88rem;
+}
+
+.tbl-muted {
+  color: #666;
+}
+
+.tbl-time {
+  font-size: 0.72rem;
+  color: #aaa;
+  margin-top: 0.15rem;
+}
+
+/* category chips */
+.tbl-category {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+
+.tbl-cat-technical { background: #ede9ff; color: #5c4ee8; }
+.tbl-cat-cultural  { background: #fce4ec; color: #c2185b; }
+.tbl-cat-sports    { background: #fff3e0; color: #e65100; }
+.tbl-cat-academic  { background: #e3f2fd; color: #1565c0; }
+.tbl-cat-other     { background: #e8f5e9; color: #2e7d32; }
+
+/* status badges in table */
+.tbl-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.tbl-badge-pending  { background: #fff8e6; color: #d48a06; }
+.tbl-badge-approved { background: #e8faf5; color: #2aab87; }
+.tbl-badge-rejected { background: #ffebee; color: #c62828; }
+
+/* action buttons in table */
+.tbl-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tbl-btn-approve,
+.tbl-btn-reject {
+  padding: 0.3rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.tbl-btn-approve {
+  background: #e8faf5;
+  color: #2aab87;
+}
+
+.tbl-btn-approve:hover {
+  background: #48c9b0;
+  color: #fff;
+}
+
+.tbl-btn-reject {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.tbl-btn-reject:hover {
+  background: #e57373;
+  color: #fff;
+}
+
+

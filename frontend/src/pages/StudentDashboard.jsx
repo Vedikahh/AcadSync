@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import EventCard from "../components/EventCard";
 import NotificationItem from "../components/NotificationItem";
+import CalendarView from "../components/CalendarView";
 import "./Dashboard.css";
 
 // Mock data — replace with real API calls when backend is ready
@@ -64,6 +65,7 @@ export default function StudentDashboard() {
   const { user } = useAuth();
   const [events] = useState(MOCK_EVENTS);
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [eventsView, setEventsView] = useState("list"); // "list" | "calendar"
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const approvedEvents = events.filter((e) => e.status === "approved").length;
@@ -124,17 +126,38 @@ export default function StudentDashboard() {
 
       {/* Main content */}
       <div className="dashboard-grid">
-        {/* Recent Events */}
+        {/* Events panel with List / Calendar toggle */}
         <div className="dashboard-section">
           <div className="section-title-row">
             <h2>My Events</h2>
+            <div className="view-toggle-group">
+              <button
+                className={`view-toggle-btn ${eventsView === "list" ? "active" : ""}`}
+                onClick={() => setEventsView("list")}
+                aria-pressed={eventsView === "list"}
+              >
+                ☰ List
+              </button>
+              <button
+                className={`view-toggle-btn ${eventsView === "calendar" ? "active" : ""}`}
+                onClick={() => setEventsView("calendar")}
+                aria-pressed={eventsView === "calendar"}
+              >
+                📅 Calendar
+              </button>
+            </div>
             <Link to="/events" className="view-all-link">View all →</Link>
           </div>
-          <div className="events-list">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} isAdmin={false} />
-            ))}
-          </div>
+
+          {eventsView === "list" ? (
+            <div className="events-list">
+              {events.map((event) => (
+                <EventCard key={event.id} event={event} isAdmin={false} />
+              ))}
+            </div>
+          ) : (
+            <CalendarView events={events} />
+          )}
         </div>
 
         {/* Notifications */}

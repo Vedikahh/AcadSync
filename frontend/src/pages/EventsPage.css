@@ -205,3 +205,137 @@
 .btn-submit:hover {
   opacity: 0.9;
 }
+
+/* ---- Events header actions ------------------------------------ */
+.events-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ---- View toggle (List / Calendar) ---------------------------- */
+.view-toggle-group {
+  display: flex;
+  gap: 0.3rem;
+  background: #f5f5f5;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.view-toggle-btn {
+  padding: 0.35rem 0.9rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #666;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.view-toggle-btn.active {
+  background: #fff;
+  color: #6c63ff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.09);
+}
+
+/* ---- Calendar wrapper ----------------------------------------- */
+.events-calendar-wrapper {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Category selector (Eventbrite-inspired) ------------------ */
+.category-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.category-btn {
+  padding: 0.3rem 0.85rem;
+  border: 1.5px solid #e0e0f0;
+  border-radius: 20px;
+  background: #fafafa;
+  color: #555;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-btn:hover {
+  border-color: #6c63ff;
+  color: #6c63ff;
+  background: #f0eeff;
+}
+
+.category-btn.active {
+  border-color: #6c63ff;
+  background: #6c63ff;
+  color: #fff;
+}
+
+/* ---- Conflict / scheduling warning (Calendly-inspired) -------- */
+.conflict-warning {
+  background: #fff8e6;
+  border: 1.5px solid #f6d55c;
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.conflict-warning-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #8a6300;
+  margin-bottom: 0.4rem;
+}
+
+.conflict-warning-body {
+  font-size: 0.82rem;
+  color: #6b4f00;
+  margin: 0 0 0.6rem;
+}
+
+.alt-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.alt-dates-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8a6300;
+}
+
+.alt-dates-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.alt-date-btn {
+  padding: 0.3rem 0.85rem;
+  border: 1.5px solid #d4a017;
+  border-radius: 20px;
+  background: #fff;
+  color: #7a5400;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.alt-date-btn:hover {
+  background: #f6a623;
+  border-color: #f6a623;
+  color: #fff;
+}
+
