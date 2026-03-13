@@ -332,8 +332,8 @@
 
 /* ── Footer ────────────────────────────────────────────── */
 .footer {
-  background: #111;
-  color: #aaa;
+  background: linear-gradient(135deg, #6c63ff, #48c9b0);
+  color: #fff;
   padding: 2rem 5vw;
   display: flex;
   align-items: center;
