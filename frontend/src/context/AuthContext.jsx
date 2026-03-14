@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { getMe } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -13,6 +14,10 @@ function getStoredUser() {
   }
 }
 
+function getStoredToken() {
+  return localStorage.getItem("acadsync_token");
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
@@ -22,6 +27,35 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getStoredUser);
+  const [loadingContext, setLoadingContext] = useState(true);
+
+  // Validate the session on initial active load
+  useEffect(() => {
+    const validateSession = async () => {
+      const token = getStoredToken();
+      if (!token) {
+        setLoadingContext(false);
+        return;
+      }
+
+      try {
+        // Ping our secure /api/auth/me endpoint using the stored JWT
+        const userData = await getMe();
+        
+        // Update user payload dynamically (e.g if name changed)
+        setUser(userData);
+        localStorage.setItem("acadsync_user", JSON.stringify(userData));
+      } catch (err) {
+        console.error("Session validation failed:", err.message);
+        // If token is expired/invalid, force logout
+        logout();
+      } finally {
+        setLoadingContext(false);
+      }
+    };
+
+    validateSession();
+  }, []);
 
   const login = (userData, token) => {
     setUser(userData);
@@ -36,7 +70,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loadingContext }}>
       {children}
     </AuthContext.Provider>
   );

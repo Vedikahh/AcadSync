@@ -1,26 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { register as apiRegister } from "../services/api";
 import "./AuthPages.css";
-
-function mockRegister({ name, email, password, role }) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (!name || !email || !password) {
-        reject(new Error("All fields are required"));
-        return;
-      }
-      if (password.length < 6) {
-        reject(new Error("Password must be at least 6 characters"));
-        return;
-      }
-      resolve({
-        user: { id: Date.now(), name, email, role },
-        token: "mock-jwt-token",
-      });
-    }, 800);
-  });
-}
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -29,7 +11,7 @@ export default function RegisterPage() {
     department: "",
     password: "",
     confirm: "",
-    role: "student",
+    role: "student", // Start off as student by default on UI
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,18 +25,39 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (form.password !== form.confirm) {
       setError("Passwords do not match");
       return;
     }
+
     setLoading(true);
     setError("");
+
     try {
-      const { user, token } = await mockRegister(form);
-      login(user, token);
-      navigate(user.role === "admin" ? "/admin" : user.role === "faculty" ? "/faculty-dashboard" : "/dashboard");
+      // Send secure payload to Node Backend /register
+      const payload = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+        department: form.department
+      };
+
+      const response = await apiRegister(payload);
+      
+      // Store new authenticated session directly
+      login({
+        id: response._id,
+        name: response.name,
+        email: response.email,
+        role: response.role,
+        department: response.department
+      }, response.token);
+
+      navigate(response.role === "admin" ? "/admin" : response.role === "faculty" ? "/faculty-dashboard" : "/dashboard");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to register");
     } finally {
       setLoading(false);
     }
@@ -129,6 +132,7 @@ export default function RegisterPage() {
               name="department"
               value={form.department}
               onChange={handleChange}
+              required
             >
               <option value="">— Select your department —</option>
               <option>Computer Science (CSE)</option>
@@ -152,6 +156,7 @@ export default function RegisterPage() {
               placeholder="Min. 6 characters"
               value={form.password}
               onChange={handleChange}
+              minLength="6"
               required
             />
           </div>
@@ -165,6 +170,7 @@ export default function RegisterPage() {
               placeholder="Repeat password"
               value={form.confirm}
               onChange={handleChange}
+              minLength="6"
               required
             />
           </div>

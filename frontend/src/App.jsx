@@ -24,7 +24,19 @@ import NotFoundPage     from "./pages/NotFoundPage";
 import "./App.css";
 
 function ProtectedRoute({ children, roles }) {
-  const { user } = useAuth();
+  const { user, loadingContext } = useAuth();
+  
+  // Wait for JWT validation before booting user out
+  if (loadingContext) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card" style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+          <span style={{ fontSize: '1.5rem', color: 'var(--primary, #2563EB)', fontWeight: 'bold' }}>Validating Session...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) {
     const home = user.role === "admin" ? "/admin" : user.role === "faculty" ? "/faculty-dashboard" : "/dashboard";
@@ -34,7 +46,7 @@ function ProtectedRoute({ children, roles }) {
 }
 
 function AppLayout() {
-  const { user } = useAuth();
+  const { user, loadingContext } = useAuth();
   const [sidebarOpen, setSidebarOpen]       = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -58,25 +70,37 @@ function AppLayout() {
           <Route
             path="/login"
             element={
-              user
-                ? <Navigate to={
+              loadingContext ? (
+                <div className="auth-page">
+                  <div className="auth-card" style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+                    <span style={{ fontSize: '1.5rem', color: 'var(--primary, #2563EB)', fontWeight: 'bold' }}>Loading...</span>
+                  </div>
+                </div>
+              ) : user ? (
+                <Navigate to={
                     user.role === "admin" ? "/admin"
                     : user.role === "faculty" ? "/faculty-dashboard"
                     : "/dashboard"
                   } replace />
-                : <LoginPage />
+              ) : <LoginPage />
             }
           />
           <Route
             path="/register"
             element={
-              user
-                ? <Navigate to={
+              loadingContext ? (
+                <div className="auth-page">
+                  <div className="auth-card" style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+                    <span style={{ fontSize: '1.5rem', color: 'var(--primary, #2563EB)', fontWeight: 'bold' }}>Loading...</span>
+                  </div>
+                </div>
+              ) : user ? (
+                <Navigate to={
                     user.role === "admin" ? "/admin"
                     : user.role === "faculty" ? "/faculty-dashboard"
                     : "/dashboard"
                   } replace />
-                : <RegisterPage />
+              ) : <RegisterPage />
             }
           />
 

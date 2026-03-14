@@ -93,69 +93,78 @@ export default function NotificationsPage() {
   });
 
   return (
-    <div className="notifications-page">
-      <div className="notif-header">
-        <div>
-          <h1>
-            Notifications
+    <div className="notif-page-bg">
+      <div className="notif-page-container">
+        
+        {/* Page Header */}
+        <div className="np-header">
+          <div className="np-header-title">
+            <h1>Inbox</h1>
             {unreadCount > 0 && (
-              <span className="unread-pill">{unreadCount} unread</span>
+              <span className="np-unread-badge">{unreadCount} new</span>
             )}
-          </h1>
-          <p>Click any notification to go directly to the relevant page.</p>
+          </div>
+          <p className="np-header-sub">Manage your alerts and system messages.</p>
         </div>
-        <div className="notif-header-actions">
-          {unreadCount > 0 && (
-            <button className="btn-mark-all" onClick={markAllRead}>
-              Mark all read
-            </button>
-          )}
-          {notifications.length > 0 && (
-            <button className="btn-clear" onClick={clearAll}>
-              Clear all
-            </button>
-          )}
-        </div>
-      </div>
 
-      {/* Filter tabs */}
-      <div className="notif-filters">
-        {["all", "unread", "read"].map((f) => (
-          <button
-            key={f}
-            className={`filter-tab ${filter === f ? "active" : ""}`}
-            onClick={() => setFilter(f)}
-          >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-            {f === "unread" && unreadCount > 0 && (
-              <span className="filter-count">{unreadCount}</span>
+        {/* Action Bar */}
+        <div className="np-action-bar">
+          <div className="np-filters">
+            {["all", "unread", "read"].map((f) => (
+              <button
+                key={f}
+                className={`np-filter-btn ${filter === f ? "np-filter-active" : ""}`}
+                onClick={() => setFilter(f)}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+                {f === "unread" && unreadCount > 0 && (
+                  <span className="np-filter-count">{unreadCount}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="np-bulk-actions">
+            {unreadCount > 0 && (
+              <button className="np-btn-ghost np-text-primary" onClick={markAllRead}>
+                Mark all as read
+              </button>
             )}
-          </button>
-        ))}
-      </div>
+            {notifications.length > 0 && (
+              <button className="np-btn-ghost np-text-danger" onClick={clearAll}>
+                Clear all
+              </button>
+            )}
+          </div>
+        </div>
 
-      {/* Notification list */}
-      {filtered.length === 0 ? (
-        <div className="notif-empty">
-          <div className="notif-empty-icon">—</div>
-          <p>
-            {filter === "unread"
-              ? "No unread notifications. You're all caught up!"
-              : "No notifications here."}
-          </p>
+        {/* Notifications Grid */}
+        <div className="np-content-area">
+          {filtered.length === 0 ? (
+            <div className="np-empty-state">
+              <div className="np-empty-icon">✓</div>
+              <h3 className="np-empty-title">You're all caught up</h3>
+              <p className="np-empty-desc">
+                {filter === "unread"
+                  ? "There are no new unread notifications right now."
+                  : "Your inbox is completely empty."}
+              </p>
+            </div>
+          ) : (
+            <div className="np-list-wrapper">
+              {filtered.map((n) => (
+                <NotificationItem
+                  key={n.id}
+                  notification={n}
+                  onMarkRead={markRead}
+                  onClick={handleClick}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="notif-list">
-          {filtered.map((n) => (
-            <NotificationItem
-              key={n.id}
-              notification={n}
-              onMarkRead={markRead}
-              onClick={handleClick}
-            />
-          ))}
-        </div>
-      )}
+
+      </div>
     </div>
   );
 }

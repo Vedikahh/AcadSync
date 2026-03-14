@@ -1,26 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { login as apiLogin } from "../services/api";
 import "./AuthPages.css";
 
-// Mock login for demo (replace with real API call when backend is ready)
-function mockLogin({ email, password, role }) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (!email || !password) {
-        reject(new Error("Email and password are required"));
-        return;
-      }
-      resolve({
-        user: { id: 1, name: email.split("@")[0], email, role, department: role === "faculty" ? "CSE" : "" },
-        token: "mock-jwt-token",
-      });
-    }, 800);
-  });
-}
-
 export default function LoginPage() {
-  const [form, setForm] = useState({ email: "", password: "", role: "student" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -35,12 +20,24 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    
     try {
-      const { user, token } = await mockLogin(form);
-      login(user, token);
-      navigate(user.role === "admin" ? "/admin" : user.role === "faculty" ? "/faculty-dashboard" : "/dashboard");
+      // API call to our new Node HTTP backend
+      const response = await apiLogin(form);
+      
+      // Store user payload & JWT safely
+      login({
+        id: response._id,
+        name: response.name,
+        email: response.email,
+        role: response.role,
+        department: response.department
+      }, response.token);
+
+      // Route based on newly verified database role
+      navigate(response.role === "admin" ? "/admin" : response.role === "faculty" ? "/faculty-dashboard" : "/dashboard");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to log in");
     } finally {
       setLoading(false);
     }
@@ -58,29 +55,8 @@ export default function LoginPage() {
         {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="role-selector">
-            <button
-              type="button"
-              className={`role-btn ${form.role === "student" ? "active" : ""}`}
-              onClick={() => setForm((p) => ({ ...p, role: "student" }))}
-            >
-              🎓 Student
-            </button>
-            <button
-              type="button"
-              className={`role-btn ${form.role === "faculty" ? "active" : ""}`}
-              onClick={() => setForm((p) => ({ ...p, role: "faculty" }))}
-            >
-              👨‍🏫 Faculty
-            </button>
-            <button
-              type="button"
-              className={`role-btn ${form.role === "admin" ? "active" : ""}`}
-              onClick={() => setForm((p) => ({ ...p, role: "admin" }))}
-            >
-              🔑 Admin
-            </button>
-          </div>
+          
+          {/* Note: Roles are now database bound, we don't ask users to select their role at login anymore */}
 
           <div className="form-group">
             <label htmlFor="email">Email address</label>
