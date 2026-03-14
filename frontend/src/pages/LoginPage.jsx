@@ -12,7 +12,7 @@ function mockLogin({ email, password, role }) {
         return;
       }
       resolve({
-        user: { id: 1, name: email.split("@")[0], email, role },
+        user: { id: 1, name: email.split("@")[0], email, role, department: role === "faculty" ? "CSE" : "" },
         token: "mock-jwt-token",
       });
     }, 800);
@@ -38,7 +38,7 @@ export default function LoginPage() {
     try {
       const { user, token } = await mockLogin(form);
       login(user, token);
-      navigate(user.role === "admin" ? "/admin" : "/dashboard");
+      navigate(user.role === "admin" ? "/admin" : user.role === "faculty" ? "/faculty-dashboard" : "/dashboard");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -65,6 +65,13 @@ export default function LoginPage() {
               onClick={() => setForm((p) => ({ ...p, role: "student" }))}
             >
               🎓 Student
+            </button>
+            <button
+              type="button"
+              className={`role-btn ${form.role === "faculty" ? "active" : ""}`}
+              onClick={() => setForm((p) => ({ ...p, role: "faculty" }))}
+            >
+              👨‍🏫 Faculty
             </button>
             <button
               type="button"

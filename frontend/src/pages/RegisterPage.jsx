@@ -26,6 +26,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    department: "",
     password: "",
     confirm: "",
     role: "student",
@@ -51,7 +52,7 @@ export default function RegisterPage() {
     try {
       const { user, token } = await mockRegister(form);
       login(user, token);
-      navigate(user.role === "admin" ? "/admin" : "/dashboard");
+      navigate(user.role === "admin" ? "/admin" : user.role === "faculty" ? "/faculty-dashboard" : "/dashboard");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -78,6 +79,13 @@ export default function RegisterPage() {
               onClick={() => setForm((p) => ({ ...p, role: "student" }))}
             >
               🎓 Student
+            </button>
+            <button
+              type="button"
+              className={`role-btn ${form.role === "faculty" ? "active" : ""}`}
+              onClick={() => setForm((p) => ({ ...p, role: "faculty" }))}
+            >
+              👨‍🏫 Faculty
             </button>
             <button
               type="button"
@@ -112,6 +120,27 @@ export default function RegisterPage() {
               onChange={handleChange}
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="department">Department</label>
+            <select
+              id="department"
+              name="department"
+              value={form.department}
+              onChange={handleChange}
+            >
+              <option value="">— Select your department —</option>
+              <option>Computer Science (CSE)</option>
+              <option>Electronics &amp; Communication (ECE)</option>
+              <option>Mechanical Engineering (ME)</option>
+              <option>Civil Engineering (CE)</option>
+              <option>Information Technology (IT)</option>
+              <option>MBA</option>
+              <option>MCA</option>
+              <option>Mathematics</option>
+              <option>Physics</option>
+            </select>
           </div>
 
           <div className="form-group">

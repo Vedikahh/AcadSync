@@ -1,0 +1,74 @@
+/* ========================
+   ConflictCard — Light Theme
+   ======================== */
+.conflict-card {
+  background: var(--bg-card, #fff);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.conflict-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.severity-high   { border-left-color: var(--danger, #EF4444); }
+.severity-medium { border-left-color: var(--orange-500, #F97316); }
+.severity-low    { border-left-color: var(--success, #22C55E); }
+
+.conflict-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.conflict-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.severity-high   .conflict-badge { background: #FEE2E2; color: #B91C1C; }
+.severity-medium .conflict-badge { background: #FFEDD5; color: #C2410C; }
+.severity-low    .conflict-badge { background: #DCFCE7; color: #15803D; }
+
+.conflict-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.conflict-event-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+}
+
+.conflict-detail {
+  display: flex;
+  gap: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+  align-items: flex-start;
+}
+
+.conflict-label {
+  color: var(--text-muted);
+  min-width: 110px;
+  flex-shrink: 0;
+}
+
+.conflict-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}

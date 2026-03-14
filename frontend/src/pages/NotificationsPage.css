@@ -1,133 +1,157 @@
+/* ===================================
+   NotificationsPage — Light Theme
+   =================================== */
+
 .notifications-page {
-  max-width: 760px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 2rem 2vw;
+  padding: 28px 20px 48px;
 }
 
+/* Header */
 .notif-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .notif-header h1 {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: #111;
-  margin: 0 0 0.25rem;
+  color: var(--text-primary, #0F172A);
+  margin: 0 0 4px;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 10px;
 }
 
 .unread-pill {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #6c63ff, #48c9b0);
+  background: var(--primary, #2563EB);
   color: #fff;
-  padding: 0.25rem 0.75rem;
+  padding: 3px 10px;
   border-radius: 20px;
+  letter-spacing: 0.02em;
 }
 
 .notif-header p {
-  color: #888;
-  font-size: 0.88rem;
+  color: var(--text-muted, #94A3B8);
+  font-size: 0.83rem;
   margin: 0;
 }
 
 .notif-header-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .btn-mark-all {
-  padding: 0.5rem 1.1rem;
-  background: #ede9fe;
-  color: #6c63ff;
+  padding: 7px 14px;
+  background: #DBEAFE;
+  color: var(--primary, #2563EB);
   border: none;
   border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
+  font-family: inherit;
 }
 
-.btn-mark-all:hover {
-  background: #ddd6fe;
-}
+.btn-mark-all:hover { background: #BFDBFE; }
 
 .btn-clear {
-  padding: 0.5rem 1.1rem;
-  background: #f5f5f5;
-  color: #555;
-  border: none;
+  padding: 7px 14px;
+  background: var(--bg-page, #F8FAFC);
+  color: var(--text-secondary, #475569);
+  border: 1px solid var(--border, #E2E8F0);
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
+  font-family: inherit;
 }
 
-.btn-clear:hover {
-  background: #eee;
-}
+.btn-clear:hover { background: #F1F5F9; }
 
+/* Filter tabs */
 .notif-filters {
   display: flex;
-  gap: 0.4rem;
-  background: #f5f5f5;
-  padding: 0.3rem;
-  border-radius: 10px;
-  margin-bottom: 1.25rem;
+  gap: 4px;
+  background: var(--bg-page, #F8FAFC);
+  border: 1px solid var(--border, #E2E8F0);
+  padding: 4px;
+  border-radius: 11px;
+  margin-bottom: 16px;
   width: fit-content;
 }
 
 .filter-tab {
-  padding: 0.4rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
   border: none;
-  border-radius: 7px;
+  border-radius: 8px;
   background: transparent;
-  color: #666;
-  font-size: 0.85rem;
+  color: var(--text-secondary, #475569);
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s;
+  font-family: inherit;
 }
 
 .filter-tab.active {
   background: #fff;
-  color: #6c63ff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: var(--primary, #2563EB);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: var(--primary, #2563EB);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+/* Notification list */
 .notif-list {
-  background: #fff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.notif-list > * + * {
-  border-top: 1px solid #f5f5f5;
-}
-
+/* Empty state */
 .notif-empty {
   text-align: center;
-  padding: 4rem 1rem;
-  color: #aaa;
+  padding: 60px 20px;
+  color: var(--text-muted, #94A3B8);
 }
 
-.notif-empty span {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: 0.75rem;
+.notif-empty-icon {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #CBD5E1;
+  margin-bottom: 12px;
+  line-height: 1;
 }
 
 .notif-empty p {
   margin: 0;
   font-size: 0.9rem;
+  color: var(--text-muted, #94A3B8);
 }

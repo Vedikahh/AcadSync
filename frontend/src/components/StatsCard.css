@@ -1,0 +1,80 @@
+/* ========================
+   StatsCard — Light Theme
+   ======================== */
+.stats-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-card, #fff);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card-clickable { cursor: pointer; }
+.stats-card-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stats-card-icon {
+  font-size: 1.5rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stats-card-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.stats-card-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.stats-card-trend {
+  font-size: 0.72rem;
+  margin-top: 3px;
+  font-weight: 600;
+}
+
+.trend-up   { color: var(--success); }
+.trend-down { color: var(--danger); }
+
+/* Color variants — light theme icon backgrounds */
+.stats-card-blue   .stats-card-icon { background: #DBEAFE; }
+.stats-card-green  .stats-card-icon { background: #DCFCE7; }
+.stats-card-orange .stats-card-icon { background: #FFEDD5; }
+.stats-card-red    .stats-card-icon { background: #FEE2E2; }
+.stats-card-purple .stats-card-icon { background: #F3E8FF; }
+.stats-card-yellow .stats-card-icon { background: #FEF9C3; }
+
+/* Colored left accent bar */
+.stats-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 14px 0 0 14px;
+}
+
+.stats-card-blue::before   { background: var(--primary); }
+.stats-card-green::before  { background: var(--success); }
+.stats-card-orange::before { background: var(--orange-500); }
+.stats-card-red::before    { background: var(--danger); }
+.stats-card-purple::before { background: var(--purple-500); }
+.stats-card-yellow::before { background: var(--yellow-500); }

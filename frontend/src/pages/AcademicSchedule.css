@@ -1,0 +1,256 @@
+/* ==============================
+   Academic Schedule — Light Theme
+   ============================== */
+.as-page {
+  padding: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.as-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.as-title { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0 0 4px; }
+.as-sub   { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+.as-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.as-btn-csv {
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+}
+
+.as-btn-csv:hover { background: var(--bg-page); color: var(--text-primary); }
+
+.as-btn-add {
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+}
+
+.as-btn-add:hover { background: var(--blue-700); }
+
+/* Add form */
+.as-form-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--blue-100, #DBEAFE);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-card);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.as-form-title { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin: 0 0 18px; }
+
+.as-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.as-field { display: flex; flex-direction: column; gap: 5px; }
+
+.as-field label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); }
+
+.as-field input, .as-field select {
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.as-field input:focus, .as-field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.as-input-err { border-color: var(--danger) !important; }
+.as-err { font-size: 0.72rem; color: var(--danger); }
+
+.as-form-submit { display: flex; justify-content: flex-end; margin-top: 6px; }
+
+.as-btn-submit {
+  padding: 9px 22px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.2);
+}
+
+.as-btn-submit:hover { background: var(--blue-700); }
+
+/* Filters */
+.as-filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+.as-filter-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.as-filter-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 80px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.as-filter-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.as-filter-btn:hover { background: var(--bg-page); }
+
+.as-filter-btn-active {
+  background: var(--blue-50);
+  border-color: var(--blue-100);
+  color: var(--primary);
+}
+
+/* Table */
+.as-table-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow-x: auto;
+  box-shadow: var(--shadow-card);
+}
+
+.as-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+.as-table thead tr { border-bottom: 1px solid var(--border); }
+
+.as-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  background: var(--bg-page);
+}
+
+.as-row { border-bottom: 1px solid var(--border-light); transition: background 0.15s; }
+.as-row:last-child { border-bottom: none; }
+.as-row:hover { background: var(--bg-page); }
+
+.as-table td { padding: 12px 16px; color: var(--text-secondary); vertical-align: middle; }
+
+.as-subject { font-weight: 700; color: var(--text-primary); }
+.as-faculty  { color: var(--text-muted); font-size: 0.82rem; }
+.as-time     { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--primary); font-weight: 700; }
+.as-day      { white-space: nowrap; }
+.as-room     { white-space: nowrap; font-size: 0.82rem; }
+
+.as-dept-badge {
+  background: var(--indigo-100, #E0E7FF);
+  color: var(--secondary);
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.as-type-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.as-btn-del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.18s;
+}
+
+.as-btn-del:hover { background: var(--red-50); color: var(--danger); }
+
+.as-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.as-empty span { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+
+.as-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-primary);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  z-index: 9999;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .as-page { padding: 16px; }
+  .as-form-row { grid-template-columns: 1fr; }
+}

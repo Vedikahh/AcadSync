@@ -1,26 +1,89 @@
+/* ================================================
+   AcadSync — Global Light Theme Foundation
+   ================================================ */
+
+/* Import Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 :root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Typography */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
-  color: #333;
-  background-color: #f9f9fb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* === Design Tokens === */
+
+  /* Backgrounds */
+  --bg-page:     #F8FAFC;
+  --bg-card:     #FFFFFF;
+  --bg-card-2:   #FFFFFF;
+  --bg-sidebar:  #FFFFFF;
+  --bg-navbar:   #FFFFFF;
+
+  /* Primary — Deep Blue (system UI, nav, buttons) */
+  --blue-50:  #EFF6FF;
+  --blue-100: #DBEAFE;
+  --blue-500: #3B82F6;
+  --blue-600: #2563EB;
+  --blue-700: #1D4ED8;
+  --primary:  #2563EB;
+
+  /* Secondary — Indigo (AI features, smart suggestions) */
+  --indigo-50:  #EEF2FF;
+  --indigo-100: #E0E7FF;
+  --indigo-500: #6366F1;
+  --indigo-600: #4F46E5;
+  --secondary:  #6366F1;
+
+  /* Semantic */
+  --green-50:  #F0FDF4;
+  --green-500: #22C55E;
+  --green-600: #16A34A;
+  --success:   #22C55E;
+
+  --red-50:   #FEF2F2;
+  --red-500:  #EF4444;
+  --red-600:  #DC2626;
+  --danger:   #EF4444;
+
+  --orange-50:  #FFF7ED;
+  --orange-500: #F97316;
+
+  --yellow-500: #EAB308;
+
+  --purple-500: #A855F7;
+
+  /* Borders */
+  --border:       #E2E8F0;
+  --border-light: #F1F5F9;
+
+  /* Text */
+  --text-primary:   #0F172A;
+  --text-secondary: #475569;
+  --text-muted:     #94A3B8;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.04);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
 }
 
 *,
 *::before,
-*::after {
-  box-sizing: border-box;
-}
+*::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 a {
@@ -33,7 +96,10 @@ button {
   cursor: pointer;
 }
 
-img, svg {
-  max-width: 100%;
-}
+img, svg { max-width: 100%; }
 
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--border-light); }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }

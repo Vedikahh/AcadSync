@@ -1,138 +1,127 @@
+/* ========================
+   EventCard — Light Theme
+   ======================== */
 .event-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
-  transition: transform 0.2s, box-shadow 0.2s;
-  border-left: 4px solid #e0e0e0;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .event-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
-.event-card.approved {
-  border-left-color: #48c9b0;
-}
-
-.event-card.pending {
-  border-left-color: #f6a623;
-}
-
-.event-card.rejected {
-  border-left-color: #e53935;
-}
+/* Status left border accents */
+.event-card.approved { border-left: 3px solid var(--success); }
+.event-card.pending  { border-left: 3px solid var(--orange-500); }
+.event-card.rejected { border-left: 3px solid var(--danger); }
 
 .event-card-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .event-title {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #222;
+  color: var(--text-primary);
   margin: 0;
+  line-height: 1.3;
 }
 
 .badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
+  padding: 3px 10px;
   border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.badge-pending {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.badge-approved {
-  background: #e0f7f4;
-  color: #00897b;
-}
-
-.badge-rejected {
-  background: #ffebee;
-  color: #c62828;
-}
+.badge-pending  { background: #FFF3E0; color: #F57C00; }
+.badge-approved { background: #E8F5E9; color: #2E7D32; }
+.badge-rejected { background: #FFEBEE; color: #C62828; }
 
 .event-description {
-  color: #666;
-  font-size: 0.9rem;
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
   line-height: 1.5;
-  margin: 0 0 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .event-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.82rem;
-  color: #777;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-.meta-icon {
-  font-size: 0.9rem;
-}
+.meta-icon { font-size: 0.85rem; }
 
 .event-actions {
   display: flex;
-  gap: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #f0f0f0;
-}
-
-.btn-approve,
-.btn-reject,
-.btn-delete {
-  padding: 0.45rem 1.1rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: opacity 0.2s;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
 }
 
 .btn-approve {
-  background: #e0f7f4;
-  color: #00897b;
+  flex: 1;
+  padding: 7px;
+  background: #E8F5E9;
+  color: #2E7D32;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-
-.btn-approve:hover {
-  background: #48c9b0;
-  color: #fff;
-}
+.btn-approve:hover { background: #C8E6C9; }
 
 .btn-reject {
-  background: #ffebee;
-  color: #c62828;
+  flex: 1;
+  padding: 7px;
+  background: #FFEBEE;
+  color: #C62828;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-
-.btn-reject:hover {
-  background: #e53935;
-  color: #fff;
-}
+.btn-reject:hover { background: #FFCDD2; }
 
 .btn-delete {
-  background: #ffebee;
-  color: #c62828;
+  flex: 1;
+  padding: 7px;
+  background: #FEF2F2;
+  color: var(--danger);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-
-.btn-delete:hover {
-  background: #e53935;
-  color: #fff;
-}
+.btn-delete:hover { background: #FEE2E2; }
