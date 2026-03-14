@@ -1,0 +1,138 @@
+.event-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid #e0e0e0;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+}
+
+.event-card.approved {
+  border-left-color: #48c9b0;
+}
+
+.event-card.pending {
+  border-left-color: #f6a623;
+}
+
+.event-card.rejected {
+  border-left-color: #e53935;
+}
+
+.event-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.event-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.badge-pending {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.badge-approved {
+  background: #e0f7f4;
+  color: #00897b;
+}
+
+.badge-rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.event-description {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #777;
+}
+
+.meta-icon {
+  font-size: 0.9rem;
+}
+
+.event-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-approve,
+.btn-reject,
+.btn-delete {
+  padding: 0.45rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-approve {
+  background: #e0f7f4;
+  color: #00897b;
+}
+
+.btn-approve:hover {
+  background: #48c9b0;
+  color: #fff;
+}
+
+.btn-reject {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-reject:hover {
+  background: #e53935;
+  color: #fff;
+}
+
+.btn-delete {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-delete:hover {
+  background: #e53935;
+  color: #fff;
+}

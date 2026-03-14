@@ -1,85 +1,80 @@
-from flask import Flask, request, jsonify
-from pymongo import MongoClient
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from flask import Flask
+from flask_cors import CORS
+from config.db import get_database, close_mongo_connection
+from routes.event_routes import events_bp
+from routes.schedule_routes import schedule_bp
+from routes.conflict_routes import conflicts_bp
+from routes.admin_routes import admin_bp
 
 app = Flask(__name__)
+CORS(app)
 
-# MongoDB connection
-client = MongoClient("mongodb://localhost:27017/")
-db = client["acadsync"]
+# Register blueprints
+app.register_blueprint(events_bp)
+app.register_blueprint(schedule_bp)
+app.register_blueprint(conflicts_bp)
+app.register_blueprint(admin_bp)
 
-print("MongoDB Connected Successfully")
+# Initialize database connection on app start
+@app.before_request
+def initialize_db():
+    """Initialize MongoDB connection before first request"""
+    try:
+        get_database()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+        return {"error": "Database connection failed"}, 500
+
+
+@app.teardown_appcontext
+def shutdown_db(exception=None):
+    """Close database connection on app shutdown"""
+    close_mongo_connection()
 
 
 @app.route("/")
 def home():
-    return "AcadSync AI Backend Running"
+    return {"status": "AcadSync AI backend running"}
 
 
-# API to insert user
-@app.route("/add-user", methods=["POST"])
-def add_user():
-    data = request.json
+@app.route("/health")
+def health_check():
+    """Health check endpoint that verifies database connection"""
+    try:
+        db = get_database()
+        db.admin.command("ping")
+        return {"status": "healthy", "database": "connected"}, 200
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}, 500
 
-    user = {
-        "name": data["name"],
-        "email": data["email"],
-        "role": "student"
-    }
 
-    db.users.insert_one(user)
-
-    return jsonify({"message": "User added successfully"})
-
-@app.route("/users", methods=["GET"])
-def get_users():
-
-    users = list(db.users.find({}, {"_id":0}))
-
-    return {"users": users}
-
-@app.route("/add-document", methods=["POST"])
-def add_document():
-
-    data = request.json
-
-    document = {
-        "title": data["title"],
-        "subject": data["subject"],
-        "description": data["description"],
-        "tags": data["tags"],
-        "uploaded_by": data["uploaded_by"]
-    }
-
-    db.documents.insert_one(document)
-
-    return {"message": "Document added"}
-
-@app.route("/documents/<user>", methods=["GET"])
-def get_user_documents(user):
-
-    docs = list(db.documents.find({"uploaded_by": user}, {"_id":0}))
-
-    return {"documents": docs}
-
-@app.route("/delete-document/<title>", methods=["DELETE"])
-def delete_document(title):
-
-    db.documents.delete_one({"title": title})
-
-    return {"message": "Document deleted"}
-
-@app.route("/search", methods=["GET"])
-def search_documents():
-
-    subject = request.args.get("subject")
-
-    results = list(db.documents.find({"subject": subject}, {"_id": 0}))
-
-    return {"results": results}
+@app.route("/test-db")
+def test_db():
+    """Test MongoDB Atlas integration by inserting and fetching documents"""
+    try:
+        # Get database instance
+        db = get_database()
+        
+        # Get the test collection
+        test_collection = db["test"]
+        
+        # Insert a sample document
+        sample_document = {"message": "Database connected successfully"}
+        test_collection.insert_one(sample_document)
+        
+        # Fetch all documents from the test collection
+        documents = list(test_collection.find({}))
+        
+        # Convert documents to JSON-serializable format (exclude _id)
+        result = []
+        for doc in documents:
+            doc_dict = {key: value for key, value in doc.items() if key != "_id"}
+            result.append(doc_dict)
+        
+        return {"success": True, "documents": result}, 200
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}, 500
 
 
 if __name__ == "__main__":

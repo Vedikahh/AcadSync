@@ -1,0 +1,49 @@
+.not-found {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8f7ff, #f0fffe);
+}
+
+.nf-code {
+  font-size: 7rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #6c63ff, #48c9b0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.not-found h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #222;
+  margin: 0 0 0.5rem;
+}
+
+.not-found p {
+  color: #777;
+  font-size: 1rem;
+  margin: 0 0 2rem;
+}
+
+.nf-btn {
+  display: inline-block;
+  padding: 0.7rem 1.6rem;
+  background: linear-gradient(135deg, #6c63ff, #48c9b0);
+  color: #fff;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.nf-btn:hover {
+  opacity: 0.9;
+}

@@ -1,0 +1,54 @@
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.notification-item.unread {
+  background: #f5f3ff;
+}
+
+.notification-item.read {
+  background: #fff;
+  opacity: 0.75;
+}
+
+.notification-item:hover {
+  background: #ede9fe;
+}
+
+.notif-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.notif-content {
+  flex: 1;
+}
+
+.notif-message {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  color: #333;
+  line-height: 1.4;
+}
+
+.notif-time {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6c63ff;
+  flex-shrink: 0;
+  margin-top: 0.4rem;
+}
