@@ -19,7 +19,7 @@
   display: flex;
   flex-direction: column;
   z-index: 200;
-  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -64,12 +64,20 @@
 
 /* Overlay */
 .sidebar-overlay {
-  display: none;
   position: fixed;
   inset: 0;
+  top: 64px; /* start below navbar */
   background: rgba(15, 23, 42, 0.35);
   z-index: 199;
   backdrop-filter: blur(2px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sidebar-overlay-active {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* ── Profile section ── */
@@ -259,12 +267,15 @@
     transform: translateX(-100%);
     width: var(--sidebar-width) !important; /* Always full width on mobile */
   }
-  .sidebar-open    { transform: translateX(0); }
-  .sidebar-overlay { display: block; }
+  .sidebar-open { 
+    transform: translateX(0); 
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.15); /* deeper shadow when it slides in */
+  }
   .sidebar-collapse-btn { display: none !important; }
 }
 
 @media (min-width: 769px) {
   .sidebar { transform: translateX(0) !important; }
   .sidebar-collapse-btn { display: flex; }
+  .sidebar-overlay { display: none !important; }
 }

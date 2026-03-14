@@ -1,157 +1,418 @@
 /* ==============================
-   Faculty Dashboard — Light Theme
+   Faculty Dashboard — Premium Light
    ============================== */
-.faculty-db {
-  padding: 28px;
-  max-width: 1100px;
+
+.faculty-db-page {
+  padding: 28px 2vw 60px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
+/* ── Header ── */
 .faculty-db-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 24px;
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
 .faculty-db-title {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--text-primary, #0F172A);
   margin: 0 0 4px;
+  letter-spacing: -0.02em;
 }
 
 .faculty-db-sub {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  font-size: 0.95rem;
+  color: var(--text-muted, #94A3B8);
+  font-weight: 500;
   margin: 0;
 }
 
 .faculty-db-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.faculty-btn {
-  padding: 9px 16px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  border: none;
-  text-decoration: none;
+.fac-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  font-family: inherit;
+  border: 1px solid transparent;
 }
 
-.faculty-btn-primary {
-  background: var(--primary);
+.fac-btn-icon {
+  font-family: monospace;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.fac-btn-primary {
+  background: var(--primary, #2563EB);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
-.faculty-btn-primary:hover { background: var(--blue-700); }
-
-.faculty-btn-outline {
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
+.fac-btn-primary:hover {
+  background: var(--blue-700, #1D4ED8);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
 }
 
-.faculty-btn-outline:hover { background: var(--bg-page); }
+.fac-btn-outline {
+  background: #fff;
+  color: var(--text-secondary, #475569);
+  border-color: var(--border, #E2E8F0);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
 
-/* Stats */
-.faculty-stats-row {
+.fac-btn-outline:hover {
+  background: #F8FAFC;
+  color: var(--text-primary, #0F172A);
+  border-color: #CBD5E1;
+}
+
+/* ── Stats Row ── */
+.faculty-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 14px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
-/* Tabs */
+/* ── Layout Framework ── */
+.faculty-content-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 960px) {
+  .faculty-content-layout {
+    grid-template-columns: 2.3fr 1fr; /* Main area wider than side */
+  }
+}
+
+/* ── Main Column (Tabs) ── */
+.faculty-main-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.faculty-tabs-wrapper {
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--border-light, #F1F5F9);
+}
+
 .faculty-tabs {
   display: flex;
-  gap: 4px;
-  border-bottom: 1.5px solid var(--border);
-  margin-bottom: 20px;
+  gap: 24px;
+  overflow-x: auto;
+  scrollbar-width: none; /* hide scrollbar for horizontal tabs */
 }
+
+.faculty-tabs::-webkit-scrollbar { display: none; }
 
 .faculty-tab {
-  padding: 10px 18px;
+  padding: 0 0 12px 0;
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.2s ease;
   position: relative;
-  bottom: -1.5px;
-  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 
-.faculty-tab:hover { color: var(--text-primary); }
+.faculty-tab::after {
+  content: "";
+  position: absolute;
+  bottom: -2px; /* overlap border */
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary, #2563EB);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+  border-radius: 2px 2px 0 0;
+}
+
+.faculty-tab:hover {
+  color: var(--text-primary, #0F172A);
+}
 
 .faculty-tab-active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: var(--primary, #2563EB);
 }
 
-/* Panels */
-.faculty-panel {
-  animation: fadeSlide 0.18s ease;
+.faculty-tab-active::after {
+  transform: scaleX(1);
 }
 
-@keyframes fadeSlide {
-  from { opacity: 0; transform: translateY(6px); }
+.fac-tab-badge {
+  background: #EF4444;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 12px;
+  line-height: 1;
+}
+
+/* ── Panel Area ── */
+.faculty-panel-area {
+  animation: facFadeIn 0.3s ease;
+}
+
+@keyframes facFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.faculty-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* Empty States */
+.fac-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  background: #fff;
+  border: 1px dashed var(--border, #E2E8F0);
+  border-radius: 16px;
+}
+
+.fac-empty-icon {
+  font-size: 2rem;
+  color: #CBD5E1;
+  font-weight: 800;
+  margin-bottom: 12px;
+  width: 56px;
+  height: 56px;
+  background: #F8FAFC;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.fac-empty-state p {
+  color: var(--text-muted, #94A3B8);
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Timeline (Today tab) */
+.fac-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.fac-timeline::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 20px;
+  left: 60px; /* aligns with timebox edge */
+  width: 2px;
+  background: var(--border-light, #F1F5F9);
+  z-index: 0;
+}
+
+.fac-timeline-item {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.fac-timebox {
+  width: 60px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-top: 16px; /* align text to card top roughly */
+}
+
+.fac-time {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-secondary, #475569);
+}
+
+.fac-card-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Conflicts Tab */
+.fac-conflict-list {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-@media (max-width: 700px) { .faculty-grid { grid-template-columns: 1fr; } }
-
-.faculty-card {
-  background: var(--bg-card, #fff);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow: var(--shadow-card);
-  margin-bottom: 0;
+.fac-alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #FFF7ED;
+  border: 1px solid #FFEDD5;
+  border-radius: 12px;
+  color: #9A3412;
 }
 
-.faculty-card-title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 14px;
+.fac-alert-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #EA580C;
+  color: #fff;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
-.faculty-list {
+.fac-alert-text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Events Tab */
+.fac-events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ── Side Column (Widgets) ── */
+.faculty-side-col {
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+
+.fac-side-card {
+  background: #fff;
+  border: 1px solid var(--border, #E2E8F0);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(15,23,42,0.02);
+}
+
+.fac-side-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary, #0F172A);
+  margin: 0 0 16px;
+}
+
+/* Quick Links */
+.fac-quick-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fac-link-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #F8FAFC;
+  border-radius: 10px;
+  color: var(--text-secondary, #475569);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.fac-link-item:hover {
+  background: #fff;
+  color: var(--primary, #2563EB);
+  border-color: #DBEAFE;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+  transform: translateX(4px);
+}
+
+.fac-link-icon {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+/* News/Notice list */
+.fac-notice-card {
+  background: linear-gradient(180deg, #fff, #F8FAFC);
+}
+
+.fac-news-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fac-news-list li {
+  display: flex;
+  align-items: flex-start;
   gap: 10px;
 }
 
-.faculty-empty {
-  text-align: center;
-  padding: 32px;
-  color: var(--text-muted);
-  font-size: 0.875rem;
+.fac-news-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
 }
 
-@media (max-width: 768px) { .faculty-db { padding: 16px; } }
+.sync-blue { background: #3B82F6; }
+.sync-green { background: #10B981; }
+.sync-orange { background: #F59E0B; }
+
+.fac-news-list p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #475569);
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .faculty-db-page { padding: 20px 16px; }
+  .fac-timeline::before { display: none; }
+  .fac-timeline-item { flex-direction: column; gap: 8px; }
+  .fac-timebox { text-align: left; padding-top: 0; }
+}

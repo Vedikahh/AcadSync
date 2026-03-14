@@ -61,7 +61,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
   return (
     <>
-      {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
+      <div className={`sidebar-overlay ${isOpen ? "sidebar-overlay-active" : ""}`} onClick={onClose} />
       <aside className={`sidebar ${isOpen ? "sidebar-open" : ""} ${collapsed ? "sidebar-collapsed" : ""}`}>
 
         {/* Collapse toggle button — desktop only */}
