@@ -66,7 +66,18 @@ function AppLayout() {
       <main className={`${isAuth ? "app-main-with-sidebar" : "app-main"} ${isAuth && sidebarCollapsed ? "app-main-collapsed" : ""}`}>
         <Routes>
           {/* Public */}
-          <Route path="/" element={<LandingPage />} />
+          <Route 
+            path="/" 
+            element={
+              user ? (
+                <Navigate to={
+                    user.role === "admin" ? "/admin"
+                    : user.role === "faculty" ? "/faculty-dashboard"
+                    : "/dashboard"
+                  } replace />
+              ) : <LandingPage />
+            } 
+          />
           <Route
             path="/login"
             element={
