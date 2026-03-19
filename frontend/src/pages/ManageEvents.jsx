@@ -1,15 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
 import "./ManageEvents.css";
-
-const INITIAL_EVENTS = [
-  { id: 1, title: "Annual Tech Fest 2025", department: "CSE", date: "2025-11-15", venue: "Main Auditorium", organizer: "CSE Dept", participants: 300, status: "pending" },
-  { id: 2, title: "Cultural Night", department: "Cultural Committee", date: "2025-12-05", venue: "Open Air Stage", organizer: "Cultural Committee", participants: 500, status: "pending" },
-  { id: 3, title: "Hackathon 2025", department: "Tech Club", date: "2025-10-20", venue: "Lab Block C", organizer: "Tech Club", participants: 100, status: "approved" },
-  { id: 4, title: "Sports Day", department: "Sports Committee", date: "2025-09-10", venue: "Sports Ground", organizer: "Sports Committee", participants: 600, status: "approved" },
-  { id: 5, title: "Alumni Meet 2025", department: "Alumni Cell", date: "2025-12-20", venue: "Conference Hall", organizer: "Alumni Cell", participants: 200, status: "pending" },
-  { id: 6, title: "Workshop on AI/ML", department: "CSE", date: "2025-11-02", venue: "Seminar Room", organizer: "IEEE Club", participants: 80, status: "rejected" },
-];
 
 const FILTERS = ["all", "pending", "approved", "rejected"];
 
@@ -21,35 +13,70 @@ const STATUS_BADGE = {
 
 export default function ManageEvents() {
   const { user } = useAuth();
-  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const [events, setEvents] = useState([]);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getEvents();
+      setEvents(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load events", err);
+      showToast("❌ Failed to load events");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(""), 2500);
   };
 
-  const handleApprove = (id) => {
-    setEvents((prev) => prev.map((e) => e.id === id ? { ...e, status: "approved" } : e));
-    showToast("✅ Event approved successfully!");
+  const handleApprove = async (id) => {
+    try {
+      await updateEventStatus(id, "approved");
+      setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? { ...e, status: "approved" } : e));
+      showToast("✅ Event approved successfully!");
+    } catch (err) {
+      showToast("❌ Failed to approve event");
+    }
   };
 
-  const handleReject = (id) => {
-    setEvents((prev) => prev.map((e) => e.id === id ? { ...e, status: "rejected" } : e));
-    showToast("❌ Event rejected.");
+  const handleReject = async (id) => {
+    try {
+      await updateEventStatus(id, "rejected");
+      setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? { ...e, status: "rejected" } : e));
+      showToast("❌ Event rejected.");
+    } catch (err) {
+      showToast("❌ Failed to reject event");
+    }
   };
 
-  const handleDelete = (id) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-    showToast("🗑 Event deleted.");
+  const handleDelete = async (id) => {
+    try {
+      await deleteEvent(id);
+      setEvents((prev) => prev.filter((e) => e._id !== id && e.id !== id));
+      showToast("🗑 Event deleted.");
+    } catch (err) {
+      showToast("❌ Failed to delete event");
+    }
   };
 
   const filtered = events.filter((e) => {
     if (filter !== "all" && e.status !== filter) return false;
-    if (search && !e.title.toLowerCase().includes(search.toLowerCase()) &&
-        !e.department.toLowerCase().includes(search.toLowerCase())) return false;
+    // ensure title and department exist before toLowerCase
+    const titleMatch = e.title && e.title.toLowerCase().includes(search.toLowerCase());
+    const deptMatch = e.department && e.department.toLowerCase().includes(search.toLowerCase());
+    if (search && !(titleMatch || deptMatch)) return false;
     return true;
   });
 
@@ -97,7 +124,9 @@ export default function ManageEvents() {
       </div>
 
       {/* Table */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div style={{ textAlign: "center", padding: "2rem" }}>Loading events...</div>
+      ) : filtered.length === 0 ? (
         <div className="me-empty">
           <span>📭</span>
           <p>No events match your filter.</p>
@@ -119,36 +148,37 @@ export default function ManageEvents() {
             <tbody>
               {filtered.map((ev) => {
                 const badge = STATUS_BADGE[ev.status] || STATUS_BADGE.pending;
+                const id = ev._id || ev.id;
                 return (
-                  <tr key={ev.id} className="me-row">
+                  <tr key={id} className="me-row">
                     <td>
                       <p className="me-event-name">{ev.title}</p>
-                      <span className="me-event-organizer">{ev.organizer}</span>
+                      <span className="me-event-organizer">{ev.organizer || (ev.createdBy && ev.createdBy.name) || "Unknown"}</span>
                     </td>
                     <td className="me-dept">{ev.department}</td>
                     <td className="me-date">
-                      {new Date(ev.date + "T00:00").toLocaleDateString("en-IN", {
+                      {ev.date ? new Date(ev.date + "T00:00").toLocaleDateString("en-IN", {
                         day: "numeric", month: "short", year: "numeric",
-                      })}
+                      }) : "TBA"}
                     </td>
                     <td className="me-venue">{ev.venue}</td>
-                    <td className="me-participants">{ev.participants}</td>
+                    <td className="me-participants">{ev.participants || "--"}</td>
                     <td>
                       <span className={`me-badge ${badge.cls}`}>{badge.label}</span>
                     </td>
                     <td>
                       <div className="me-actions">
                         {ev.status !== "approved" && (
-                          <button className="me-btn-approve" onClick={() => handleApprove(ev.id)} title="Approve">
+                          <button className="me-btn-approve" onClick={() => handleApprove(id)} title="Approve">
                             ✓
                           </button>
                         )}
                         {ev.status !== "rejected" && (
-                          <button className="me-btn-reject" onClick={() => handleReject(ev.id)} title="Reject">
+                          <button className="me-btn-reject" onClick={() => handleReject(id)} title="Reject">
                             ✗
                           </button>
                         )}
-                        <button className="me-btn-delete" onClick={() => handleDelete(ev.id)} title="Delete">
+                        <button className="me-btn-delete" onClick={() => handleDelete(id)} title="Delete">
                           🗑
                         </button>
                       </div>

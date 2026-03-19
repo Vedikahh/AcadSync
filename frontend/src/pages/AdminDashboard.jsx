@@ -1,50 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getEvents, updateEventStatus } from "../services/api";
 import EventCard from "../components/EventCard";
 import StatsCard from "../components/StatsCard";
 import "./Dashboard.css";
 
-const MOCK_EVENTS = [
-  { id: 1, title: "Annual Tech Fest 2025", description: "A two-day celebration of technology and innovation.", date: "2025-11-15", venue: "Main Auditorium", organizer: "CSE Department", status: "pending" },
-  { id: 2, title: "Cultural Night", description: "An evening of music, dance, and drama showcasing campus talent.", date: "2025-12-05", venue: "Open Air Stage", organizer: "Cultural Committee", status: "pending" },
-  { id: 3, title: "Hackathon 2025", description: "24-hour coding marathon to solve real-world problems.", date: "2025-10-20", venue: "Lab Block C", organizer: "Tech Club", status: "approved" },
-  { id: 4, title: "Sports Day", description: "Annual inter-department sports competition.", date: "2025-09-10", venue: "Sports Ground", organizer: "Sports Committee", status: "approved" },
-];
-
-const DEPT_ACTIVITY = [
-  { dept: "CSE",   count: 8 },
-  { dept: "ECE",   count: 5 },
-  { dept: "ME",    count: 4 },
-  { dept: "MBA",   count: 6 },
-  { dept: "Civil", count: 3 },
-];
-
-const MOCK_CONFLICTS = [
-  { id: 101, event: "Annual Tech Fest 2025", clashWith: "DSA Lecture — CSE Sem 3", dept: "CSE", severity: "High" },
-  { id: 102, event: "Cultural Night", clashWith: "Software Engg Lecture — CSE Sem 5", dept: "CSE", severity: "Low" },
-];
-
-const SYSTEM_LOGS = [
-  { id: 1, action: "Approved event", subject: "Hackathon 2025", time: "2h ago", user: "Admin (You)" },
-  { id: 2, action: "Rejected event", subject: "Night DJ Party", time: "5h ago", user: "Admin (You)" },
-  { id: 3, action: "System Backup", subject: "Database Snapshot", time: "1d ago", user: "System" },
-];
-
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [events, setEvents] = useState(MOCK_EVENTS);
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getEvents();
+      setEvents(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const pending  = events.filter((e) => e.status === "pending");
   const approved = events.filter((e) => e.status === "approved");
-  const MOCK_STUDENTS    = 428;
-  const MOCK_DEPARTMENTS = 8;
-  const maxCount = Math.max(...DEPT_ACTIVITY.map((d) => d.count));
+  const MOCK_STUDENTS    = 0; // Set to 0 until actual user API exists
+  
+  // Calculate dynamic department activity from events
+  const deptCounts = events.reduce((acc, event) => {
+    const dept = event.department || "General";
+    acc[dept] = (acc[dept] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const DEPT_ACTIVITY = Object.entries(deptCounts).map(([dept, count]) => ({ dept, count })).slice(0, 5);
+  const maxCount = Math.max(1, ...DEPT_ACTIVITY.map((d) => d.count));
+  const activeDepartmentsCount = Object.keys(deptCounts).length;
 
-  const handleApprove = (id) =>
-    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, status: "approved" } : e)));
-  const handleReject = (id) =>
-    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, status: "rejected" } : e)));
+  const conflictsList = events
+    .filter((e) => e.conflicts && e.conflicts.length > 0)
+    .map((e, idx) => ({
+      id: e._id || e.id || idx,
+      event: e.title,
+      clashWith: e.conflicts[0], // Show the first clash as summary
+      severity: "High"
+    }));
+
+  const SYSTEM_LOGS = []; // Keep empty for now until logs API is ready
+
+  const handleApprove = async (id) => {
+    try {
+      await updateEventStatus(id, "approved");
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "approved" } : e)));
+    } catch (err) { console.error("Failed to approve", err); }
+  };
+  const handleReject = async (id) => {
+    try {
+      await updateEventStatus(id, "rejected");
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "rejected" } : e)));
+    } catch (err) { console.error("Failed to reject", err); }
+  };
 
   return (
     <div className="admin-db-page">
@@ -63,10 +83,10 @@ export default function AdminDashboard() {
 
       {/* ── Stats Row ── */}
       <div className="admin-stats-grid">
-        <StatsCard icon="◈" value={MOCK_STUDENTS}    label="Total Students"   color="blue"   />
-        <StatsCard icon="…" value={pending.length}   label="Needs Approval"   color="orange" />
-        <StatsCard icon="✓" value={approved.length}  label="Approved Events"  color="green"  />
-        <StatsCard icon="⊞" value={MOCK_DEPARTMENTS} label="Active Depts"     color="purple" />
+        <StatsCard icon="◈" value={MOCK_STUDENTS}       label="Total Students"   color="blue"   />
+        <StatsCard icon="…" value={pending.length}      label="Needs Approval"   color="orange" />
+        <StatsCard icon="✓" value={approved.length}     label="Approved Events"  color="green"  />
+        <StatsCard icon="⊞" value={activeDepartmentsCount} label="Active Depts"  color="purple" />
       </div>
 
       {/* ── Main Layout ── */}
@@ -86,16 +106,28 @@ export default function AdminDashboard() {
             </div>
             
             <div className="admin-card-body">
-              {pending.length === 0 ? (
+              {isLoading ? (
+                <div style={{ textAlign: "center", padding: "1rem" }}>Loading events...</div>
+              ) : pending.length === 0 ? (
                 <div className="admin-empty">
                   <div className="admin-empty-icon">✓</div>
                   <p>Inbox zero. All events have been processed.</p>
                 </div>
               ) : (
                 <div className="admin-event-list">
-                  {pending.map((event) => (
-                    <EventCard key={event.id} event={event} isAdmin onApprove={handleApprove} onReject={handleReject} />
-                  ))}
+                  {pending.map((event) => {
+                    const id = event._id || event.id;
+                    return (
+                      <EventCard 
+                        key={id} 
+                        event={{ ...event, id }} 
+                        user={user}
+                        isAdmin 
+                        onApprove={() => handleApprove(id)} 
+                        onReject={() => handleReject(id)} 
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -108,21 +140,27 @@ export default function AdminDashboard() {
               <span className="admin-metric-label">This Semester</span>
             </div>
             <div className="admin-card-body">
-              <div className="admin-chart-container">
-                {DEPT_ACTIVITY.map((d) => {
-                  const percent = Math.max(10, Math.round((d.count / maxCount) * 100));
-                  return (
-                    <div key={d.dept} className="admin-chart-bar-group">
-                      <div className="admin-chart-bar-wrap">
-                        <div className="admin-chart-bar" style={{ height: `${percent}%` }}>
-                          <span className="admin-chart-tooltip">{d.count} Events</span>
+              {DEPT_ACTIVITY.length === 0 ? (
+                <div className="admin-empty">
+                  <p>No departmental event data available.</p>
+                </div>
+              ) : (
+                <div className="admin-chart-container">
+                  {DEPT_ACTIVITY.map((d) => {
+                    const percent = Math.max(10, Math.round((d.count / maxCount) * 100));
+                    return (
+                      <div key={d.dept} className="admin-chart-bar-group">
+                        <div className="admin-chart-bar-wrap">
+                          <div className="admin-chart-bar" style={{ height: `${percent}%` }}>
+                            <span className="admin-chart-tooltip">{d.count} Events</span>
+                          </div>
                         </div>
+                        <span className="admin-chart-label">{d.dept}</span>
                       </div>
-                      <span className="admin-chart-label">{d.dept}</span>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </section>
 
@@ -131,7 +169,7 @@ export default function AdminDashboard() {
             <div className="admin-card-header">
               <div className="admin-card-title-wrap">
                 <h2 className="admin-card-title">Active Conflict Reports</h2>
-                {MOCK_CONFLICTS.length > 0 && <span className="admin-badge admin-badge-red">{MOCK_CONFLICTS.length}</span>}
+                {conflictsList.length > 0 && <span className="admin-badge admin-badge-red">{conflictsList.length}</span>}
               </div>
               <Link to="/conflict" className="admin-link">Resolution center →</Link>
             </div>
@@ -146,7 +184,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {MOCK_CONFLICTS.map((c) => (
+                    {conflictsList.map((c) => (
                       <tr key={c.id}>
                         <td className="admin-td-primary">{c.event}</td>
                         <td className="admin-td-secondary">{c.clashWith}</td>
@@ -157,7 +195,7 @@ export default function AdminDashboard() {
                         </td>
                       </tr>
                     ))}
-                    {MOCK_CONFLICTS.length === 0 && (
+                    {conflictsList.length === 0 && (
                       <tr>
                         <td colSpan="3" className="admin-td-empty">No active conflicts detected.</td>
                       </tr>
@@ -206,19 +244,25 @@ export default function AdminDashboard() {
               <h2 className="admin-card-title">System Logs</h2>
             </div>
             <div className="admin-card-body">
-              <div className="admin-logs">
-                {SYSTEM_LOGS.map((log) => (
-                  <div key={log.id} className="admin-log-item">
-                    <div className="admin-log-indicator" />
-                    <div className="admin-log-content">
-                      <p className="admin-log-main">
-                        <span className="admin-log-bold">{log.action}:</span> {log.subject}
-                      </p>
-                      <p className="admin-log-meta">{log.user} • {log.time}</p>
+              {SYSTEM_LOGS.length === 0 ? (
+                <div className="admin-empty">
+                  <p>No recent system logs.</p>
+                </div>
+              ) : (
+                <div className="admin-logs">
+                  {SYSTEM_LOGS.map((log) => (
+                    <div key={log.id} className="admin-log-item">
+                      <div className="admin-log-indicator" />
+                      <div className="admin-log-content">
+                        <p className="admin-log-main">
+                          <span className="admin-log-bold">{log.action}:</span> {log.subject}
+                        </p>
+                        <p className="admin-log-meta">{log.user} • {log.time}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
           

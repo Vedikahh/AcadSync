@@ -1,15 +1,15 @@
 /* ==============================
-   Faculty Dashboard — Premium Light
+   organizer Dashboard — Premium Light
    ============================== */
 
-.faculty-db-page {
+.organizer-db-page {
   padding: 28px 2vw 60px;
   max-width: 1280px;
   margin: 0 auto;
 }
 
 /* ── Header ── */
-.faculty-db-header {
+.organizer-db-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -18,7 +18,7 @@
   margin-bottom: 32px;
 }
 
-.faculty-db-title {
+.organizer-db-title {
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--text-primary, #0F172A);
@@ -26,14 +26,14 @@
   letter-spacing: -0.02em;
 }
 
-.faculty-db-sub {
+.organizer-db-sub {
   font-size: 0.95rem;
   color: var(--text-muted, #94A3B8);
   font-weight: 500;
   margin: 0;
 }
 
-.faculty-db-actions {
+.organizer-db-actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
@@ -86,7 +86,7 @@
 }
 
 /* ── Stats Row ── */
-.faculty-stats-grid {
+.organizer-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
@@ -94,40 +94,40 @@
 }
 
 /* ── Layout Framework ── */
-.faculty-content-layout {
+.organizer-content-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
 }
 
 @media (min-width: 960px) {
-  .faculty-content-layout {
+  .organizer-content-layout {
     grid-template-columns: 2.3fr 1fr; /* Main area wider than side */
   }
 }
 
 /* ── Main Column (Tabs) ── */
-.faculty-main-col {
+.organizer-main-col {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.faculty-tabs-wrapper {
+.organizer-tabs-wrapper {
   margin-bottom: 24px;
   border-bottom: 2px solid var(--border-light, #F1F5F9);
 }
 
-.faculty-tabs {
+.organizer-tabs {
   display: flex;
   gap: 24px;
   overflow-x: auto;
   scrollbar-width: none; /* hide scrollbar for horizontal tabs */
 }
 
-.faculty-tabs::-webkit-scrollbar { display: none; }
+.organizer-tabs::-webkit-scrollbar { display: none; }
 
-.faculty-tab {
+.organizer-tab {
   padding: 0 0 12px 0;
   background: none;
   border: none;
@@ -143,7 +143,7 @@
   white-space: nowrap;
 }
 
-.faculty-tab::after {
+.organizer-tab::after {
   content: "";
   position: absolute;
   bottom: -2px; /* overlap border */
@@ -157,15 +157,15 @@
   border-radius: 2px 2px 0 0;
 }
 
-.faculty-tab:hover {
+.organizer-tab:hover {
   color: var(--text-primary, #0F172A);
 }
 
-.faculty-tab-active {
+.organizer-tab-active {
   color: var(--primary, #2563EB);
 }
 
-.faculty-tab-active::after {
+.organizer-tab-active::after {
   transform: scaleX(1);
 }
 
@@ -180,7 +180,7 @@
 }
 
 /* ── Panel Area ── */
-.faculty-panel-area {
+.organizer-panel-area {
   animation: facFadeIn 0.3s ease;
 }
 
@@ -314,7 +314,7 @@
 }
 
 /* ── Side Column (Widgets) ── */
-.faculty-side-col {
+.organizer-side-col {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -411,7 +411,7 @@
 }
 
 @media (max-width: 768px) {
-  .faculty-db-page { padding: 20px 16px; }
+  .organizer-db-page { padding: 20px 16px; }
   .fac-timeline::before { display: none; }
   .fac-timeline-item { flex-direction: column; gap: 8px; }
   .fac-timebox { text-align: left; padding-top: 0; }

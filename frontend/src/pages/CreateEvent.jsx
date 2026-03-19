@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { checkEventConflicts } from "../services/api";
 import "./CreateEvent.css";
 
 const DEPARTMENTS = [
@@ -53,11 +54,27 @@ const EMPTY_FORM = {
 
 export default function CreateEvent() {
   const { user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ ...EMPTY_FORM, organizer: user?.name || "" });
+  
+  // Support returning from conflict page OR editing an existing event
+  const getInitialForm = () => {
+    const data = location.state?.eventData;
+    if (!data) return { ...EMPTY_FORM, organizer: user?.name || "" };
+
+    return {
+      ...EMPTY_FORM,
+      ...data,
+      // Ensure date is in YYYY-MM-DD for the input
+      date: data.date ? new Date(data.date).toISOString().split('T')[0] : "",
+      // Maintain ID if it exists (for editing)
+      id: data._id || data.id
+    };
+  };
+
+  const [form, setForm] = useState(getInitialForm());
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  // eslint-disable-next-line no-unused-vars
   const [step, setStep] = useState(1);
 
   const handleChange = (e) => {
@@ -98,27 +115,37 @@ export default function CreateEvent() {
     const errs = validateStep2();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1800));
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await checkEventConflicts(form);
+      const conflicts = res.conflicts || [];
+      const suggestions = res.suggestions || [];
+      const hasConflict = conflicts.length > 0;
+      
+      const formattedConflicts = conflicts.map((c, i) => ({
+        id: i,
+        eventName: form.title,
+        severity: "high",
+        clashWith: c,
+        timeOverlap: `${form.startTime} – ${form.endTime}`,
+        venue: form.venue,
+        date: form.date,
+        affectedStudents: form.participants || "Unknown"
+      }));
 
-    const hasConflict = Math.random() > 0.5;
-    navigate("/conflict", {
-      state: {
-        hasConflict,
-        eventData: form,
-        conflicts: hasConflict ? [{
-          id: 1,
-          eventName: form.title,
-          severity: "high",
-          clashWith: "Data Structures & Algorithms — CSE Sem 3",
-          timeOverlap: `${form.startTime} – ${form.endTime}`,
-          venue: form.venue,
-          date: form.date,
-          affectedStudents: Math.floor(Math.random() * 100) + 30,
-        }] : [],
-      },
-    });
+      navigate("/conflict", {
+        state: {
+          hasConflict,
+          eventData: form,
+          conflicts: formattedConflicts,
+          suggestions
+        },
+      });
+    } catch (err) {
+      alert("Failed to check conflicts: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
 

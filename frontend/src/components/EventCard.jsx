@@ -6,8 +6,12 @@ const STATUS_LABELS = {
   rejected: { label: "Rejected", cls: "badge-rejected" },
 };
 
-export default function EventCard({ event, isAdmin, onApprove, onReject, onDelete }) {
+export default function EventCard({ event, user, isAdmin, onApprove, onReject, onDelete, onEdit }) {
   const status = STATUS_LABELS[event.status] || STATUS_LABELS.pending;
+  
+  // Ownership check: createdBy might be populated object or just ID string
+  const createdById = event.createdBy?._id || event.createdBy;
+  const isOwner = user?.id === createdById;
 
   return (
     <div className={`event-card ${event.status}`}>
@@ -31,32 +35,43 @@ export default function EventCard({ event, isAdmin, onApprove, onReject, onDelet
         </div>
         <div className="meta-item">
           <span className="meta-icon">👤</span>
-          <span>{event.organizer || "Unknown"}</span>
+          <span>{event.createdBy?.name || event.organizer || "Unknown"}</span>
         </div>
       </div>
 
-      {isAdmin && event.status === "pending" && (
+      {(isAdmin || isOwner) && (
         <div className="event-actions">
-          <button
-            className="btn-approve"
-            onClick={() => onApprove && onApprove(event.id)}
-          >
-            ✓ Approve
-          </button>
-          <button
-            className="btn-reject"
-            onClick={() => onReject && onReject(event.id)}
-          >
-            ✗ Reject
-          </button>
-        </div>
-      )}
-
-      {!isAdmin && event.status === "pending" && onDelete && (
-        <div className="event-actions">
-          <button className="btn-delete" onClick={() => onDelete(event.id)}>
-            Delete Request
-          </button>
+          {isAdmin && event.status === "pending" && (
+            <>
+              <button
+                className="btn-approve"
+                onClick={() => onApprove && onApprove(event.id)}
+              >
+                ✓ Approve
+              </button>
+              <button
+                className="btn-reject"
+                onClick={() => onReject && onReject(event.id)}
+              >
+                ✗ Reject
+              </button>
+            </>
+          )}
+          
+          {(isAdmin || isOwner) && (
+             <div className="owner-actions">
+               {onEdit && (
+                 <button className="btn-edit" onClick={() => onEdit(event)}>
+                   Edit
+                 </button>
+               )}
+               {onDelete && (
+                 <button className="btn-delete" onClick={() => onDelete(event.id)}>
+                   Delete
+                 </button>
+               )}
+             </div>
+          )}
         </div>
       )}
     </div>

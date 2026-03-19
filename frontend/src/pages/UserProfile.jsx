@@ -62,7 +62,7 @@ export default function UserProfile() {
 
   const roleLabel = {
     admin: "Administrator",
-    faculty: "Faculty Member",
+    organizer: "Faculty/Committee Member",
     student: "Student",
   }[user?.role] || "Member";
 

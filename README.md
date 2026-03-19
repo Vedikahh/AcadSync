@@ -7,7 +7,8 @@
     <a href="#features">Features</a> •
     <a href="#tech-stack">Tech Stack</a> •
     <a href="#architecture">Architecture</a> •
-    <a href="#getting-started">Getting Started</a>
+    <a href="#getting-started">Getting Started</a> •
+    <a href="#security">Security</a>
   </p>
 </div>
 
@@ -15,19 +16,28 @@
 
 ## 🚀 Overview
 
-**AcadSync** is a premium, AI-powered campus management ecosystem designed to streamline university operations. It bridges the communication gap between Students, Faculty, and Administrators by offering intelligent scheduling, automated conflict resolution, and real-time event management in a beautiful, highly responsive interface.
+**AcadSync** is a premium, AI-powered campus management ecosystem designed to eliminate scheduling friction in modern universities. By bridging the gap between Students, Event Organizers, and Administrators, AcadSync offers **intelligent conflict detection**, automated workflow approvals, and a unified master calendar—all packaged within a high-performance, responsive React interface.
 
 ---
 
 ## ✨ Key Features
 
-- **Intelligent Conflict Detection:** AcadSync automatically scans event proposals against the master academic calendar to flag overlapping schedules, venue clashes, and resource constraints.
-- **Role-Based Smart Dashboards:**
-  - **Student Portal:** Track event proposals, view upcoming classes, and receive actionable system notifications.
-  - **Faculty Portal:** Manage lecture schedules, review department metrics, and view real-time daily timelines.
-  - **Admin Command Center:** Review institutional analytics, approve/reject event requests, and monitor system-wide conflict reports via advanced data grids.
-- **Unified Academic Calendar:** A master, color-coded view mapping out lectures (blue), labs (green), exams (red), and campus events (purple).
-- **Automated Workflow Notifications:** Real-time, clickable routing alerts keeping all users synchronized on approvals, rejections, and schedule changes.
+### 🧠 Intelligent Conflict Detection
+- **Multi-Source Validation:** Automatically scans new event proposals against existing **approved events** AND the **master academic timetable** (lectures/labs).
+- **AI-Driven Suggestions:** When a clash is detected, the system suggests alternative available slots based on venue availability and campus hours.
+
+### 📅 Unified Event Lifecycle
+- **End-to-End Workflow:** A streamlined multi-step wizard for creating, editing, and tracking event proposals.
+- **Conflict Resolution Center:** A dedicated dashboard for Administrators to resolve complex overlaps and manage institutional resources effectively.
+
+### 🔐 Multi-Role Ecosystem
+- **Student Portal:** Real-time visibility into campus events, academic schedules, and personalized system notifications.
+- **Organizer Portal:** Specialized tools for creating event requests, managing clashes, and monitoring approval pipelines.
+- **Admin Command Center:** High-level institutional analytics, department-wise activity tracking, and master control over the academic calendar.
+
+### 🔔 Real-Time Synchronization
+- **Actionable Notifications:** Clickable alerts that route users directly to the relevant approval queue or event details.
+- **Master Unified Calendar:** A color-coded, interactive visualization of the entire campus schedule.
 
 ---
 
@@ -36,13 +46,14 @@
 ### Frontend (Client)
 - **Framework:** React 19 + Vite
 - **Routing:** React Router v7
-- **Styling:** Custom CSS architecture (BEM/Namespaced) with CSS Variables for premium light styling.
-- **State Management:** React Context API (`AuthContext`)
+- **Authentication:** Google OAuth 2.0 (GSI) & Managed JWT Sessions
+- **Styling:** Premium Custom CSS with CSS Variables for state-of-the-art aesthetics.
 
 ### Backend (API)
-- **Runtime:** Python 3.10+
-- **Framework:** Flask
-- **Data:** SQLite (Customizable to PostgreSQL/MySQL)
+- **Runtime:** Node.js (v18+)
+- **Framework:** Express.js
+- **Database:** MongoDB Atlas (Mongoose ODM)
+- **Security:** Argon2/Bcrypt Password Hashing & JWT-based RBAC.
 
 ---
 
@@ -50,63 +61,62 @@
 
 ```text
 AcadSync/
-├── backend/                  # Python Flask API
-│   ├── app.py                # Main application entry point
-│   ├── routes/               # API endpoint controllers
-│   └── models/               # Database schemas
+├── backend/                  # RESTful API Service
+│   ├── config/               # Database (MongoDB) & JWT configurations
+│   ├── controllers/          # Business logic (Auth, Events, Schedules, Notifications)
+│   ├── middleware/           # RBAC guards & Token verification
+│   ├── models/               # Data Schemas (User, Event, Schedule, Notification)
+│   ├── routes/               # Modular API endpoint definitions
+│   └── utils/                # Core engines (Conflict Detection, Time Parsers)
 │
-└── frontend/                 # React SPA
-    ├── public/               # Static assets
-    └── src/
-        ├── components/       # Reusable, atomic UI building blocks (Sidebar, Navbar, Cards)
-        ├── context/          # Global state (Auth, Theme)
-        ├── pages/            # View components (Dashboards, Calendar, Login)
-        ├── services/         # Axios API interceptors and fetching logic
-        ├── App.jsx           # Root layout and Router configuration
-        └── index.css         # Global design tokens and resets
+└── frontend/                 # Interactive SPA
+    ├── src/
+    │   ├── components/       # Atomic UI (Sidebar, EventCard, StatsCard, ConflictCard)
+    │   ├── context/          # State engines (AuthContext, Theme)
+    │   ├── pages/            # View Layers (Dashboards, Calendar, Resolution Center)
+    │   ├── services/         # API Interceptors & Fetching logic
+    │   ├── App.jsx           # Routing & Global Layout
+    │   └── index.css         # Design Tokens & UI Global Resets
 ```
 
 ---
 
 ## ⚙️ Getting Started
 
-Follow these instructions to get a copy of AcadSync running on your local machine for development and testing.
+### 1. Prerequisites
+- Node.js (v18 or higher)
+- MongoDB Atlas account (or local MongoDB instance)
+- Google Cloud Console project (for Google Auth)
 
-### 1. Clone the Repository
+### 2. Backend Installation
 ```bash
-git clone https://github.com/Vedikahh/AcadSync.git
-cd AcadSync
-```
-
-### 2. Backend Setup
-We recommend using a virtual environment for the Python backend.
-
-```bash
-# Navigate to backend directory
 cd backend
-
-# Create and activate virtual environment (Windows)
-python -m venv venv
-venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start the Flask development server (Default: http://localhost:5000)
-python app.py
+npm install
+```
+Create a `.env` file in the `backend/` directory:
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_signing_key
+GOOGLE_CLIENT_ID=your_google_client_id
+```
+Start the server:
+```bash
+npm start
 ```
 
-### 3. Frontend Setup
-Open a new terminal window and navigate to the frontend directory.
-
+### 3. Frontend Installation
 ```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install Node.js dependencies
+cd ../frontend
 npm install
-
-# Start the Vite development server (Default: http://localhost:5173)
+```
+Create a `.env` file in the `frontend/` directory:
+```env
+VITE_API_URL=http://localhost:5000
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+```
+Launch the development server:
+```bash
 npm run dev
 ```
 
@@ -116,20 +126,20 @@ npm run dev
 
 | Route | View | Access Level | Description |
 |-----------|-----------|-----------|-----------|
-| `/` | Landing Page | Public | Marketing & Entry |
-| `/login` | Authentication | Public | JWT Login Portal |
-| `/dashboard` | Student Dashboard | Student | Personal event & alert overview |
-| `/faculty-dashboard`| Faculty Dashboard | Faculty | Lecture timeline & dept stats |
-| `/admin` | Admin Dashboard | Admin | Master command center |
-| `/conflict` | Conflict Resolver | Admin/Student | AI-assisted clash resolution |
-| `/calendar` | Unified Calendar | All Users | Master schedule visualization |
-| `/profile` | User Settings | All Users | Security & Identity management |
-
----
-
-## 🛡 Security & Access Control
-
-AcadSync implements a robust Role-Based Access Control (RBAC) system. The `AuthContext` provides the application with the current user's role (`admin`, `faculty`, `student`), dynamically protecting routes using the `<ProtectedRoute>` wrapper and actively filtering Sidebar navigation to ensure users only access authorized systems.
+| `/` | Landing Page | Public | Platform Introduction |
+| `/login` | Authentication | Public | JWT & Google Login Portal |
+| `/register` | Signup | Public | New User Registration |
+| `/dashboard` | Portal | Student | Personal Event & Alert Hub |
+| `/organizer-dashboard`| Portal | Organizer | Event Lifecycle Management |
+| `/admin` | Portal | Admin | Institutional Analytics & Control |
+| `/events` | Campus Wall | Authenticated | Listing of all campus activities |
+| `/create-event` | Request Wizard | Org/Admin | Unified creation/edit pipeline |
+| `/conflict` | Resolution Center | Org/Admin | AI-assisted clash resolver |
+| `/calendar` | Master Calendar | Authenticated | Unified schedule visualization |
+| `/manage-events` | Admin Queue | Admin | Review & Process Requests |
+| `/schedule` | Master Schedule | Admin/Org | Timetable & Venue management |
+| `/notifications` | Inbox | Authenticated | Real-time system-wide alerts |
+| `/profile` | User Settings | Authenticated | Account & Identity Management |
 
 ---
 

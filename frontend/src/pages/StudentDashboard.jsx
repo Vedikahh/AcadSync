@@ -1,42 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getEvents, getNotifications, markNotificationRead } from "../services/api";
 import EventCard from "../components/EventCard";
 import NotificationItem from "../components/NotificationItem";
 import ConflictCard from "../components/ConflictCard";
 import StatsCard from "../components/StatsCard";
 import "./StudentDashboard.css";
 
-const MOCK_EVENTS = [
-  { id: 1, title: "Annual Tech Fest 2025", description: "A two-day celebration of technology, innovation, and creativity.", date: "2025-11-15", venue: "Main Auditorium", organizer: "CSE Department", status: "approved" },
-  { id: 2, title: "Cultural Night", description: "An evening of music, dance, and drama showcasing campus talent.", date: "2025-12-05", venue: "Open Air Stage", organizer: "Cultural Committee", status: "pending" },
-  { id: 3, title: "Hackathon 2025", description: "24-hour coding marathon solve real-world problems.", date: "2025-10-20", venue: "Lab Block C", organizer: "Tech Club", status: "rejected" },
-];
-
-const MOCK_NOTIFICATIONS = [
-  { id: 1, type: "approval", message: "Your event \"Annual Tech Fest 2025\" has been approved!", read: false, link: "/events", created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
-  { id: 2, type: "reminder", message: "Reminder: Tech Fest is in 3 days. Complete all arrangements.", read: false, link: "/events", created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
-  { id: 3, type: "announcement", message: "New academic calendar for 2025-26 has been released.", read: true, link: "/calendar", created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
-];
-
-const MOCK_CONFLICTS = [
-  { id: 1, eventName: "Annual Tech Fest 2025", severity: "high", clashWith: "Data Structures & Algorithms — CSE Sem 3", timeOverlap: "09:00 – 10:00", venue: "Main Auditorium", date: "Nov 15, 2025", affectedStudents: 120 },
-];
-
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const [events] = useState(MOCK_EVENTS);
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [events, setEvents] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      getEvents().catch(() => []),
+      getNotifications().catch(() => [])
+    ]).then(([eventsData, notifsData]) => {
+      // For student, show all approved campus events
+      const approvedEventsList = Array.isArray(eventsData) ? eventsData.filter(e => e.status === "approved") : [];
+      setEvents(approvedEventsList);
+      
+      setNotifications(Array.isArray(notifsData) ? notifsData : []);
+      setIsLoading(false);
+    });
+  }, [user]);
 
   const unreadCount    = notifications.filter((n) => !n.read).length;
-  const approvedEvents = events.filter((e) => e.status === "approved").length;
-  const pendingEvents  = events.filter((e) => e.status === "pending").length;
+  const totalApproved  = events.length;
+  const MOCK_CONFLICTS = []; // Empty out dummy conflicts
 
-  const markRead = (id) =>
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markRead = async (id) => {
+    try {
+      await markNotificationRead(id);
+      setNotifications((prev) => prev.map((n) => ((n._id === id || n.id === id) ? { ...n, read: true } : n)));
+    } catch (err) { console.error(err); }
+  };
 
   const handleNotifClick = (notif) => {
-    if (!notif.read) markRead(notif.id);
+    const id = notif._id || notif.id;
+    if (!notif.read) markRead(id);
   };
 
   return (
@@ -48,18 +53,18 @@ export default function StudentDashboard() {
           <p className="std-subtitle">Welcome to your student portal. Here's what's happening on campus today.</p>
         </div>
         <div className="std-actions">
-          <Link to="/events" className="std-btn-outline">Browse Events</Link>
-          <Link to="/create-event" className="std-btn-primary">
-            <span className="std-btn-icon">+</span> Propose Event
+          <Link to="/calendar" className="std-btn-outline">Academic Calendar</Link>
+          <Link to="/events" className="std-btn-primary">
+            Browse Events
           </Link>
         </div>
       </div>
 
       {/* Stats Row */}
       <div className="std-stats-grid">
-        <StatsCard icon="◈" value={events.length}  label="My Events"    color="purple" />
-        <StatsCard icon="✓" value={approvedEvents} label="Approved"     color="green"  />
-        <StatsCard icon="…" value={pendingEvents}  label="Pending"      color="orange" />
+        <StatsCard icon="◈" value={totalApproved}  label="Campus Events" color="purple" />
+        <StatsCard icon="✓" value="Today"          label="Active Day"    color="green"  />
+        <StatsCard icon="▦" value="8"              label="Classes Today" color="orange" />
         <StatsCard icon="◉" value={unreadCount}    label="Unread Alerts" color="blue"  />
       </div>
 
@@ -96,23 +101,27 @@ export default function StudentDashboard() {
           <section className="std-card">
             <div className="std-card-header">
               <div className="std-card-title-wrap">
-                <h2 className="std-card-title">My Event Proposals</h2>
-                <div className="std-badge std-badge-purple">{events.length} Total</div>
+                <h2 className="std-card-title">Approved Campus Events</h2>
+                <div className="std-badge std-badge-purple">{events.length} Upcoming</div>
               </div>
               <Link to="/events" className="std-link">View all →</Link>
             </div>
             <div className="std-card-body std-bg-gray">
-              {events.length === 0 ? (
+              {isLoading ? (
+                <div style={{ padding: "2rem", textAlign: "center" }}>Loading events...</div>
+              ) : events.length === 0 ? (
                 <div className="std-empty">
                   <div className="std-empty-icon">◈</div>
-                  <p>You haven't proposed any events yet.</p>
-                  <Link to="/create-event" className="std-btn-primary std-mt-10">Create Event</Link>
+                  <p>No upcoming events at the moment.</p>
                 </div>
               ) : (
                 <div className="std-events-list">
-                  {events.map((event) => (
-                    <EventCard key={event.id} event={event} isAdmin={false} />
-                  ))}
+                  {events.map((event) => {
+                    const id = event._id || event.id;
+                    return (
+                      <EventCard key={id} event={{...event, id}} isAdmin={false} />
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -133,20 +142,25 @@ export default function StudentDashboard() {
               <Link to="/notifications" className="std-link">Inbox →</Link>
             </div>
             <div className="std-card-body std-p-0">
-              {notifications.length === 0 ? (
+              {isLoading ? (
+                 <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+              ) : notifications.length === 0 ? (
                 <div className="std-empty">
                   <p>You have no notifications.</p>
                 </div>
               ) : (
                 <div className="std-notif-list">
-                  {notifications.map((n) => (
-                    <NotificationItem 
-                      key={n.id} 
-                      notification={n} 
-                      onMarkRead={markRead}
-                      onClick={handleNotifClick}
-                    />
-                  ))}
+                  {notifications.map((n) => {
+                    const id = n._id || n.id;
+                    return (
+                      <NotificationItem 
+                        key={id} 
+                        notification={{...n, id}} 
+                        onMarkRead={() => markRead(id)}
+                        onClick={() => handleNotifClick(n)}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

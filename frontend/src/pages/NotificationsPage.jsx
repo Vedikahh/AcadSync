@@ -1,87 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getNotifications, markNotificationRead, markAllNotificationsRead } from "../services/api";
 import NotificationItem from "../components/NotificationItem";
 import "./NotificationsPage.css";
 
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: "approval",
-    message: "Your event \"Annual Tech Fest 2025\" has been approved! Congratulations.",
-    read: false,
-    link: "/events",
-    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: 2,
-    type: "reminder",
-    message: "Reminder: Tech Fest is in 3 days. Complete all pre-event arrangements.",
-    read: false,
-    link: "/events",
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: 3,
-    type: "announcement",
-    message: "New academic calendar for 2025-26 has been released by the administration.",
-    read: false,
-    link: "/schedule",
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-  {
-    id: 4,
-    type: "rejection",
-    message: "Your event request \"Night Concert\" was not approved. Contact admin for details.",
-    read: true,
-    link: "/events",
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-  {
-    id: 5,
-    type: "event",
-    message: "Hackathon 2025 registrations are now open. Deadline: Oct 15.",
-    read: true,
-    link: "/events",
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
-  },
-  {
-    id: 6,
-    type: "system",
-    message: "Your AcadSync account details have been updated successfully.",
-    read: true,
-    link: "/profile",
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-  },
-  {
-    id: 7,
-    type: "conflict",
-    message: "Conflict detected: Annual Tech Fest overlaps with DSA Lecture on Nov 15.",
-    read: false,
-    link: "/conflict",
-    created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-  },
-];
-
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getNotifications();
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load notifications", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markRead = (id) =>
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const markRead = async (id) => {
+    try {
+      await markNotificationRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => ((n._id === id || n.id === id) ? { ...n, read: true } : n))
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  const markAllRead = () =>
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const markAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const clearAll = () => setNotifications([]);
 
   const handleClick = (notif) => {
+    const id = notif._id || notif.id;
     // Mark as read
-    if (!notif.read) markRead(notif.id);
+    if (!notif.read) markRead(id);
     // Navigate to the linked page
     if (notif.link) navigate(notif.link);
   };
@@ -140,7 +112,9 @@ export default function NotificationsPage() {
 
         {/* Notifications Grid */}
         <div className="np-content-area">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>Loading notification data...</div>
+          ) : filtered.length === 0 ? (
             <div className="np-empty-state">
               <div className="np-empty-icon">✓</div>
               <h3 className="np-empty-title">You're all caught up</h3>
@@ -152,14 +126,17 @@ export default function NotificationsPage() {
             </div>
           ) : (
             <div className="np-list-wrapper">
-              {filtered.map((n) => (
-                <NotificationItem
-                  key={n.id}
-                  notification={n}
-                  onMarkRead={markRead}
-                  onClick={handleClick}
-                />
-              ))}
+              {filtered.map((n) => {
+                const normalizedNotif = { ...n, id: n._id || n.id };
+                return (
+                  <NotificationItem
+                    key={normalizedNotif.id}
+                    notification={normalizedNotif}
+                    onMarkRead={() => markRead(normalizedNotif.id)}
+                    onClick={() => handleClick(normalizedNotif)}
+                  />
+                )
+              })}
             </div>
           )}
         </div>

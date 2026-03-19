@@ -1,6 +1,9 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT token
 const generateToken = (id, role) => {
@@ -93,5 +96,95 @@ exports.getMe = async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Authenticate user with Google
+// @route   POST /api/auth/google
+// @access  Public
+exports.googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: 'No Google token provided' });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const { name, email } = ticket.getPayload();
+
+    // Check if user exists by email
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // User does not exist. Instead of auto-creating, return isNewUser true
+      // Pass the token back so the frontend can submit it again with role/dept
+      return res.status(200).json({
+        isNewUser: true,
+        email,
+        name,
+        token
+      });
+    }
+
+    res.json({
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      token: generateToken(user._id, user.role),
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Google Auth Error: ' + error.message });
+  }
+};
+
+// @desc    Register user with Google token, role and department
+// @route   POST /api/auth/google-register
+// @access  Public
+exports.googleRegister = async (req, res) => {
+  try {
+    const { token, role, department } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: 'No Google token provided' });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const { name, email } = ticket.getPayload();
+
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Create user with explicit role and department
+    user = await User.create({
+      name,
+      email,
+      role: role || 'student',
+      department,
+      provider: 'google'
+    });
+
+    res.status(201).json({
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      token: generateToken(user._id, user.role),
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Google Register Error: ' + error.message });
   }
 };

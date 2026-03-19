@@ -20,14 +20,13 @@ const Icons = {
 const STUDENT_LINKS = [
   { to: "/dashboard",     icon: "Dashboard",     label: "Dashboard" },
   { to: "/calendar",      icon: "Calendar",      label: "Calendar" },
-  { to: "/events",        icon: "Events",        label: "Events" },
-  { to: "/create-event",  icon: "Create",        label: "Create Event" },
+  { to: "/events",        icon: "Events",        label: "Campus Events" },
   { to: "/notifications", icon: "Notifications", label: "Notifications" },
   { to: "/profile",       icon: "Profile",       label: "Profile" },
 ];
 
-const FACULTY_LINKS = [
-  { to: "/faculty-dashboard", icon: "Dashboard",     label: "Dashboard" },
+const ORGANIZER_LINKS = [
+  { to: "/organizer-dashboard", icon: "Dashboard",     label: "Dashboard" },
   { to: "/calendar",          icon: "Calendar",      label: "Calendar" },
   { to: "/events",            icon: "Events",        label: "Campus Events" },
   { to: "/notifications",     icon: "Notifications", label: "Notifications" },
@@ -46,7 +45,7 @@ const ADMIN_LINKS = [
 
 function getLinksByRole(role) {
   if (role === "admin")   return ADMIN_LINKS;
-  if (role === "faculty") return FACULTY_LINKS;
+  if (role === "organizer") return ORGANIZER_LINKS;
   return STUDENT_LINKS;
 }
 
@@ -64,13 +63,13 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
   const roleLabel = {
     admin:   "Administrator",
-    faculty: "Faculty",
+    organizer: "Faculty/Committee",
     student: "Student",
   }[user?.role] || "Member";
 
   const roleColor = {
     admin:   "#EF4444",
-    faculty: "#F97316",
+    organizer: "#F97316",
     student: "#2563EB",
   }[user?.role] || "#2563EB";
 

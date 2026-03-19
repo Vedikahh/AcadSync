@@ -9,7 +9,7 @@ import LandingPage      from "./pages/LandingPage";
 import LoginPage        from "./pages/LoginPage";
 import RegisterPage     from "./pages/RegisterPage";
 import StudentDashboard from "./pages/StudentDashboard";
-import FacultyDashboard from "./pages/FacultyDashboard";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
 import AdminDashboard   from "./pages/AdminDashboard";
 import UnifiedCalendar  from "./pages/UnifiedCalendar";
 import CreateEvent      from "./pages/CreateEvent";
@@ -39,7 +39,7 @@ function ProtectedRoute({ children, roles }) {
 
   if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) {
-    const home = user.role === "admin" ? "/admin" : user.role === "faculty" ? "/faculty-dashboard" : "/dashboard";
+    const home = user.role === "admin" ? "/admin" : user.role === "organizer" ? "/organizer-dashboard" : "/dashboard";
     return <Navigate to={home} replace />;
   }
   return children;
@@ -72,7 +72,7 @@ function AppLayout() {
               user ? (
                 <Navigate to={
                     user.role === "admin" ? "/admin"
-                    : user.role === "faculty" ? "/faculty-dashboard"
+                    : user.role === "organizer" ? "/organizer-dashboard"
                     : "/dashboard"
                   } replace />
               ) : <LandingPage />
@@ -90,7 +90,7 @@ function AppLayout() {
               ) : user ? (
                 <Navigate to={
                     user.role === "admin" ? "/admin"
-                    : user.role === "faculty" ? "/faculty-dashboard"
+                    : user.role === "organizer" ? "/organizer-dashboard"
                     : "/dashboard"
                   } replace />
               ) : <LoginPage />
@@ -108,7 +108,7 @@ function AppLayout() {
               ) : user ? (
                 <Navigate to={
                     user.role === "admin" ? "/admin"
-                    : user.role === "faculty" ? "/faculty-dashboard"
+                    : user.role === "organizer" ? "/organizer-dashboard"
                     : "/dashboard"
                   } replace />
               ) : <RegisterPage />
@@ -118,19 +118,19 @@ function AppLayout() {
           {/* Student */}
           <Route path="/dashboard" element={<ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>} />
 
-          {/* Faculty */}
-          <Route path="/faculty-dashboard" element={<ProtectedRoute roles={["faculty"]}><FacultyDashboard /></ProtectedRoute>} />
+          {/* Organizer */}
+          <Route path="/organizer-dashboard" element={<ProtectedRoute roles={["organizer"]}><OrganizerDashboard /></ProtectedRoute>} />
 
           {/* Admin */}
           <Route path="/admin"         element={<ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
           <Route path="/manage-events" element={<ProtectedRoute roles={["admin"]}><ManageEvents /></ProtectedRoute>} />
-          <Route path="/schedule"      element={<ProtectedRoute roles={["admin", "faculty"]}><AcademicSchedule /></ProtectedRoute>} />
+          <Route path="/schedule"      element={<ProtectedRoute roles={["admin", "organizer"]}><AcademicSchedule /></ProtectedRoute>} />
 
           {/* Shared (all authenticated) */}
           <Route path="/calendar"      element={<ProtectedRoute><UnifiedCalendar /></ProtectedRoute>} />
           <Route path="/events"        element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-          <Route path="/create-event"  element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
-          <Route path="/conflict"      element={<ProtectedRoute><ConflictResult /></ProtectedRoute>} />
+          <Route path="/create-event"  element={<ProtectedRoute roles={["admin", "organizer"]}><CreateEvent /></ProtectedRoute>} />
+          <Route path="/conflict"      element={<ProtectedRoute roles={["admin", "organizer"]}><ConflictResult /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="/profile"       element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
 

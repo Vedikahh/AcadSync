@@ -55,7 +55,7 @@ export default function RegisterPage() {
         department: response.department
       }, response.token);
 
-      navigate(response.role === "admin" ? "/admin" : response.role === "faculty" ? "/faculty-dashboard" : "/dashboard");
+      navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
     } catch (err) {
       setError(err.message || "Failed to register");
     } finally {
@@ -85,10 +85,10 @@ export default function RegisterPage() {
             </button>
             <button
               type="button"
-              className={`role-btn ${form.role === "faculty" ? "active" : ""}`}
-              onClick={() => setForm((p) => ({ ...p, role: "faculty" }))}
+              className={`role-btn ${form.role === "organizer" ? "active" : ""}`}
+              onClick={() => setForm((p) => ({ ...p, role: "organizer" }))}
             >
-              👨‍🏫 Faculty
+              👨‍🏫 Faculty/Committee
             </button>
             <button
               type="button"

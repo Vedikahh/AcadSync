@@ -68,7 +68,7 @@
 
 /* Role-based avatar colors */
 .up-avatar-admin { background: linear-gradient(135deg, #EF4444, #B91C1C); }
-.up-avatar-faculty { background: linear-gradient(135deg, #F97316, #C2410C); }
+.up-avatar-organizer { background: linear-gradient(135deg, #F97316, #C2410C); }
 .up-avatar-student { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
 
 .up-hero-info {
@@ -104,7 +104,7 @@
 }
 
 .badge-admin { color: #DC2626; background: #FEF2F2; }
-.badge-faculty { color: #EA580C; background: #FFF7ED; }
+.badge-organizer { color: #EA580C; background: #FFF7ED; }
 .badge-student { color: #2563EB; background: #EFF6FF; }
 
 .up-dept-box {

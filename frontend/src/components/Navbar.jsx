@@ -16,7 +16,7 @@ export default function Navbar({ onMenuToggle }) {
 
   const homeLink =
     user?.role === "admin"   ? "/admin"
-    : user?.role === "faculty" ? "/faculty-dashboard"
+    : user?.role === "organizer" ? "/organizer-dashboard"
     : "/dashboard";
 
   return (

@@ -1,21 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getSchedules, createSchedule, deleteSchedule } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import "./AcademicSchedule.css";
 
 const DEPARTMENTS = ["All", "CSE", "ECE", "ME", "CE", "IT", "MBA", "MCA"];
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-const INITIAL_LECTURES = [
-  { id: 1, subject: "Data Structures & Algorithms", faculty: "Dr. Ramesh Kumar", department: "CSE", day: "Monday", startTime: "09:00", endTime: "10:00", room: "A-201", type: "lecture" },
-  { id: 2, subject: "Database Management Systems", faculty: "Dr. Priya Sharma", department: "CSE", day: "Monday", startTime: "11:00", endTime: "12:00", room: "A-202", type: "lecture" },
-  { id: 3, subject: "DSA Lab", faculty: "Prof. Anil Verma", department: "CSE", day: "Tuesday", startTime: "14:00", endTime: "16:00", room: "Lab-B3", type: "lab" },
-  { id: 4, subject: "Circuit Theory", faculty: "Dr. Meera Iyer", department: "ECE", day: "Monday", startTime: "10:00", endTime: "11:00", room: "B-101", type: "lecture" },
-  { id: 5, subject: "Signals & Systems", faculty: "Dr. Meera Iyer", department: "ECE", day: "Wednesday", startTime: "09:00", endTime: "10:00", room: "B-102", type: "lecture" },
-  { id: 6, subject: "Thermodynamics", faculty: "Prof. Suresh Nair", department: "ME", day: "Tuesday", startTime: "09:00", endTime: "10:00", room: "C-201", type: "lecture" },
-  { id: 7, subject: "Engineering Drawing", faculty: "Prof. Kavita Joshi", department: "ME", day: "Thursday", startTime: "11:00", endTime: "13:00", room: "Drawing Hall", type: "lab" },
-  { id: 8, subject: "Software Engineering", faculty: "Dr. Ramesh Kumar", department: "CSE", day: "Wednesday", startTime: "14:00", endTime: "15:00", room: "A-205", type: "lecture" },
-  { id: 9, subject: "Mid-Semester Exam — DSA", faculty: "Dr. Ramesh Kumar", department: "CSE", day: "Friday", startTime: "10:00", endTime: "13:00", room: "Exam Hall A", type: "exam" },
-];
 
 const EMPTY_FORM = {
   subject: "", faculty: "", department: "CSE", day: "Monday",
@@ -29,13 +19,34 @@ const TYPE_COLORS = {
 };
 
 export default function AcademicSchedule() {
-  const [lectures, setLectures] = useState(INITIAL_LECTURES);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  
+  const [lectures, setLectures] = useState([]);
   const [deptFilter, setDeptFilter] = useState("All");
   const [dayFilter, setDayFilter] = useState("All");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
+
+  const fetchSchedules = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getSchedules();
+      setLectures(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load schedules", err);
+      showToast("❌ Failed to load schedules");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 2500); };
 
@@ -50,7 +61,7 @@ export default function AcademicSchedule() {
     setErrors((p) => ({ ...p, [e.target.name]: "" }));
   };
 
-  const handleAddLecture = (e) => {
+  const handleAddLecture = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!form.subject.trim()) errs.subject = "Subject is required";
@@ -60,15 +71,27 @@ export default function AcademicSchedule() {
     if (!form.room.trim()) errs.room = "Room is required";
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
-    setLectures((prev) => [...prev, { id: Date.now(), ...form }]);
-    setShowForm(false);
-    setForm(EMPTY_FORM);
-    showToast("✅ Lecture slot added!");
+    try {
+      const newSchedule = await createSchedule(form);
+      setLectures((prev) => [...prev, newSchedule]);
+      setShowForm(false);
+      setForm(EMPTY_FORM);
+      showToast("✅ Lecture slot added!");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Failed to add lecture");
+    }
   };
 
-  const handleDelete = (id) => {
-    setLectures((prev) => prev.filter((l) => l.id !== id));
-    showToast("🗑 Lecture removed.");
+  const handleDelete = async (id) => {
+    try {
+      await deleteSchedule(id);
+      setLectures((prev) => prev.filter((l) => l._id !== id && l.id !== id));
+      showToast("🗑 Lecture removed.");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Failed to delete lecture");
+    }
   };
 
   return (
@@ -81,18 +104,20 @@ export default function AcademicSchedule() {
           <h1 className="as-title">📚 Academic Schedule</h1>
           <p className="as-sub">Manage lecture slots, labs, and exam schedules across departments</p>
         </div>
-        <div className="as-header-actions">
-          <button className="as-btn-csv" onClick={() => showToast("📄 CSV upload coming soon!")}>
-            ↑ Upload CSV
-          </button>
-          <button className="as-btn-add" onClick={() => setShowForm(!showForm)}>
-            {showForm ? "✕ Cancel" : "+ Add Lecture"}
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="as-header-actions">
+            <button className="as-btn-csv" onClick={() => showToast("📄 CSV upload coming soon!")}>
+              ↑ Upload CSV
+            </button>
+            <button className="as-btn-add" onClick={() => setShowForm(!showForm)}>
+              {showForm ? "✕ Cancel" : "+ Add Lecture"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Add form */}
-      {showForm && (
+      {showForm && isAdmin && (
         <div className="as-form-card">
           <h3 className="as-form-title">Add New Lecture Slot</h3>
           <form onSubmit={handleAddLecture} className="as-form">
@@ -171,7 +196,9 @@ export default function AcademicSchedule() {
       </div>
 
       {/* Table */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div style={{ textAlign: "center", padding: "2rem" }}>Loading schedules...</div>
+      ) : filtered.length === 0 ? (
         <div className="as-empty"><span>📭</span><p>No lecture slots match your filter.</p></div>
       ) : (
         <div className="as-table-wrapper">
@@ -191,8 +218,9 @@ export default function AcademicSchedule() {
             <tbody>
               {filtered.map((l) => {
                 const typeCfg = TYPE_COLORS[l.type] || TYPE_COLORS.lecture;
+                const id = l._id || l.id;
                 return (
-                  <tr key={l.id} className="as-row">
+                  <tr key={id} className="as-row">
                     <td><span className="as-subject">{l.subject}</span></td>
                     <td className="as-faculty">{l.faculty}</td>
                     <td><span className="as-dept-badge">{l.department}</span></td>
@@ -205,7 +233,9 @@ export default function AcademicSchedule() {
                       </span>
                     </td>
                     <td>
-                      <button className="as-btn-del" onClick={() => handleDelete(l.id)} title="Remove">🗑</button>
+                      {isAdmin && (
+                        <button className="as-btn-del" onClick={() => handleDelete(id)} title="Remove">🗑</button>
+                      )}
                     </td>
                   </tr>
                 );

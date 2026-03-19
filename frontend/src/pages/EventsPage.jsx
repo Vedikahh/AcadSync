@@ -1,71 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
 import EventCard from "../components/EventCard";
-import Modal from "../components/Modal";
 import "./EventsPage.css";
-
-const INITIAL_EVENTS = [
-  {
-    id: 1,
-    title: "Annual Tech Fest 2025",
-    description: "A two-day celebration of technology, innovation, and creativity for all students.",
-    date: "2025-11-15",
-    venue: "Main Auditorium",
-    organizer: "CSE Department",
-    status: "approved",
-  },
-  {
-    id: 2,
-    title: "Cultural Night",
-    description: "An evening of music, dance, and drama showcasing campus talent.",
-    date: "2025-12-05",
-    venue: "Open Air Stage",
-    organizer: "Cultural Committee",
-    status: "pending",
-  },
-  {
-    id: 3,
-    title: "Hackathon 2025",
-    description: "24-hour coding marathon to solve real-world problems.",
-    date: "2025-10-20",
-    venue: "Lab Block C",
-    organizer: "Tech Club",
-    status: "rejected",
-  },
-  {
-    id: 4,
-    title: "Sports Day",
-    description: "Annual inter-department sports competition.",
-    date: "2025-09-10",
-    venue: "Sports Ground",
-    organizer: "Sports Committee",
-    status: "approved",
-  },
-  {
-    id: 5,
-    title: "Alumni Meet 2025",
-    description: "Annual gathering of alumni to reconnect and share experiences.",
-    date: "2025-12-20",
-    venue: "Conference Hall",
-    organizer: "Alumni Cell",
-    status: "pending",
-  },
-];
 
 const FILTERS = ["all", "pending", "approved", "rejected"];
 
-const EMPTY_FORM = { title: "", description: "", date: "", venue: "", organizer: "" };
-
 export default function EventsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
 
-  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const [events, setEvents] = useState([]);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [formError, setFormError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getEvents();
+      setEvents(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch events", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const filtered = events.filter((e) => {
     if (filter !== "all" && e.status !== filter) return false;
@@ -73,35 +39,30 @@ export default function EventsPage() {
     return true;
   });
 
-  const handleApprove = (id) =>
-    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, status: "approved" } : e)));
-
-  const handleReject = (id) =>
-    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, status: "rejected" } : e)));
-
-  const handleDelete = (id) =>
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-
-  const handleFormChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setFormError("");
+  const handleApprove = async (id) => {
+    try {
+      await updateEventStatus(id, "approved");
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "approved" } : e)));
+    } catch (err) { console.error("Update failed", err); }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.title || !form.description) {
-      setFormError("Title and description are required.");
-      return;
-    }
-    const newEvent = {
-      id: Date.now(),
-      ...form,
-      organizer: form.organizer || user?.name || "Unknown",
-      status: "pending",
-    };
-    setEvents((prev) => [newEvent, ...prev]);
-    setModalOpen(false);
-    setForm(EMPTY_FORM);
+  const handleReject = async (id) => {
+    try {
+      await updateEventStatus(id, "rejected");
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "rejected" } : e)));
+    } catch (err) { console.error("Update failed", err); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this event?")) return;
+    try {
+      await deleteEvent(id);
+      setEvents((prev) => prev.filter((e) => e._id !== id && e.id !== id));
+    } catch (err) { console.error("Delete failed", err); }
+  };
+
+  const handleEdit = (event) => {
+    navigate("/create-event", { state: { eventData: event } });
   };
 
   return (
@@ -111,14 +72,13 @@ export default function EventsPage() {
           <h1>Campus Events</h1>
           <p>{filtered.length} event{filtered.length !== 1 ? "s" : ""} found</p>
         </div>
-        {!isAdmin && (
-          <button className="btn-request" onClick={() => setModalOpen(true)}>
+        {(isAdmin || user?.role === "organizer") && (
+          <button className="btn-request" onClick={() => navigate("/create-event")}>
             + Request Event
           </button>
         )}
       </div>
 
-      {/* Search + Filter */}
       <div className="events-controls">
         <input
           className="search-input"
@@ -140,102 +100,32 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Events grid */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div style={{ textAlign: "center", padding: "2rem" }}>Loading events...</div>
+      ) : filtered.length === 0 ? (
         <div className="empty-events">
           <span>📭</span>
           <p>No events match your filter.</p>
         </div>
       ) : (
         <div className="events-grid">
-          {filtered.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              isAdmin={isAdmin}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onDelete={!isAdmin ? handleDelete : undefined}
-            />
-          ))}
+          {filtered.map((event) => {
+            const normalizedEvent = { ...event, id: event._id || event.id };
+            return (
+              <EventCard
+                key={normalizedEvent.id}
+                event={normalizedEvent}
+                user={user}
+                isAdmin={isAdmin}
+                onApprove={() => handleApprove(normalizedEvent.id)}
+                onReject={() => handleReject(normalizedEvent.id)}
+                onDelete={() => handleDelete(normalizedEvent.id)}
+                onEdit={handleEdit}
+              />
+            )
+          })}
         </div>
       )}
-
-      {/* Request Event Modal */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setForm(EMPTY_FORM); setFormError(""); }}
-        title="Request New Event"
-      >
-        {formError && <div className="form-error">{formError}</div>}
-        <form onSubmit={handleSubmit} className="event-form">
-          <div className="form-group">
-            <label>Event Title *</label>
-            <input
-              name="title"
-              type="text"
-              placeholder="e.g. Annual Tech Fest"
-              value={form.title}
-              onChange={handleFormChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Description *</label>
-            <textarea
-              name="description"
-              placeholder="Describe the event…"
-              value={form.description}
-              onChange={handleFormChange}
-              rows={3}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Date</label>
-              <input
-                name="date"
-                type="date"
-                value={form.date}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Venue</label>
-              <input
-                name="venue"
-                type="text"
-                placeholder="e.g. Main Auditorium"
-                value={form.venue}
-                onChange={handleFormChange}
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Organizer / Department</label>
-            <input
-              name="organizer"
-              type="text"
-              placeholder="e.g. CSE Department"
-              value={form.organizer}
-              onChange={handleFormChange}
-            />
-          </div>
-          <div className="form-actions">
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={() => { setModalOpen(false); setForm(EMPTY_FORM); }}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="btn-submit">
-              Submit Request
-            </button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }

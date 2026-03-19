@@ -12,15 +12,20 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function() { return this.provider === 'local'; },
   },
   role: {
     type: String,
-    enum: ['student', 'faculty', 'admin'],
+    enum: ['student', 'organizer', 'admin'],
     default: 'student',
   },
   department: {
     type: String,
+  },
+  provider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local',
   },
 }, { timestamps: true });
 

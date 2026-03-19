@@ -21,44 +21,65 @@ const checkConflicts = async (eventDetails) => {
   const evStart = parseTime(startTime);
   const evEnd = parseTime(endTime);
 
-  // 1. Check existing Approved events on the exact same date & venue
+  // Collect all occupied intervals
+  const occupiedIntervals = [];
+
+  // Fetch approved events for the same date and venue
   const existingEvents = await Event.find({
-    date: new Date(date),
-    venue: venue,
+    date,
+    venue,
     status: 'approved'
   });
 
   for (const ev of existingEvents) {
-    const exStart = parseTime(ev.startTime);
-    const exEnd = parseTime(ev.endTime);
-
-    // Overlap condition:
-    // Event A starts before B ends AND Event A ends after B starts
-    if (evStart < exEnd && evEnd > exStart) {
+    occupiedIntervals.push({ start: parseTime(ev.startTime), end: parseTime(ev.endTime), name: ev.title });
+    if (evStart < parseTime(ev.endTime) && evEnd > parseTime(ev.startTime)) {
       conflicts.push(`Venue clash: Overlaps with approved event "${ev.title}" from ${ev.startTime}-${ev.endTime}.`);
     }
   }
 
-  // 2. Check regular academic schedule
-  // Convert JS date to day string (e.g "Monday")
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const eventDayStr = dayNames[new Date(date).getDay()];
 
-  const classes = await Schedule.find({
-    day: eventDayStr,
-    room: venue
-  });
+  const classes = await Schedule.find({ day: eventDayStr, room: venue });
 
   for (const cls of classes) {
-    const clStart = parseTime(cls.startTime);
-    const clEnd = parseTime(cls.endTime);
-
-    if (evStart < clEnd && evEnd > clStart) {
+    occupiedIntervals.push({ start: parseTime(cls.startTime), end: parseTime(cls.endTime), name: cls.subject });
+    if (evStart < parseTime(cls.endTime) && evEnd > parseTime(cls.startTime)) {
       conflicts.push(`Academic clash: Overlaps with regular lecture "${cls.subject}" (${cls.faculty}) from ${cls.startTime}-${cls.endTime}.`);
     }
   }
 
-  return conflicts;
+  // Generate suggestions if conflicts exist
+  const suggestions = [];
+  if (conflicts.length > 0) {
+    const duration = evEnd - evStart;
+    const workdayStart = 9; // 09:00
+    const workdayEnd = 18; // 18:00
+
+    const formatTime = (timeNum) => {
+      const h = Math.floor(timeNum);
+      const m = Math.round((timeNum - h) * 60);
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    };
+
+    // Find up to 3 gaps
+    for (let testStart = workdayStart; testStart <= workdayEnd - duration; testStart += 1) { // step by 1 hr
+      const testEnd = testStart + duration;
+      const isFree = !occupiedIntervals.some(occ => testStart < occ.end && testEnd > occ.start);
+      if (isFree) {
+        suggestions.push({
+          date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          startTime: formatTime(testStart),
+          endTime: formatTime(testEnd),
+          label: testStart >= 17 ? 'After classes' : testStart >= 12 && testStart <= 14 ? 'Lunch hours' : 'Available slot'
+        });
+        if (suggestions.length >= 3) break;
+      }
+    }
+  }
+
+  return { conflicts, suggestions };
 };
 
 module.exports = {

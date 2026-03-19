@@ -24,7 +24,7 @@ const FEATURES = [
     color: "#F97316",
     label: "Role-Based Access",
     title: "Three-Role System",
-    desc: "Separate dashboards for Students, Faculty, and Admins — each with tailored views and permissions.",
+    desc: "Separate dashboards for Students, Faculty/Committee, and Admins — each with tailored views and permissions.",
   },
   {
     color: "#8B5CF6",
@@ -44,12 +44,12 @@ const STEPS = [
   {
     num: "01",
     title: "Register your account",
-    desc: "Sign up as a Student, Faculty, or Admin. Your role determines what you see and can do.",
+    desc: "Sign up as a Student, Faculty/Committee, or Admin. Your role determines what you see and can do.",
   },
   {
     num: "02",
     title: "Submit or manage events",
-    desc: "Students propose events; Faculty review schedules; Admins approve with full AI conflict reports.",
+    desc: "Faculty/Committee propose events; AI scans for clashes; Admins approve with full conflict reports.",
   },
   {
     num: "03",
@@ -64,14 +64,14 @@ const ROLES = [
     color: "#2563EB",
     bg: "#EFF6FF",
     points: [
-      "Propose events with one form",
-      "Track approval status live",
-      "View campus calendar",
-      "Get notified instantly",
+      "View unified campus calendar",
+      "Stay updated with notifications",
+      "Track class & exam schedules",
+      "View approved campus events",
     ],
   },
   {
-    role: "Faculty",
+    role: "Faculty / Committee",
     color: "#6366F1",
     bg: "#EEF2FF",
     points: [
@@ -117,7 +117,7 @@ export default function LandingPage() {
             <p className="lp-hero-sub">
               AcadSync brings event management, academic timetables, and AI
               conflict detection into one clean platform — built for students,
-              faculty, and administrators.
+              faculty/committee, and administrators.
             </p>
 
             <div className="lp-hero-actions">

@@ -30,6 +30,12 @@ async function request(path, options = {}) {
 export const login = (credentials) =>
   request("/api/auth/login", { method: "POST", body: JSON.stringify(credentials) });
 
+export const googleLogin = (token) =>
+  request("/api/auth/google", { method: "POST", body: JSON.stringify({ token }) });
+
+export const googleRegister = (payload) =>
+  request("/api/auth/google-register", { method: "POST", body: JSON.stringify(payload) });
+
 export const register = (payload) =>
   request("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });
 
@@ -39,8 +45,14 @@ export const getMe = () =>
 // ---- Event APIs ----
 export const getEvents = () => request("/api/events");
 
+export const checkEventConflicts = (event) =>
+  request("/api/events/check-conflicts", { method: "POST", body: JSON.stringify(event) });
+
 export const createEvent = (event) =>
   request("/api/events", { method: "POST", body: JSON.stringify(event) });
+
+export const updateEvent = (id, event) =>
+  request(`/api/events/${id}`, { method: "PATCH", body: JSON.stringify(event) });
 
 export const updateEventStatus = (id, status) => {
   // Routes mapped to our Node.js design
@@ -50,6 +62,18 @@ export const updateEventStatus = (id, status) => {
 
 export const deleteEvent = (id) =>
   request(`/api/events/${id}`, { method: "DELETE" });
+
+// ---- Schedule APIs ----
+export const getSchedules = () => request("/api/schedule");
+
+export const createSchedule = (schedule) =>
+  request("/api/schedule", { method: "POST", body: JSON.stringify(schedule) });
+
+export const updateSchedule = (id, schedule) =>
+  request(`/api/schedule/${id}`, { method: "PUT", body: JSON.stringify(schedule) });
+
+export const deleteSchedule = (id) =>
+  request(`/api/schedule/${id}`, { method: "DELETE" });
 
 // ---- Notification APIs ----
 export const getNotifications = () => request("/api/notifications");
