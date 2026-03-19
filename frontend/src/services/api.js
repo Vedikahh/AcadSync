@@ -84,5 +84,10 @@ export const markNotificationRead = (id) =>
 export const markAllNotificationsRead = () =>
   request("/api/notifications/read-all", { method: "PATCH" });
 
+// ---- User APIs ----
+export const updateUserProfile = (data) =>
+  request("/api/users/update", { method: "PUT", body: JSON.stringify(data) });
+
 // ---- Dashboard APIs (Currently placeholder map) ----
 export const getDashboardStats = () => request("/api/dashboard/stats");
+

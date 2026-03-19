@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
+import EventModal from "../components/EventModal";
 import "./ManageEvents.css";
 
 const FILTERS = ["all", "pending", "approved", "rejected"];
@@ -18,6 +19,7 @@ export default function ManageEvents() {
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -150,7 +152,7 @@ export default function ManageEvents() {
                 const badge = STATUS_BADGE[ev.status] || STATUS_BADGE.pending;
                 const id = ev._id || ev.id;
                 return (
-                  <tr key={id} className="me-row">
+                  <tr key={id} className="me-row" onClick={() => setSelectedEvent(ev)} style={{ cursor: "pointer" }}>
                     <td>
                       <p className="me-event-name">{ev.title}</p>
                       <span className="me-event-organizer">{ev.organizer || (ev.createdBy && ev.createdBy.name) || "Unknown"}</span>
@@ -166,7 +168,7 @@ export default function ManageEvents() {
                     <td>
                       <span className={`me-badge ${badge.cls}`}>{badge.label}</span>
                     </td>
-                    <td>
+                    <td onClick={e => e.stopPropagation()}>
                       <div className="me-actions">
                         {ev.status !== "approved" && (
                           <button className="me-btn-approve" onClick={() => handleApprove(id)} title="Approve">
@@ -189,6 +191,13 @@ export default function ManageEvents() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedEvent && (
+        <EventModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
       )}
     </div>
   );

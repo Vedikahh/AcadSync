@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { NotificationsProvider } from "./context/NotificationsContext";
 import { useState } from "react";
 
 import Navbar           from "./components/Navbar";
@@ -145,7 +146,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppLayout />
+        <NotificationsProvider>
+          <AppLayout />
+        </NotificationsProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -1,9 +1,11 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationsContext";
 import "./Navbar.css";
 
 export default function Navbar({ onMenuToggle }) {
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -49,8 +51,9 @@ export default function Navbar({ onMenuToggle }) {
             <Link to="/calendar" className={`nav-link ${isActive("/calendar") ? "active" : ""}`}>
               Calendar
             </Link>
-            <Link to="/notifications" className={`nav-link ${isActive("/notifications") ? "active" : ""}`}>
+            <Link to="/notifications" className={`nav-link nav-link-badge-container ${isActive("/notifications") ? "active" : ""}`}>
               Alerts
+              {unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}
             </Link>
 
             {/* User avatar dropdown */}

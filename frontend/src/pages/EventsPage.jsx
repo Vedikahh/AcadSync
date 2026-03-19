@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
 import EventCard from "../components/EventCard";
+import EventModal from "../components/EventModal";
 import "./EventsPage.css";
 
 const FILTERS = ["all", "pending", "approved", "rejected"];
@@ -16,6 +17,7 @@ export default function EventsPage() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -121,10 +123,18 @@ export default function EventsPage() {
                 onReject={() => handleReject(normalizedEvent.id)}
                 onDelete={() => handleDelete(normalizedEvent.id)}
                 onEdit={handleEdit}
+                onClick={() => setSelectedEvent(normalizedEvent)}
               />
             )
           })}
         </div>
+      )}
+
+      {selectedEvent && (
+        <EventModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
       )}
     </div>
   );

@@ -60,11 +60,26 @@ export default function NotificationItem({ notification, onMarkRead, onClick }) 
         )}
       </div>
 
-      {/* Unread dot */}
-      {!notification.read && <span className="unread-dot" />}
+      {/* Unread dot / Mark as read button */}
+      {!notification.read && (
+        <div className="notif-actions">
+          <button
+            className="notif-btn-read"
+            title="Mark as Read"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMarkRead();
+            }}
+          >
+            ✓
+          </button>
+          <span className="unread-dot" />
+        </div>
+      )}
     </div>
   );
 }
+
 
 function getTimeAgo(dateStr) {
   if (!dateStr) return "";

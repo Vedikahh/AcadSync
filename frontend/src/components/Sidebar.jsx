@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationsContext";
 import "./Sidebar.css";
 
 const Icons = {
@@ -51,6 +52,7 @@ function getLinksByRole(role) {
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }) {
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
 
   const links = getLinksByRole(user?.role);
@@ -124,6 +126,11 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
                 >
                   <span className="sidebar-link-icon"><Icon /></span>
                   <span className="sidebar-link-label">{link.label}</span>
+                  {link.to === "/notifications" && unreadCount > 0 && (
+                    <span className={`sidebar-badge ${collapsed ? "sidebar-badge-collapsed" : ""}`}>
+                      {unreadCount}
+                    </span>
+                  )}
                 </NavLink>
               );
             })}

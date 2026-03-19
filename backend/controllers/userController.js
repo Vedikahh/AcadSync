@@ -26,6 +26,7 @@ exports.updateUserProfile = async (req, res) => {
     if (user) {
       user.name = req.body.name || user.name;
       user.department = req.body.department !== undefined ? req.body.department : user.department;
+      user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
       
       const updatedUser = await user.save();
 
@@ -35,6 +36,7 @@ exports.updateUserProfile = async (req, res) => {
         email: updatedUser.email,
         role: updatedUser.role,
         department: updatedUser.department,
+        bio: updatedUser.bio,
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -43,3 +45,4 @@ exports.updateUserProfile = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+

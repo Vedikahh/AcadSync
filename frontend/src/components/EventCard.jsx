@@ -6,7 +6,7 @@ const STATUS_LABELS = {
   rejected: { label: "Rejected", cls: "badge-rejected" },
 };
 
-export default function EventCard({ event, user, isAdmin, onApprove, onReject, onDelete, onEdit }) {
+export default function EventCard({ event, user, isAdmin, onApprove, onReject, onDelete, onEdit, onClick }) {
   const status = STATUS_LABELS[event.status] || STATUS_LABELS.pending;
   
   // Ownership check: createdBy might be populated object or just ID string
@@ -14,7 +14,13 @@ export default function EventCard({ event, user, isAdmin, onApprove, onReject, o
   const isOwner = user?.id === createdById;
 
   return (
-    <div className={`event-card ${event.status}`}>
+    <div 
+      className={`event-card ${event.status} ${onClick ? "event-card-clickable" : ""}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
+    >
       <div className="event-card-header">
         <h3 className="event-title">{event.title}</h3>
         <span className={`badge ${status.cls}`}>{status.label}</span>
@@ -40,7 +46,7 @@ export default function EventCard({ event, user, isAdmin, onApprove, onReject, o
       </div>
 
       {(isAdmin || isOwner) && (
-        <div className="event-actions">
+        <div className="event-actions" onClick={e => e.stopPropagation()}>
           {isAdmin && event.status === "pending" && (
             <>
               <button
@@ -77,3 +83,4 @@ export default function EventCard({ event, user, isAdmin, onApprove, onReject, o
     </div>
   );
 }
+

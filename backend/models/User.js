@@ -22,6 +22,9 @@ const userSchema = new mongoose.Schema({
   department: {
     type: String,
   },
+  bio: {
+    type: String,
+  },
   provider: {
     type: String,
     enum: ['local', 'google'],

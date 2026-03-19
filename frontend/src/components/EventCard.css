@@ -15,6 +15,20 @@
   transform: translateY(-1px);
 }
 
+.event-card-clickable {
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.event-card-clickable:hover {
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
+  outline-color: var(--blue-100, #DBEAFE);
+}
+
+
 /* Status left border accents */
 .event-card.approved { border-left: 3px solid var(--success); }
 .event-card.pending  { border-left: 3px solid var(--orange-500); }
@@ -56,6 +70,7 @@
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

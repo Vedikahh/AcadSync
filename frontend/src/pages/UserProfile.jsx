@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { updateUserProfile } from "../services/api";
 import "./UserProfile.css";
 
 const DEPARTMENTS = [
@@ -36,11 +37,18 @@ export default function UserProfile() {
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     if (!editForm.name.trim()) return;
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
-    login({ ...user, name: editForm.name, department: editForm.department, bio: editForm.bio });
-    setLoading(false);
-    showToast("Profile information updated successfully");
+    try {
+      setLoading(true);
+      const updated = await updateUserProfile(editForm);
+      // Update local storage and context state
+      login({ ...user, ...updated });
+      showToast("Profile updated successfully!");
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to update profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePwChange = (e) => {
@@ -98,6 +106,13 @@ export default function UserProfile() {
                   <span className="up-dept-value">{user.department}</span>
                 </div>
               )}
+              {user?.bio && (
+                <div className="up-bio-box">
+                  <span className="up-dept-label">Bio</span>
+                  <p className="up-bio-text">{user.bio}</p>
+                </div>
+              )}
+
             </div>
 
           </div>

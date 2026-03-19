@@ -131,6 +131,32 @@
   color: var(--text-primary, #0F172A);
 }
 
+.up-bio-box {
+  margin-top: 12px;
+  background: var(--bg-page, #F8FAFC);
+  padding: 10px;
+  border-radius: 10px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--border-light, #F1F5F9);
+  text-align: left;
+}
+
+.up-bio-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #475569);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
 /* Nav Menu Side */
 .up-nav-menu {
   display: flex;

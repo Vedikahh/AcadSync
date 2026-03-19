@@ -1,60 +1,27 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getNotifications, markNotificationRead, markAllNotificationsRead } from "../services/api";
+import { useNotifications } from "../context/NotificationsContext";
 import NotificationItem from "../components/NotificationItem";
 import "./NotificationsPage.css";
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState([]);
+  const { notifications, unreadCount, fetchNotifications, markAsRead, markAllRead } = useNotifications();
   const [filter, setFilter] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Initial fetch handled by context, but we can call it again if we want fresh data on mount
     fetchNotifications();
-  }, []);
+  }, [fetchNotifications]);
 
-  const fetchNotifications = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getNotifications();
-      setNotifications(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Failed to load notifications", err);
-    } finally {
-      setIsLoading(false);
-    }
+  const clearAll = () => {
+    // Local clear for UI if needed, but usually we'd want an API call
   };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markRead = async (id) => {
-    try {
-      await markNotificationRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => ((n._id === id || n.id === id) ? { ...n, read: true } : n))
-      );
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const markAllRead = async () => {
-    try {
-      await markAllNotificationsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const clearAll = () => setNotifications([]);
 
   const handleClick = (notif) => {
     const id = notif._id || notif.id;
-    // Mark as read
-    if (!notif.read) markRead(id);
-    // Navigate to the linked page
+    if (!notif.read) markAsRead(id);
     if (notif.link) navigate(notif.link);
   };
 
@@ -132,7 +99,7 @@ export default function NotificationsPage() {
                   <NotificationItem
                     key={normalizedNotif.id}
                     notification={normalizedNotif}
-                    onMarkRead={() => markRead(normalizedNotif.id)}
+                    onMarkRead={() => markAsRead(normalizedNotif.id)}
                     onClick={() => handleClick(normalizedNotif)}
                   />
                 )
