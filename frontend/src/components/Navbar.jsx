@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationsContext";
+import logo from "../assets/logoo.png";
 import "./Navbar.css";
 
 export default function Navbar({ onMenuToggle }) {
@@ -31,7 +32,7 @@ export default function Navbar({ onMenuToggle }) {
         )}
         <div className="navbar-brand">
           <Link to="/">
-            <span className="brand-name">AcadSync</span>
+            <img src={logo} alt="AcadSync logo" className="brand-logo" />
           </Link>
         </div>
       </div>
