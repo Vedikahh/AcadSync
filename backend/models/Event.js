@@ -29,6 +29,18 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true, // Expected format "HH:MM"
   },
+  participants: {
+    type: Number,
+    min: 1,
+  },
+  organizer: {
+    type: String,
+    trim: true,
+  },
+  category: {
+    type: String,
+    trim: true,
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

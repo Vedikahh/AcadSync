@@ -135,15 +135,11 @@ export default function RegisterPage() {
               required
             >
               <option value="">— Select your department —</option>
-              <option>Computer Science (CSE)</option>
-              <option>Electronics &amp; Communication (ECE)</option>
-              <option>Mechanical Engineering (ME)</option>
-              <option>Civil Engineering (CE)</option>
-              <option>Information Technology (IT)</option>
-              <option>MBA</option>
-              <option>MCA</option>
-              <option>Mathematics</option>
-              <option>Physics</option>
+              <option>COMPS</option>
+              <option>AIML</option>
+              <option>AIDS</option>
+              <option>IOT</option>
+              <option>Mechanical</option>
             </select>
           </div>
 

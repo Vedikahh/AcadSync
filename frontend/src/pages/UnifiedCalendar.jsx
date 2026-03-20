@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { getSchedules, getEvents } from "../services/api";
+import socket from "../services/socket";
 import "./UnifiedCalendar.css";
 
 const Icons = {
@@ -33,36 +35,95 @@ const MONTH_NAMES = [
 const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 export default function UnifiedCalendar() {
+  const { user } = useAuth();
   const now = new Date();
   const [year, setYear]   = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [selected, setSelected] = useState(null);
   const [filterType, setFilterType] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   
   const [calendarItems, setCalendarItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const isAdmin = user?.role === "admin";
+  const isOrganizer = user?.role === "organizer";
+  const canCreateEvent = isAdmin || isOrganizer;
+  const currentUserId = user?._id || user?.id;
+
+  const roleDescription = isAdmin
+    ? "Admin view: includes approved, pending, and rejected events."
+    : isOrganizer
+      ? "Organizer view: approved events plus your own pending/rejected requests."
+      : "Student view: approved events and academic schedule entries.";
+
+  const normalizeDateKey = (value) => {
+    if (!value) return "";
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      return value.slice(0, 10);
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "";
+    return parsed.toISOString().slice(0, 10);
+  };
+
+  const fetchCalendarData = () => {
     Promise.all([
       getEvents().catch(() => []),
       getSchedules().catch(() => [])
     ]).then(([eventsData, schedData]) => {
       // Map one-off Events
-      const mappedEvents = Array.isArray(eventsData) ? eventsData.map(e => ({
+      const mappedEvents = Array.isArray(eventsData) ? eventsData.map((e) => ({
         id: e._id || e.id,
         title: e.title,
-        date: e.date, // "YYYY-MM-DD"
+        date: normalizeDateKey(e.date),
         type: "event",
-        status: e.status
+        source: "event",
+        status: e.status || "pending",
+        department: e.department,
+        venue: e.venue,
+        startTime: e.startTime,
+        endTime: e.endTime,
+        createdById: e.createdBy?._id || e.createdBy || null,
+        createdByName: e.createdBy?.name || "Unknown"
       })) : [];
 
       // Map recurring Weekly Schedules (Ex: Lectures, Labs)
       const schedules = Array.isArray(schedData) ? schedData : [];
+      const mappedSchedules = schedules.map((s) => ({
+        id: s._id || s.id,
+        title: s.subject || "Untitled Class",
+        day: s.day,
+        type: s.type || "lecture",
+        source: "schedule",
+        department: s.department,
+        faculty: s.faculty,
+        venue: s.room,
+        room: s.room,
+        startTime: s.startTime,
+        endTime: s.endTime
+      }));
       
-      setCalendarItems([...mappedEvents, ...schedules]);
+      setCalendarItems([...mappedEvents, ...mappedSchedules]);
       setIsLoading(false);
     });
+  };
+
+  useEffect(() => {
+    fetchCalendarData();
+
+    // Socket Listener
+    socket.on('calendarUpdate', () => {
+      console.log('Calendar update received via socket');
+      fetchCalendarData();
+    });
+
+    return () => {
+      socket.off('calendarUpdate');
+    }
   }, []);
+
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay    = getFirstDayOfMonth(year, month);
@@ -81,18 +142,63 @@ export default function UnifiedCalendar() {
   const toDateStr = (day) =>
     `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+  const visibleItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    return calendarItems.filter((item) => {
+      const isSchedule = item.source === "schedule";
+      const isApprovedEvent = item.status === "approved";
+      const isOwnedByOrganizer = isOrganizer && item.createdById && item.createdById.toString() === currentUserId;
+
+      if (!isSchedule && !isAdmin && !isApprovedEvent && !isOwnedByOrganizer) {
+        return false;
+      }
+
+      if (statusFilter !== "all") {
+        if (isSchedule) return false;
+        if (item.status !== statusFilter) return false;
+      }
+
+      if (!q) return true;
+
+      const searchableText = [
+        item.title,
+        item.department,
+        item.venue,
+        item.room,
+        item.faculty,
+        item.createdByName,
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      return searchableText.includes(q);
+    });
+  }, [calendarItems, searchQuery, statusFilter, isAdmin, isOrganizer, currentUserId]);
+
+  const monthlyStats = useMemo(() => {
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}-`;
+    const totalEvents = visibleItems.filter((i) => i.source === "event").length;
+    const totalSchedules = visibleItems.filter((i) => i.source === "schedule").length;
+    const monthlyOneOffEvents = visibleItems.filter((i) => i.source === "event" && i.date?.startsWith(monthPrefix)).length;
+
+    return {
+      totalEvents,
+      totalSchedules,
+      monthlyOneOffEvents,
+    };
+  }, [visibleItems, year, month]);
+
   // Combines explicitly dated items with repeating day items for a specific UI month/day
-  const getEventsForDate = (dateStr, dayNum) => {
+  const getEventsForDate = (dateStr, dayNum, items = visibleItems) => {
     const curDate = new Date(year, month, dayNum);
     const dayOfWeek = curDate.toLocaleDateString("en-US", { weekday: "long" }); // "Monday"
 
-    return calendarItems.filter((item) => {
+    return items.filter((item) => {
       // Direct date match (Event APIs)
       if (item.date && item.date === dateStr) return true;
       // Day of week match (Schedule/Lecture APIs)
       if (item.day && item.day === dayOfWeek) return true;
       return false;
-    }).map(match => ({
+    }).map((match) => ({
       ...match,
       type: match.type || "lecture", // Fallback to lecture for generic schedule records
       title: match.title || match.subject || "Untitled Class"
@@ -105,9 +211,7 @@ export default function UnifiedCalendar() {
   };
 
   const selectedEvents = selected
-    ? getEventsForDate(toDateStr(selected), selected).filter(
-        (e) => filterType === "all" || e.type === filterType
-      )
+    ? getEventsForDate(toDateStr(selected), selected).filter((e) => filterType === "all" || e.type === filterType)
     : [];
 
   return (
@@ -119,15 +223,65 @@ export default function UnifiedCalendar() {
           <div className="cal-title-wrapper">
             <h1 className="cal-title">Unified Calendar</h1>
             <p className="cal-sub">All lectures, exams, and campus events in one master view.</p>
+            <p className="cal-role-sub">{roleDescription}</p>
           </div>
-          <Link to="/create-event" className="cal-create-btn">
-            <span className="cal-btn-icon"><Icons.Plus /></span>
-            Create Event
-          </Link>
+          <div className="cal-header-actions">
+            <Link to="/events" className="cal-secondary-btn">
+              View Events
+            </Link>
+            {canCreateEvent && (
+              <Link to="/create-event" className="cal-create-btn">
+                <span className="cal-btn-icon"><Icons.Plus /></span>
+                Create Event
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <div className="cal-summary-strip">
+          <div className="cal-summary-item">
+            <span className="cal-summary-label">Visible One-off Events (This Month)</span>
+            <strong>{monthlyStats.monthlyOneOffEvents}</strong>
+          </div>
+          <div className="cal-summary-item">
+            <span className="cal-summary-label">Visible Event Records</span>
+            <strong>{monthlyStats.totalEvents}</strong>
+          </div>
+          <div className="cal-summary-item">
+            <span className="cal-summary-label">Recurring Schedule Slots</span>
+            <strong>{monthlyStats.totalSchedules}</strong>
+          </div>
         </div>
 
         {/* Legend / Action Bar */}
         <div className="cal-action-bar">
+          <div className="cal-search-wrap">
+            <input
+              className="cal-search-input"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search title, venue, department, faculty..."
+            />
+          </div>
+
+          <div className="cal-status-filters">
+            {[
+              { key: "all", label: "All Status" },
+              { key: "approved", label: "Approved" },
+              { key: "pending", label: "Pending" },
+              { key: "rejected", label: "Rejected" },
+            ].map((status) => (
+              <button
+                key={status.key}
+                className={`cal-status-pill ${statusFilter === status.key ? "cal-status-active" : ""}`}
+                onClick={() => setStatusFilter(status.key)}
+              >
+                {status.label}
+              </button>
+            ))}
+          </div>
+
           <div className="cal-legend-filters">
             <button
               className={`cal-legend-pill ${filterType === "all" ? "cal-legend-active" : ""}`}
@@ -184,7 +338,7 @@ export default function UnifiedCalendar() {
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
                   const dateStr = toDateStr(day);
-                  const dayEvents = getEventsForDate(dateStr, day).filter(
+                  const dayEvents = getEventsForDate(dateStr, day, visibleItems).filter(
                     (e) => filterType === "all" || e.type === filterType
                   );
                   const isSelected = selected === day;
@@ -278,6 +432,12 @@ export default function UnifiedCalendar() {
                               >
                                 {TYPE_CONFIG[ev.type]?.label}
                               </span>
+                              {ev.department && <span>• {ev.department}</span>}
+                              {ev.venue && <span>• {ev.venue}</span>}
+                              {ev.faculty && <span>• {ev.faculty}</span>}
+                              {ev.createdByName && isAdmin && ev.source === "event" && (
+                                <span>• By {ev.createdByName}</span>
+                              )}
                               {ev.startTime && ev.endTime && (
                                 <span className="cal-detail-time">
                                   • {ev.startTime} - {ev.endTime}

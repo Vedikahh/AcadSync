@@ -1,6 +1,8 @@
 const Event = require('../models/Event');
 const Notification = require('../models/Notification');
 const { checkConflicts } = require('../utils/conflictChecker');
+const socket = require('../utils/socket');
+
 
 // @desc    Get all events
 // @route   GET /api/events
@@ -35,7 +37,18 @@ exports.getMyEvents = async (req, res) => {
 // @access  Private (Students/Faculty)
 exports.createEvent = async (req, res) => {
   try {
-    const { title, description, department, venue, date, startTime, endTime } = req.body;
+    const {
+      title,
+      description,
+      department,
+      venue,
+      date,
+      startTime,
+      endTime,
+      participants,
+      organizer,
+      category,
+    } = req.body;
 
     // Run overlap check
     const { conflicts } = await checkConflicts({ date, startTime, endTime, venue });
@@ -48,6 +61,9 @@ exports.createEvent = async (req, res) => {
       date,
       startTime,
       endTime,
+      participants,
+      organizer,
+      category,
       createdBy: req.user.id,
       status: 'pending',
       conflicts: conflicts // attach calculated conflicts
@@ -64,7 +80,11 @@ exports.createEvent = async (req, res) => {
       });
     }
 
+    // Real-time Update
+    socket.getIO().emit('calendarUpdate', { type: 'event', action: 'create', data: event });
+
     res.status(201).json(event);
+
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -90,7 +110,11 @@ exports.approveEvent = async (req, res) => {
       link: '/events'
     });
 
+    // Real-time Update
+    socket.getIO().emit('calendarUpdate', { type: 'event', action: 'approve', data: populatedEvent });
+
     res.json(populatedEvent);
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -115,7 +139,11 @@ exports.rejectEvent = async (req, res) => {
       link: '/events'
     });
 
+    // Real-time Update
+    socket.getIO().emit('calendarUpdate', { type: 'event', action: 'reject', data: populatedEvent });
+
     res.json(populatedEvent);
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -134,7 +162,7 @@ exports.updateEvent = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this event' });
     }
 
-    const { title, description, venue, date, startTime, endTime } = req.body;
+    const { title, description, venue, date, startTime, endTime, participants, organizer, category } = req.body;
     
     // Only recalculate conflicts if time/venue changed
     if (venue || date || startTime || endTime) {
@@ -153,6 +181,9 @@ exports.updateEvent = async (req, res) => {
     event.date = date || event.date;
     event.startTime = startTime || event.startTime;
     event.endTime = endTime || event.endTime;
+    event.participants = participants || event.participants;
+    event.organizer = organizer || event.organizer;
+    event.category = category || event.category;
 
     // Reset status to pending if updated by non-admin? 
     // Usually if an organizer edits, it should go back to pending.
@@ -162,7 +193,12 @@ exports.updateEvent = async (req, res) => {
 
     const updatedEvent = await event.save();
     const populatedEvent = await Event.findById(updatedEvent._id).populate('createdBy', 'name email department');
+
+    // Real-time Update
+    socket.getIO().emit('calendarUpdate', { type: 'event', action: 'update', data: populatedEvent });
+
     res.json(populatedEvent);
+
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -182,7 +218,12 @@ exports.deleteEvent = async (req, res) => {
     }
 
     await event.deleteOne();
+
+    // Real-time Update
+    socket.getIO().emit('calendarUpdate', { type: 'event', action: 'delete', id: req.params.id });
+
     res.json({ message: 'Event removed' });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

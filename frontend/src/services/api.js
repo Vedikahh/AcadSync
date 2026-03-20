@@ -10,10 +10,20 @@ async function request(path, options = {}) {
   
   try {
     const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
-    const data = await res.json().catch(() => ({}));
+    const rawText = await res.text();
+    let data = {};
+
+    try {
+      data = rawText ? JSON.parse(rawText) : {};
+    } catch {
+      data = {};
+    }
     
     if (!res.ok) {
-      throw new Error(data.message || "Request failed");
+      const fallback = rawText && !rawText.trim().startsWith("<!DOCTYPE")
+        ? rawText.trim()
+        : `${res.status} ${res.statusText}`;
+      throw new Error(data.message || fallback || "Request failed");
     }
     
     return data;
@@ -74,6 +84,12 @@ export const updateSchedule = (id, schedule) =>
 
 export const deleteSchedule = (id) =>
   request(`/api/schedule/${id}`, { method: "DELETE" });
+
+export const importSchedules = (rows, mode = "replace") =>
+  request("/api/schedule/import", {
+    method: "POST",
+    body: JSON.stringify({ rows, mode }),
+  });
 
 // ---- Notification APIs ----
 export const getNotifications = () => request("/api/notifications");

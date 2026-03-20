@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
 import EventModal from "../components/EventModal";
+import socket from "../services/socket";
 import "./ManageEvents.css";
 
 const FILTERS = ["all", "pending", "approved", "rejected"];
@@ -23,7 +24,11 @@ export default function ManageEvents() {
 
   useEffect(() => {
     fetchEvents();
+
+    socket.on('calendarUpdate', fetchEvents);
+    return () => { socket.off('calendarUpdate', fetchEvents); };
   }, []);
+
 
   const fetchEvents = async () => {
     try {

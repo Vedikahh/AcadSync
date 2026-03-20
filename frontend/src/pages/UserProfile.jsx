@@ -4,9 +4,7 @@ import { updateUserProfile } from "../services/api";
 import "./UserProfile.css";
 
 const DEPARTMENTS = [
-  "Computer Science (CSE)", "Electronics & Communication (ECE)",
-  "Mechanical Engineering (ME)", "Civil Engineering (CE)",
-  "Information Technology (IT)", "MBA", "MCA", "Physics", "Mathematics",
+  "COMPS", "AIML", "AIDS", "IOT", "Mechanical",
 ];
 
 function Toast({ message, onDone }) {

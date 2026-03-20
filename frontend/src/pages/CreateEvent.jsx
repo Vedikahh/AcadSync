@@ -5,16 +5,11 @@ import { checkEventConflicts } from "../services/api";
 import "./CreateEvent.css";
 
 const DEPARTMENTS = [
-  "Computer Science (CSE)",
-  "Electronics & Communication (ECE)",
-  "Mechanical Engineering (ME)",
-  "Civil Engineering (CE)",
-  "Information Technology (IT)",
-  "Master of Business Administration (MBA)",
-  "Master of Computer Applications (MCA)",
-  "Physics",
-  "Mathematics",
-  "All Departments",
+  "COMPS",
+  "AIML",
+  "AIDS",
+  "IOT",
+  "Mechanical",
 ];
 
 const VENUES = [

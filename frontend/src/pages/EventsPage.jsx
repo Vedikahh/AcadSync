@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
 import EventCard from "../components/EventCard";
 import EventModal from "../components/EventModal";
+import socket from "../services/socket";
 import "./EventsPage.css";
 
 const FILTERS = ["all", "pending", "approved", "rejected"];
@@ -21,7 +22,11 @@ export default function EventsPage() {
 
   useEffect(() => {
     fetchEvents();
+
+    socket.on('calendarUpdate', fetchEvents);
+    return () => { socket.off('calendarUpdate', fetchEvents); };
   }, []);
+
 
   const fetchEvents = async () => {
     try {
