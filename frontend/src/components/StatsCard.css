@@ -1,80 +1,115 @@
 /* ========================
-   StatsCard — Light Theme
+   StatsCard — Modern SaaS "Sweet Spot"
    ======================== */
 .stats-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 22px 24px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.02);
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--bg-card, #fff);
-  box-shadow: var(--shadow-card);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  flex-direction: column;
+  gap: 14px;
   position: relative;
   overflow: hidden;
+  min-height: 104px;
 }
 
-.stats-card-clickable { cursor: pointer; }
-.stats-card-clickable:hover {
+.stats-card.clickable {
+  cursor: pointer;
+}
+
+.stats-card.clickable:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 12px -3px rgba(15, 23, 42, 0.05), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+  border-color: #cbd5e1;
 }
 
-.stats-card-icon {
-  font-size: 1.5rem;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+/* Subtle top color strip */
+.stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.stats-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.stats-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-label {
+  font-size: 0.85rem;
+  color: #64748b; /* Slate-500 */
+  font-weight: 600;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+.stats-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a; /* Slate-900 */
+  line-height: 1;
+}
+
+/* Tasteful icon badge */
+.stats-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 1.3rem;
   flex-shrink: 0;
 }
 
-.stats-card-value {
-  font-size: 1.7rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1;
-  margin-bottom: 3px;
+/* --- Thematic Colors --- */
+/* Blue */
+.stats-blue::before { background-color: #3b82f6; }
+.stats-blue .stats-icon-wrapper { background-color: #eff6ff; color: #3b82f6; }
+
+/* Green */
+.stats-green::before { background-color: #10b981; }
+.stats-green .stats-icon-wrapper { background-color: #ecfdf5; color: #10b981; }
+
+/* Orange */
+.stats-orange::before { background-color: #f97316; }
+.stats-orange .stats-icon-wrapper { background-color: #fff7ed; color: #f97316; }
+
+/* Red */
+.stats-red::before { background-color: #ef4444; }
+.stats-red .stats-icon-wrapper { background-color: #fef2f2; color: #ef4444; }
+
+/* Purple */
+.stats-purple::before { background-color: #8b5cf6; }
+.stats-purple .stats-icon-wrapper { background-color: #f5f3ff; color: #8b5cf6; }
+
+/* Yellow */
+.stats-yellow::before { background-color: #eab308; }
+.stats-yellow .stats-icon-wrapper { background-color: #fefce8; color: #eab308; }
+
+/* --- Trend Indicator --- */
+.stats-trend {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
 }
 
-.stats-card-label {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
+.trend-up { color: #16a34a; font-weight: 600; }
+.trend-down { color: #dc2626; font-weight: 600; }
+.trend-text { color: #94a3b8; font-weight: 500; }
 
-.stats-card-trend {
-  font-size: 0.72rem;
-  margin-top: 3px;
-  font-weight: 600;
-}
-
-.trend-up   { color: var(--success); }
-.trend-down { color: var(--danger); }
-
-/* Color variants — light theme icon backgrounds */
-.stats-card-blue   .stats-card-icon { background: #DBEAFE; }
-.stats-card-green  .stats-card-icon { background: #DCFCE7; }
-.stats-card-orange .stats-card-icon { background: #FFEDD5; }
-.stats-card-red    .stats-card-icon { background: #FEE2E2; }
-.stats-card-purple .stats-card-icon { background: #F3E8FF; }
-.stats-card-yellow .stats-card-icon { background: #FEF9C3; }
-
-/* Colored left accent bar */
-.stats-card::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  border-radius: 14px 0 0 14px;
-}
-
-.stats-card-blue::before   { background: var(--primary); }
-.stats-card-green::before  { background: var(--success); }
-.stats-card-orange::before { background: var(--orange-500); }
-.stats-card-red::before    { background: var(--danger); }
-.stats-card-purple::before { background: var(--purple-500); }
-.stats-card-yellow::before { background: var(--yellow-500); }

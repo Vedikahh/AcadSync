@@ -1,6 +1,6 @@
 /* App layout — sidebar offset */
 .app-main-with-sidebar {
-  margin-left: 240px;
+  margin-left: var(--sidebar-width, 250px);
   min-height: calc(100vh - 64px);
   padding-top: 64px;
   transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -9,7 +9,7 @@
 
 /* When sidebar is collapsed to icon-only (72px) */
 .app-main-collapsed {
-  margin-left: 72px !important;
+  margin-left: var(--sidebar-collapsed-width, 76px) !important;
 }
 
 .app-main {

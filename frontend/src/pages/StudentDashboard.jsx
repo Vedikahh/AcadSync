@@ -60,15 +60,15 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="std-stats-grid">
-        <StatsCard icon="◈" value={totalApproved}  label="Campus Events" color="purple" />
-        <StatsCard icon="✓" value="Today"          label="Active Day"    color="green"  />
-        <StatsCard icon="▦" value="8"              label="Classes Today" color="orange" />
-        <StatsCard icon="◉" value={unreadCount}    label="Unread Alerts" color="blue"  />
-      </div>
+      
+        <div className="std-stats-grid">
+          <StatsCard value={totalApproved}  label="Campus Events" color="purple" />
+          <StatsCard value="Today"          label="Active Day"    color="green"  />
+          <StatsCard value="8"              label="Classes Today" color="orange" />
+          <StatsCard value={unreadCount}    label="Unread Alerts" color="blue"  />
+        </div>
 
-      {/* Layout Grid */}
+        {/* Layout Grid */}
       <div className="std-layout">
         
         {/* Main Content Column */}

@@ -21,12 +21,17 @@ exports.getUserProfile = async (req, res) => {
 // @access  Private
 exports.updateUserProfile = async (req, res) => {
   try {
+    if (typeof req.body.avatar === 'string' && req.body.avatar.length > 3 * 1024 * 1024) {
+      return res.status(400).json({ message: 'Profile photo is too large' });
+    }
+
     const user = await User.findById(req.user.id);
 
     if (user) {
       user.name = req.body.name || user.name;
       user.department = req.body.department !== undefined ? req.body.department : user.department;
       user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
+      user.avatar = req.body.avatar !== undefined ? req.body.avatar : user.avatar;
       
       const updatedUser = await user.save();
 
@@ -37,6 +42,7 @@ exports.updateUserProfile = async (req, res) => {
         role: updatedUser.role,
         department: updatedUser.department,
         bio: updatedUser.bio,
+        avatar: updatedUser.avatar,
       });
     } else {
       res.status(404).json({ message: 'User not found' });

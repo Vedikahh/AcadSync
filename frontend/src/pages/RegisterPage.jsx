@@ -5,6 +5,7 @@ import { register as apiRegister } from "../services/api";
 import "./AuthPages.css";
 
 export default function RegisterPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -52,7 +53,8 @@ export default function RegisterPage() {
         name: response.name,
         email: response.email,
         role: response.role,
-        department: response.department
+        department: response.department,
+        avatar: response.avatar || ""
       }, response.token);
 
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
@@ -145,30 +147,50 @@ export default function RegisterPage() {
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Min. 6 characters"
-              value={form.password}
-              onChange={handleChange}
-              minLength="6"
-              required
-            />
+            <div className="password-input-wrap">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Min. 6 characters"
+                value={form.password}
+                onChange={handleChange}
+                minLength="6"
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="confirm">Confirm password</label>
-            <input
-              id="confirm"
-              name="confirm"
-              type="password"
-              placeholder="Repeat password"
-              value={form.confirm}
-              onChange={handleChange}
-              minLength="6"
-              required
-            />
+            <div className="password-input-wrap">
+              <input
+                id="confirm"
+                name="confirm"
+                type={showPassword ? "text" : "password"}
+                placeholder="Repeat password"
+                value={form.confirm}
+                onChange={handleChange}
+                minLength="6"
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="auth-submit" disabled={loading}>

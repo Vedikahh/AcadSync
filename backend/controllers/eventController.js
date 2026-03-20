@@ -1,5 +1,6 @@
 const Event = require('../models/Event');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const { checkConflicts } = require('../utils/conflictChecker');
 const socket = require('../utils/socket');
 
@@ -69,15 +70,28 @@ exports.createEvent = async (req, res) => {
       conflicts: conflicts // attach calculated conflicts
     });
 
-    // Notify admins if there is a conflict
+    // Notify admins about the new event request
+    const admins = await User.find({ role: 'admin' });
+    const notificationsToCreate = admins.map(admin => ({
+      userId: admin._id,
+      message: `New event request: "${title}" is pending approval.`,
+      type: 'event', // Use 'event' type or 'system'
+      link: '/manage', // Link to admin manage events page
+    }));
+
     if (conflicts.length > 0) {
-      // Find all admins (mock approach without importing User, usually find roles)
-      // Just creating a system notification log
-      await Notification.create({
-        message: `Conflict Warning: New event "${title}" has ${conflicts.length} overlapping issue(s).`,
-        type: 'conflict',
-        link: '/conflict'
+      admins.forEach(admin => {
+        notificationsToCreate.push({
+          userId: admin._id,
+          message: `Conflict Warning: New event "${title}" has ${conflicts.length} overlapping issue(s).`,
+          type: 'conflict',
+          link: '/conflict'
+        });
       });
+    }
+
+    if (notificationsToCreate.length > 0) {
+      await Notification.insertMany(notificationsToCreate);
     }
 
     // Real-time Update

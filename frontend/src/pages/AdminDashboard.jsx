@@ -81,15 +81,15 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── Stats Row ── */}
-      <div className="admin-stats-grid">
-        <StatsCard icon="◈" value={MOCK_STUDENTS}       label="Total Students"   color="blue"   />
-        <StatsCard icon="…" value={pending.length}      label="Needs Approval"   color="orange" />
-        <StatsCard icon="✓" value={approved.length}     label="Approved Events"  color="green"  />
-        <StatsCard icon="⊞" value={activeDepartmentsCount} label="Active Depts"  color="purple" />
-      </div>
+      
+        <div className="admin-stats-grid">
+          <StatsCard value={MOCK_STUDENTS}       label="Total Students"   color="blue"   />
+          <StatsCard value={pending.length}      label="Needs Approval"   color="orange" />
+          <StatsCard value={approved.length}     label="Approved Events"  color="green"  />
+          <StatsCard value={activeDepartmentsCount} label="Active Depts"  color="purple" />
+        </div>
 
-      {/* ── Main Layout ── */}
+        {/* ── Main Layout ── */}
       <div className="admin-layout">
         
         {/* Left Column (Primary Content) */}

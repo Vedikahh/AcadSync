@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { checkEventConflicts } from "../services/api";
+import { formatTime12h } from "../utils/formatTime";
 import "./CreateEvent.css";
 
 const DEPARTMENTS = [
@@ -122,7 +123,7 @@ export default function CreateEvent() {
         eventName: form.title,
         severity: "high",
         clashWith: c,
-        timeOverlap: `${form.startTime} – ${form.endTime}`,
+        timeOverlap: `${formatTime12h(form.startTime)} – ${formatTime12h(form.endTime)}`,
         venue: form.venue,
         date: form.date,
         affectedStudents: form.participants || "Unknown"
@@ -404,7 +405,7 @@ export default function CreateEvent() {
                   {form.department && <span className="ce-chip ce-chip-purple">{form.department.split(" ")[0]}</span>}
                   {form.date       && <span className="ce-chip ce-chip-green">{new Date(form.date + "T00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>}
                   {form.venue      && <span className="ce-chip ce-chip-orange">{form.venue}</span>}
-                  {form.startTime && form.endTime && <span className="ce-chip ce-chip-gray">{form.startTime} – {form.endTime}</span>}
+                  {form.startTime && form.endTime && <span className="ce-chip ce-chip-gray">{formatTime12h(form.startTime)} – {formatTime12h(form.endTime)}</span>}
                   {form.participants && <span className="ce-chip ce-chip-gray">{form.participants} participants</span>}
                 </div>
               </>

@@ -60,7 +60,11 @@ export default function Navbar({ onMenuToggle }) {
             {/* User avatar dropdown */}
             <div className="user-menu">
               <div className="user-avatar">
-                {user.name?.charAt(0).toUpperCase() || "U"}
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Profile" className="user-avatar-image" />
+                ) : (
+                  user.name?.charAt(0).toUpperCase() || "U"
+                )}
               </div>
               <div className="user-dropdown">
                 <span className="user-name">{user.name}</span>

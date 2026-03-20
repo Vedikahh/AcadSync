@@ -1,3 +1,4 @@
+import { formatTime12h } from "../utils/formatTime";
 import "./EventModal.css";
 
 export default function EventModal({ event, onClose }) {
@@ -17,24 +18,6 @@ export default function EventModal({ event, onClose }) {
       month: "long",
       day: "numeric",
     });
-  };
-
-  const formatTime12h = (time) => {
-    if (!time) return "TBD";
-
-    const timeMatch = String(time).match(/^(\d{1,2}):(\d{2})/);
-    if (!timeMatch) return time;
-
-    const hours = Number(timeMatch[1]);
-    const minutes = Number(timeMatch[2]);
-
-    if (Number.isNaN(hours) || Number.isNaN(minutes) || hours > 23 || minutes > 59) {
-      return time;
-    }
-
-    const period = hours >= 12 ? "PM" : "AM";
-    const hour12 = hours % 12 || 12;
-    return `${hour12}:${String(minutes).padStart(2, "0")} ${period}`;
   };
 
   const statusCls = event.status === "approved" ? "em-badge-appr"

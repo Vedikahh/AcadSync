@@ -124,6 +124,33 @@
 
 .form-group input::placeholder { color: var(--text-muted); }
 
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrap input {
+  width: 100%;
+  padding-right: 64px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.password-toggle:hover {
+  color: var(--blue-700, #1D4ED8);
+}
+
 .auth-submit {
   padding: 12px;
   background: var(--primary, #2563EB);

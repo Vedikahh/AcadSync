@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getSchedules, getEvents } from "../services/api";
+import { formatTime12h } from "../utils/formatTime";
 import LectureCard from "../components/LectureCard";
 import ConflictCard from "../components/ConflictCard";
 import StatsCard from "../components/StatsCard";
@@ -66,15 +67,15 @@ export default function OrganizerDashboard() {
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="organizer-stats-grid">
-        <StatsCard icon="◈" value={lectures.length}       label="Classes Today"    color="blue"   />
-        <StatsCard icon="!" value={totalConflicts}        label="Conflict Alerts"  color="orange" />
-        <StatsCard icon="!" value={highConflicts}         label="High Priority"    color="red"    />
-        <StatsCard icon="▦" value="0"                     label="Exams This Month" color="purple" />
-      </div>
+    
+        <div className="organizer-stats-grid">
+          <StatsCard value={lectures.length}       label="Classes Today"    color="blue"   />
+          <StatsCard value={totalConflicts}        label="Conflict Alerts"  color="orange" />
+          <StatsCard value={highConflicts}         label="High Priority"    color="red"    />
+          <StatsCard value="0"                     label="Exams This Month" color="purple" />
+        </div>
 
-      {/* Main Content Layout */}
+        {/* Main Content Layout */}
       <div className="organizer-content-layout">
         
         {/* Left column (Tabs & Timeline) */}
@@ -115,7 +116,7 @@ export default function OrganizerDashboard() {
                       return (
                         <div key={id} className="fac-timeline-item">
                           <div className="fac-timebox">
-                            <span className="fac-time">{lec.startTime}</span>
+                            <span className="fac-time">{formatTime12h(lec.startTime)}</span>
                           </div>
                           <div className="fac-card-wrapper">
                             <LectureCard lecture={{...lec, id}} />

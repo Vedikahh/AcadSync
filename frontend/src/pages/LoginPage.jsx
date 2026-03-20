@@ -7,6 +7,7 @@ import "./AuthPages.css";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [completeProfile, setCompleteProfile] = useState({ show: false, token: "", role: "student", department: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,7 +34,8 @@ export default function LoginPage() {
         name: response.name,
         email: response.email,
         role: response.role,
-        department: response.department
+        department: response.department,
+        avatar: response.avatar || ""
       }, response.token);
 
       // Route based on newly verified database role
@@ -66,7 +68,8 @@ export default function LoginPage() {
         name: response.name,
         email: response.email,
         role: response.role,
-        department: response.department
+        department: response.department,
+        avatar: response.avatar || ""
       }, response.token);
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
     } catch (err) {
@@ -95,7 +98,8 @@ export default function LoginPage() {
         name: response.name,
         email: response.email,
         role: response.role,
-        department: response.department
+        department: response.department,
+        avatar: response.avatar || ""
       }, response.token);
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
     } catch (err) {
@@ -189,15 +193,25 @@ export default function LoginPage() {
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
+            <div className="password-input-wrap">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="auth-submit" disabled={loading}>

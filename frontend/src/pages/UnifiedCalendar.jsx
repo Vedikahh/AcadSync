@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getSchedules, getEvents } from "../services/api";
 import socket from "../services/socket";
+import { formatTime12h } from "../utils/formatTime";
 import "./UnifiedCalendar.css";
 
 const Icons = {
@@ -427,25 +428,25 @@ export default function UnifiedCalendar() {
                             <p className="cal-detail-title">{ev.title}</p>
                             <div className="cal-detail-meta">
                               <span 
-                                className="cal-detail-type"
-                                style={{ color: TYPE_CONFIG[ev.type]?.color }}
+                                className="cal-detail-badge"
+                                style={{ backgroundColor: TYPE_CONFIG[ev.type]?.color + "1A", color: TYPE_CONFIG[ev.type]?.color }}
                               >
                                 {TYPE_CONFIG[ev.type]?.label}
                               </span>
-                              {ev.department && <span>• {ev.department}</span>}
-                              {ev.venue && <span>• {ev.venue}</span>}
-                              {ev.faculty && <span>• {ev.faculty}</span>}
+                              {ev.department && <span className="meta-item">{ev.department}</span>}
+                              {(ev.venue || ev.room) && <span className="meta-item">{ev.venue || ev.room}</span>}
+                              {ev.faculty && <span className="meta-item">{ev.faculty}</span>}
                               {ev.createdByName && isAdmin && ev.source === "event" && (
-                                <span>• By {ev.createdByName}</span>
+                                <span className="meta-item">By {ev.createdByName}</span>
                               )}
                               {ev.startTime && ev.endTime && (
-                                <span className="cal-detail-time">
-                                  • {ev.startTime} - {ev.endTime}
+                                <span className="meta-item cal-detail-time">
+                                  ⏱ {formatTime12h(ev.startTime)} - {formatTime12h(ev.endTime)}
                                 </span>
                               )}
                               {ev.status && (
-                                <span className={`cal-detail-status status-${ev.status}`}>
-                                  • {ev.status}
+                                <span className={`meta-item cal-detail-status status-${ev.status}`}>
+                                  {ev.status}
                                 </span>
                               )}
                             </div>

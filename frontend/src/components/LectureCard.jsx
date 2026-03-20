@@ -1,3 +1,4 @@
+import { formatTime12h } from "../utils/formatTime";
 import "./LectureCard.css";
 
 const TYPE_LABELS = {
@@ -23,7 +24,7 @@ export default function LectureCard({ lecture }) {
     <div className={`lecture-card ${ongoing ? "lecture-card-ongoing" : ""}`}>
       {ongoing && <div className="lecture-live-badge">Live</div>}
       <div className="lecture-card-header">
-        <span className="lecture-time">{lecture.startTime} – {lecture.endTime}</span>
+        <span className="lecture-time">{formatTime12h(lecture.startTime)} – {formatTime12h(lecture.endTime)}</span>
         <span className="lecture-dept-badge">{lecture.department}</span>
       </div>
       <h4 className="lecture-subject">{lecture.subject}</h4>

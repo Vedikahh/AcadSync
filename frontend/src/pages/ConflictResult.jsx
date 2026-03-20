@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import ConflictCard from "../components/ConflictCard";
 import { createEvent, updateEvent, getEvents } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { formatTime12h } from "../utils/formatTime";
 import "./ConflictResult.css";
 
 export default function ConflictResult() {
@@ -103,7 +104,7 @@ export default function ConflictResult() {
                   </div>
                   <div className="cr-meta-item">
                     <span className="cr-meta-label">Time</span>
-                    <span className="cr-meta-value">{eventData.startTime} – {eventData.endTime}</span>
+                    <span className="cr-meta-value">{formatTime12h(eventData.startTime)} – {formatTime12h(eventData.endTime)}</span>
                   </div>
                   <div className="cr-meta-item">
                     <span className="cr-meta-label">Venue</span>
@@ -128,7 +129,7 @@ export default function ConflictResult() {
                     <button key={idx} className="cr-slot-btn" onClick={() => navigate("/create-event", { state: { eventData: { ...eventData, startTime: slot.startTime, endTime: slot.endTime } } })}>
                       <div className="cr-slot-left">
                         <span className="cr-slot-date">{slot.date}</span>
-                        <span className="cr-slot-time">{slot.startTime} – {slot.endTime}</span>
+                        <span className="cr-slot-time">{formatTime12h(slot.startTime)} – {formatTime12h(slot.endTime)}</span>
                       </div>
                       <div className="cr-slot-right">
                         <span className="cr-slot-label">{slot.label}</span>
@@ -195,7 +196,7 @@ export default function ConflictResult() {
                 <div className="cr-res-header">
                   <div>
                     <h3 className="cr-res-title">{ev.title}</h3>
-                    <p className="cr-res-meta">{ev.venue} • {new Date(ev.date).toLocaleDateString()} • {ev.startTime}-{ev.endTime}</p>
+                    <p className="cr-res-meta">{ev.venue} • {new Date(ev.date).toLocaleDateString()} • {formatTime12h(ev.startTime)}-{formatTime12h(ev.endTime)}</p>
                   </div>
                   <Link to="/manage-events" className="cr-res-action">Review Proposal →</Link>
                 </div>

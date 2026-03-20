@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { getSchedules, importSchedules, deleteSchedule } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import socket from "../services/socket";
+import { formatTime12h } from "../utils/formatTime";
 import "./AcademicSchedule.css";
 
 
@@ -73,17 +74,6 @@ export default function AcademicSchedule() {
     }
     return true;
   }).sort(sortByDayAndTime);
-
-  const formatTime12h = (time) => {
-    const match = String(time || "").match(/^(\d{1,2}):(\d{2})/);
-    if (!match) return time || "--";
-    const h = Number(match[1]);
-    const m = Number(match[2]);
-    if (Number.isNaN(h) || Number.isNaN(m)) return time;
-    const ampm = h >= 12 ? "PM" : "AM";
-    const hh = h % 12 || 12;
-    return `${hh}:${String(m).padStart(2, "0")} ${ampm}`;
-  };
 
   const clearAllFilters = () => {
     setDeptFilter("All");

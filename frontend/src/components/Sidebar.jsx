@@ -95,7 +95,11 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         {/* Profile */}
         <div className="sidebar-profile">
           <div className="sidebar-avatar" style={{ background: `linear-gradient(135deg, ${roleColor}, ${roleColor}dd)` }}>
-            {user?.name?.charAt(0).toUpperCase() || "U"}
+            {user?.avatar ? (
+              <img src={user.avatar} alt="Profile" className="sidebar-avatar-image" />
+            ) : (
+              user?.name?.charAt(0).toUpperCase() || "U"
+            )}
           </div>
           <div className="sidebar-user-info">
             <p className="sidebar-user-name">{user?.name || "User"}</p>

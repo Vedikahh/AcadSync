@@ -49,6 +49,7 @@ exports.registerUser = async (req, res) => {
         email: user.email,
         role: user.role,
         department: user.department,
+        avatar: user.avatar,
         token: generateToken(user._id, user.role),
       });
     } else {
@@ -77,6 +78,7 @@ exports.loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         department: user.department,
+        avatar: user.avatar,
         token: generateToken(user._id, user.role),
       });
     } else {
@@ -136,6 +138,7 @@ exports.googleLogin = async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
+      avatar: user.avatar,
       token: generateToken(user._id, user.role),
     });
 
@@ -181,6 +184,7 @@ exports.googleRegister = async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
+      avatar: user.avatar,
       token: generateToken(user._id, user.role),
     });
 

@@ -28,6 +28,12 @@ const scheduleSchema = new mongoose.Schema({
   room: {
     type: String,
     required: true,
+  },
+  type: {
+    type: String,
+    enum: ['lecture', 'lab', 'exam'],
+    default: 'lecture',
+    required: true,
   }
 }, { timestamps: true });
 
