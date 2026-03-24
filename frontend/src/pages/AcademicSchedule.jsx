@@ -178,7 +178,7 @@ export default function AcademicSchedule() {
       {/* Header */}
       <div className="as-header">
         <div>
-          <h1 className="as-title">📚 Academic Schedule</h1>
+          <h1 className="as-title"> Academic Schedule</h1>
           <p className="as-sub">Manage lecture slots, labs, and exam schedules across departments</p>
         </div>
         {isAdmin && (

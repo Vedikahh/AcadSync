@@ -102,7 +102,7 @@ export default function ManageEvents() {
       {/* Header */}
       <div className="me-header">
         <div>
-          <h1 className="me-title">📋 Manage Events</h1>
+          <h1 className="me-title"> Manage Events</h1>
           <p className="me-sub">Review, approve or reject event proposals from students and clubs</p>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function ManageEvents() {
         <input
           className="me-search"
           type="text"
-          placeholder="🔍 Search by title or department…"
+          placeholder=" Search by title or department…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
