@@ -1,10 +1,10 @@
 let io;
 
 module.exports = {
-    init: (httpServer) => {
+    init: (httpServer, corsOptions = {}) => {
         io = require('socket.io')(httpServer, {
             cors: {
-                origin: "*",
+                ...corsOptions,
                 methods: ["GET", "POST", "PATCH", "PUT", "DELETE"]
             }
         });

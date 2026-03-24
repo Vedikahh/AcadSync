@@ -8,8 +8,38 @@ connectDB();
 
 const app = express();
 
+const parseAllowedOrigins = () => {
+  const combined = [process.env.CLIENT_URL, process.env.ALLOWED_ORIGINS]
+    .filter(Boolean)
+    .join(',');
+
+  return combined
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+};
+
+const allowedOrigins = parseAllowedOrigins();
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow non-browser tools (no Origin header) like health checks and curl.
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Safe fallback: if no origin is configured, keep existing open behavior.
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
 
 // Load Routes
@@ -31,6 +61,10 @@ app.get('/', (req, res) => {
   res.send('AcadSync API is running...');
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
@@ -39,5 +73,5 @@ const server = app.listen(PORT, () => {
 
 // Init socket.io
 const socketIO = require('./utils/socket');
-socketIO.init(server);
+socketIO.init(server, corsOptions);
 
