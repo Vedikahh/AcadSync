@@ -80,7 +80,7 @@ export default function ConflictResult() {
                 </h1>
                 <p className="cr-banner-desc">
                   {hasConflict
-                    ? `AcadSync AI detected ${conflicts.length} potential conflict${conflicts.length !== 1 ? "s" : ""} with existing schedules.`
+                    ? `${conflicts.length} potential conflict${conflicts.length !== 1 ? "s" : ""} detected with existing schedules.`
                     : "Your event schedule is clear and has been submitted for admin approval."}
                 </p>
               </div>

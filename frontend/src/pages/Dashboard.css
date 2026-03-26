@@ -418,3 +418,75 @@
   .admin-db-page { padding: 20px 16px; }
   .admin-table { display: block; overflow-x: auto; white-space: nowrap; }
 }
+
+/* Dark theme */
+.dark-theme .admin-btn-primary {
+  background: var(--primary, #818cf8);
+}
+
+.dark-theme .admin-btn-primary:hover {
+  background: #6366f1;
+}
+
+.dark-theme .admin-card {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .admin-card-header {
+  border-bottom-color: #334155;
+}
+
+.dark-theme .admin-empty-icon {
+  background: #052e2b;
+  color: #34d399;
+}
+
+.dark-theme .admin-chart-bar-wrap {
+  background: linear-gradient(180deg, rgba(51,65,85,0) 0%, rgba(51,65,85,0.65) 100%);
+}
+
+.dark-theme .admin-chart-label {
+  color: #cbd5e1;
+}
+
+.dark-theme .admin-table th {
+  background: #0f172a;
+  border-bottom-color: #334155;
+}
+
+.dark-theme .admin-table td {
+  border-bottom-color: #334155;
+}
+
+.dark-theme .admin-table tbody tr:hover td {
+  background: #1f2937;
+}
+
+.dark-theme .pill-red {
+  background: #7f1d1d;
+  color: #fecaca;
+  border-color: #991b1b;
+}
+
+.dark-theme .pill-green {
+  background: #14532d;
+  color: #bbf7d0;
+  border-color: #15803d;
+}
+
+.dark-theme .admin-action-btn {
+  background: #1f2937;
+  border-color: #334155;
+  color: #e5e7eb;
+}
+
+.dark-theme .admin-action-btn:hover {
+  background: #0f172a;
+  border-color: #475569;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.dark-theme .admin-log-indicator {
+  background: #64748b;
+}

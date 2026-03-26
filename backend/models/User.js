@@ -22,6 +22,22 @@ const userSchema = new mongoose.Schema({
   department: {
     type: String,
   },
+  organization: {
+    type: String,
+    default: '',
+  },
+  phone: {
+    type: String,
+    default: '',
+  },
+  year: {
+    type: String,
+    default: '',
+  },
+  designation: {
+    type: String,
+    default: '',
+  },
   bio: {
     type: String,
   },

@@ -5,6 +5,14 @@ const { OAuth2Client } = require('google-auth-library');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const allowedRoles = ['student', 'organizer', 'admin'];
+
+const normalizeRole = (role) => {
+  if (!role || typeof role !== 'string') return 'student';
+  const value = role.toLowerCase();
+  return allowedRoles.includes(value) ? value : 'student';
+};
+
 // Generate JWT token
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -17,11 +25,27 @@ const generateToken = (id, role) => {
 // @access  Public
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, department } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      department,
+      organization,
+      phone,
+      year,
+      designation,
+    } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please add all required fields' });
     }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    const normalizedRole = normalizeRole(role);
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -38,8 +62,12 @@ exports.registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || 'student', // default to student if not provided
-      department
+      role: normalizedRole,
+      department,
+      organization,
+      phone,
+      year,
+      designation,
     });
 
     if (user) {
@@ -49,6 +77,10 @@ exports.registerUser = async (req, res) => {
         email: user.email,
         role: user.role,
         department: user.department,
+        organization: user.organization,
+        phone: user.phone,
+        year: user.year,
+        designation: user.designation,
         avatar: user.avatar,
         token: generateToken(user._id, user.role),
       });
@@ -78,6 +110,10 @@ exports.loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         department: user.department,
+        organization: user.organization,
+        phone: user.phone,
+        year: user.year,
+        designation: user.designation,
         avatar: user.avatar,
         token: generateToken(user._id, user.role),
       });
@@ -138,6 +174,10 @@ exports.googleLogin = async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
+      organization: user.organization,
+      phone: user.phone,
+      year: user.year,
+      designation: user.designation,
       avatar: user.avatar,
       token: generateToken(user._id, user.role),
     });
@@ -152,7 +192,7 @@ exports.googleLogin = async (req, res) => {
 // @access  Public
 exports.googleRegister = async (req, res) => {
   try {
-    const { token, role, department } = req.body;
+    const { token, role, department, organization, phone, year, designation } = req.body;
     if (!token) {
       return res.status(400).json({ message: 'No Google token provided' });
     }
@@ -170,11 +210,16 @@ exports.googleRegister = async (req, res) => {
     }
 
     // Create user with explicit role and department
+    const normalizedRole = normalizeRole(role);
     user = await User.create({
       name,
       email,
-      role: role || 'student',
+      role: normalizedRole,
       department,
+      organization,
+      phone,
+      year,
+      designation,
       provider: 'google'
     });
 
@@ -184,6 +229,10 @@ exports.googleRegister = async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
+      organization: user.organization,
+      phone: user.phone,
+      year: user.year,
+      designation: user.designation,
       avatar: user.avatar,
       token: generateToken(user._id, user.role),
     });

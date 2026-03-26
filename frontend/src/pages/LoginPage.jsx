@@ -8,7 +8,16 @@ import "./AuthPages.css";
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [completeProfile, setCompleteProfile] = useState({ show: false, token: "", role: "student", department: "" });
+  const [completeProfile, setCompleteProfile] = useState({
+    show: false,
+    token: "",
+    role: "student",
+    department: "",
+    organization: "",
+    phone: "",
+    year: "",
+    designation: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -35,6 +44,10 @@ export default function LoginPage() {
         email: response.email,
         role: response.role,
         department: response.department,
+        organization: response.organization || "",
+        phone: response.phone || "",
+        year: response.year || "",
+        designation: response.designation || "",
         avatar: response.avatar || ""
       }, response.token);
 
@@ -58,7 +71,11 @@ export default function LoginPage() {
           show: true, 
           token: response.token, 
           role: "student", 
-          department: "" 
+          department: "",
+          organization: "",
+          phone: "",
+          year: "",
+          designation: "",
         });
         return; // Halt and show the complete profile form
       }
@@ -69,6 +86,10 @@ export default function LoginPage() {
         email: response.email,
         role: response.role,
         department: response.department,
+        organization: response.organization || "",
+        phone: response.phone || "",
+        year: response.year || "",
+        designation: response.designation || "",
         avatar: response.avatar || ""
       }, response.token);
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
@@ -91,7 +112,11 @@ export default function LoginPage() {
       const response = await apiGoogleRegister({
         token: completeProfile.token,
         role: completeProfile.role,
-        department: completeProfile.department
+        department: completeProfile.department,
+        organization: completeProfile.organization,
+        phone: completeProfile.phone,
+        year: completeProfile.year,
+        designation: completeProfile.designation,
       });
       login({
         id: response._id,
@@ -99,6 +124,10 @@ export default function LoginPage() {
         email: response.email,
         role: response.role,
         department: response.department,
+        organization: response.organization || "",
+        phone: response.phone || "",
+        year: response.year || "",
+        designation: response.designation || "",
         avatar: response.avatar || ""
       }, response.token);
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
@@ -118,8 +147,25 @@ export default function LoginPage() {
             <h1>Complete Your Profile</h1>
             <p>You&apos;re almost there! Tell us your role.</p>
           </div>
-          {error && <div className="auth-error">{error}</div>}
+          {error?.trim() && <div className="auth-error">{error}</div>}
           <form onSubmit={handleCompleteProfileSubmit} className="auth-form">
+            <div className="role-selector">
+              <button
+                type="button"
+                className={`role-btn ${completeProfile.role === "student" ? "active" : ""}`}
+                onClick={() => setCompleteProfile({ ...completeProfile, role: "student" })}
+              >
+                Student
+              </button>
+              <button
+                type="button"
+                className={`role-btn ${completeProfile.role === "organizer" ? "active" : ""}`}
+                onClick={() => setCompleteProfile({ ...completeProfile, role: "organizer" })}
+              >
+                Faculty / Committee
+              </button>
+            </div>
+
             <div className="form-group">
               <label htmlFor="role">Role</label>
               <select
@@ -127,7 +173,6 @@ export default function LoginPage() {
                 value={completeProfile.role}
                 onChange={(e) => setCompleteProfile({...completeProfile, role: e.target.value})}
                 required
-                style={{ width: '100%', padding: '0.8rem', borderRadius: '4px', border: '1px solid #ddd', fontSize: '1rem', marginTop: '0.5rem', background: '#fff' }}
               >
                 <option value="student">Student</option>
                 <option value="organizer">Faculty/Committee</option>
@@ -142,6 +187,55 @@ export default function LoginPage() {
                 value={completeProfile.department}
                 onChange={(e) => setCompleteProfile({...completeProfile, department: e.target.value})}
                 required
+              />
+            </div>
+            {completeProfile.role === "student" && (
+              <div className="form-group">
+                <label htmlFor="year">Year (optional)</label>
+                <select
+                  id="year"
+                  value={completeProfile.year}
+                  onChange={(e) => setCompleteProfile({ ...completeProfile, year: e.target.value })}
+                >
+                  <option value="">Select year</option>
+                  <option value="FY">FY</option>
+                  <option value="SY">SY</option>
+                  <option value="TY">TY</option>
+                  <option value="BE">BE</option>
+                </select>
+              </div>
+            )}
+            {completeProfile.role === "organizer" && (
+              <div className="form-group">
+                <label htmlFor="designation">Designation</label>
+                <input
+                  id="designation"
+                  type="text"
+                  placeholder="e.g. Faculty Coordinator"
+                  value={completeProfile.designation}
+                  onChange={(e) => setCompleteProfile({ ...completeProfile, designation: e.target.value })}
+                  required
+                />
+              </div>
+            )}
+            <div className="form-group">
+              <label htmlFor="organization">Organization (optional)</label>
+              <input
+                id="organization"
+                type="text"
+                placeholder="Your organization"
+                value={completeProfile.organization}
+                onChange={(e) => setCompleteProfile({ ...completeProfile, organization: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="phone">Phone (optional)</label>
+              <input
+                id="phone"
+                type="tel"
+                placeholder="e.g. +91 98765 43210"
+                value={completeProfile.phone}
+                onChange={(e) => setCompleteProfile({ ...completeProfile, phone: e.target.value })}
               />
             </div>
             <button type="submit" className="auth-submit" disabled={loading}>
@@ -162,20 +256,20 @@ export default function LoginPage() {
           <p>Sign in to your AcadSync account</p>
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
+        {error?.trim() && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           
           {/* Note: Roles are now database bound, we don't ask users to select their role at login anymore */}
 
-          <div className="google-login-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <div className="google-login-container">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
             />
           </div>
           
-          <div className="divider" style={{ textAlign: 'center', margin: '1rem 0', color: '#666', fontSize: '0.9rem' }}>
+          <div className="divider">
             OR SIGN IN WITH EMAIL
           </div>
           <div className="form-group">

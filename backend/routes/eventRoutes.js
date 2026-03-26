@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { 
   getEvents, getMyEvents, createEvent, updateEvent,
-  approveEvent, rejectEvent, deleteEvent, checkEventConflicts
+  approveEvent, rejectEvent, cancelEvent, deleteEvent, checkEventConflicts
 } = require('../controllers/eventController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
@@ -18,6 +18,7 @@ router.post('/check-conflicts', protect, authorizeRoles('organizer', 'admin'), c
 // Admin Only (Status updates)
 router.patch('/:id/approve', protect, authorizeRoles('admin'), approveEvent);
 router.patch('/:id/reject', protect, authorizeRoles('admin'), rejectEvent);
+router.patch('/:id/cancel', protect, authorizeRoles('admin'), cancelEvent);
 
 // Owner/Admin
 router.route('/:id')

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getSchedules, getEvents } from "../services/api";
 import { formatTime12h } from "../utils/formatTime";
@@ -14,6 +14,7 @@ const todayDay = today.toLocaleDateString("en-US", { weekday: "long" });
 
 export default function OrganizerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("today");
   
   const [lectures, setLectures] = useState([]);
@@ -165,7 +166,13 @@ export default function OrganizerDashboard() {
                     {events.map((ev) => {
                       const id = ev._id || ev.id;
                       return (
-                        <EventCard key={id} event={{...ev, id}} user={user} isAdmin={false} />
+                        <EventCard
+                          key={id}
+                          event={{...ev, id}}
+                          user={user}
+                          isAdmin={false}
+                          onClick={() => navigate(`/events/${id}`, { state: { event: { ...ev, id } } })}
+                        />
                       );
                     })}
                   </div>

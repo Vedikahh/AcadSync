@@ -27,10 +27,16 @@ export default function LectureCard({ lecture }) {
         <span className="lecture-time">{formatTime12h(lecture.startTime)} – {formatTime12h(lecture.endTime)}</span>
         <span className="lecture-dept-badge">{lecture.department}</span>
       </div>
-      <h4 className="lecture-subject">{lecture.subject}</h4>
+      <h4 className="lecture-subject">{lecture.subject || "Untitled"}</h4>
       <div className="lecture-meta">
-        <span>{lecture.faculty}</span>
-        <span>Room {lecture.room}</span>
+        <span className="lecture-meta-item">
+          <span className="lecture-meta-icon">FAC</span>
+          <span>{lecture.faculty}</span>
+        </span>
+        <span className="lecture-meta-item">
+          <span className="lecture-meta-icon">RM</span>
+          <span>Room {lecture.room}</span>
+        </span>
       </div>
       {lecture.type && (
         <span className={`lecture-type-badge lecture-type-${lecture.type}`}>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { useState } from "react";
 
 import Navbar           from "./components/Navbar";
@@ -16,7 +17,9 @@ import UnifiedCalendar  from "./pages/UnifiedCalendar";
 import CreateEvent      from "./pages/CreateEvent";
 import ConflictResult   from "./pages/ConflictResult";
 import EventsPage       from "./pages/EventsPage";
+import EventDetails     from "./pages/EventDetails";
 import ManageEvents     from "./pages/ManageEvents";
+import MyEvents         from "./pages/MyEvents";
 import AcademicSchedule from "./pages/AcademicSchedule";
 import NotificationsPage from "./pages/NotificationsPage";
 import UserProfile      from "./pages/UserProfile";
@@ -49,7 +52,6 @@ function ProtectedRoute({ children, roles }) {
 function AppLayout() {
   const { user, loadingContext } = useAuth();
   const [sidebarOpen, setSidebarOpen]       = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isAuth = !!user;
 
@@ -60,11 +62,9 @@ function AppLayout() {
         <Sidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
         />
       )}
-      <main className={`${isAuth ? "app-main-with-sidebar" : "app-main"} ${isAuth && sidebarCollapsed ? "app-main-collapsed" : ""}`}>
+      <main className={`${isAuth ? "app-main-with-sidebar" : "app-main"}`}>
         <Routes>
           {/* Public */}
           <Route 
@@ -130,6 +130,8 @@ function AppLayout() {
           {/* Shared (all authenticated) */}
           <Route path="/calendar"      element={<ProtectedRoute><UnifiedCalendar /></ProtectedRoute>} />
           <Route path="/events"        element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+          <Route path="/events/:eventId" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
+          <Route path="/my-events"     element={<ProtectedRoute roles={["organizer"]}><MyEvents /></ProtectedRoute>} />
           <Route path="/create-event"  element={<ProtectedRoute roles={["admin", "organizer"]}><CreateEvent /></ProtectedRoute>} />
           <Route path="/conflict"      element={<ProtectedRoute roles={["admin", "organizer"]}><ConflictResult /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
@@ -145,11 +147,13 @@ function AppLayout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <NotificationsProvider>
-          <AppLayout />
-        </NotificationsProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <NotificationsProvider>
+            <AppLayout />
+          </NotificationsProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

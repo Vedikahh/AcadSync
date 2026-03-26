@@ -169,3 +169,56 @@
   opacity: 1;
 }
 
+/* Dark theme */
+.dark-theme .notification-item {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .notif-clickable:hover {
+  background: #1f2937;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.dark-theme .notif-unread {
+  background: #0b2447;
+  border-color: #1e3a8a;
+}
+
+.dark-theme .notif-unread:hover {
+  background: #1e3a8a !important;
+}
+
+.dark-theme .notif-label-system {
+  background: #1f2937;
+  color: #94a3b8;
+}
+
+.dark-theme .notif-time,
+.dark-theme .notif-route-hint {
+  color: #94a3b8;
+}
+
+.dark-theme .notif-message {
+  color: #f8fafc;
+}
+
+.dark-theme .notif-read .notif-message {
+  color: #cbd5e1;
+}
+
+.dark-theme .unread-dot {
+  box-shadow: 0 0 0 2px #1e3a8a;
+}
+
+.dark-theme .notif-btn-read {
+  background: #1f2937;
+  color: #93c5fd;
+  border-color: #475569;
+}
+
+.dark-theme .notif-btn-read:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+

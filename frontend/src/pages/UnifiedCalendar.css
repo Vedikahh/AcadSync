@@ -632,3 +632,130 @@
     border-left: none; /* simpler on mobile */
   }
 }
+
+/* Dark theme */
+.dark-theme .cal-role-sub {
+  color: #94a3b8;
+}
+
+.dark-theme .cal-secondary-btn {
+  background: #1f2937;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+.dark-theme .cal-secondary-btn:hover {
+  background: #334155;
+  border-color: #64748b;
+}
+
+.dark-theme .cal-summary-item {
+  background: linear-gradient(130deg, #1f2937 0%, #111827 100%);
+  border-color: #334155;
+}
+
+.dark-theme .cal-summary-label {
+  color: #94a3b8;
+}
+
+.dark-theme .cal-summary-item strong {
+  color: #f8fafc;
+}
+
+.dark-theme .cal-action-bar,
+.dark-theme .cal-card,
+.dark-theme .cal-detail-panel {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .cal-search-input {
+  background: #1f2937;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+.dark-theme .cal-status-pill,
+.dark-theme .cal-legend-pill {
+  background: #1f2937;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+.dark-theme .cal-status-active,
+.dark-theme .cal-legend-active {
+  background: #1e3a8a;
+  color: #bfdbfe;
+  border-color: #3b82f6;
+}
+
+.dark-theme .cal-nav {
+  background: #111827;
+  border-bottom-color: #334155;
+}
+
+.dark-theme .cal-nav-btn {
+  background: #1f2937;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+.dark-theme .cal-nav-btn:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.dark-theme .cal-grid {
+  background: #334155;
+  border-top-color: #334155;
+}
+
+.dark-theme .cal-day-header {
+  background: #1f2937;
+  color: #94a3b8;
+  border-bottom-color: #334155;
+}
+
+.dark-theme .cal-cell {
+  background: #0f172a;
+}
+
+.dark-theme .cal-cell-empty,
+.dark-theme .cal-cell:hover:not(.cal-cell-empty) {
+  background: #111827;
+}
+
+.dark-theme .cal-cell-today {
+  background: #052e2b;
+}
+
+.dark-theme .cal-cell-today:hover {
+  background: #064e3b;
+}
+
+.dark-theme .cal-cell-selected {
+  background: #172554 !important;
+}
+
+.dark-theme .cal-detail-header {
+  border-bottom-color: #334155;
+}
+
+.dark-theme .cal-detail-close,
+.dark-theme .cal-empty-icon {
+  background: #1f2937;
+  color: #94a3b8;
+}
+
+.dark-theme .cal-detail-item {
+  border-color: #334155;
+  background: #0f172a;
+}
+
+.dark-theme .cal-detail-meta {
+  color: #94a3b8;
+}
+
+.dark-theme .meta-item::before {
+  color: #64748b;
+}

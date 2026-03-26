@@ -5,12 +5,25 @@ import EventModal from "../components/EventModal";
 import socket from "../services/socket";
 import "./ManageEvents.css";
 
-const FILTERS = ["all", "pending", "approved", "rejected"];
+const FILTERS = ["all", "pending", "approved", "cancelled", "rejected", "completed"];
 
 const STATUS_BADGE = {
   pending:  { cls: "badge-pend", label: "Pending" },
   approved: { cls: "badge-appr", label: "Approved" },
+  cancelled: { cls: "badge-canc", label: "Cancelled" },
+  completed: { cls: "badge-comp", label: "Completed" },
   rejected: { cls: "badge-reje", label: "Rejected" },
+};
+
+const formatEventDate = (rawDate) => {
+  if (!rawDate) return "TBA";
+  const dateValue = new Date(rawDate);
+  if (Number.isNaN(dateValue.getTime())) return "TBA";
+  return dateValue.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 export default function ManageEvents() {
@@ -49,6 +62,7 @@ export default function ManageEvents() {
   };
 
   const handleApprove = async (id) => {
+    if (!window.confirm("Approve this request? Once approved, it cannot be rejected.")) return;
     try {
       await updateEventStatus(id, "approved");
       setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? { ...e, status: "approved" } : e));
@@ -59,12 +73,24 @@ export default function ManageEvents() {
   };
 
   const handleReject = async (id) => {
+    if (!window.confirm("Reject this request?")) return;
     try {
       await updateEventStatus(id, "rejected");
       setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? { ...e, status: "rejected" } : e));
       showToast("❌ Event rejected.");
     } catch (err) {
       showToast("❌ Failed to reject event");
+    }
+  };
+
+  const handleCancel = async (id) => {
+    if (!window.confirm("Cancel this approved event? Once cancelled, it cannot be approved again.")) return;
+    try {
+      await updateEventStatus(id, "cancelled");
+      setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? { ...e, status: "cancelled" } : e));
+      showToast("⚠️ Event cancelled.");
+    } catch (err) {
+      showToast("❌ Failed to cancel event");
     }
   };
 
@@ -79,7 +105,8 @@ export default function ManageEvents() {
   };
 
   const filtered = events.filter((e) => {
-    if (filter !== "all" && e.status !== filter) return false;
+    const effectiveStatus = e.isCompleted && e.status === "approved" ? "completed" : e.status;
+    if (filter !== "all" && effectiveStatus !== filter) return false;
     // ensure title and department exist before toLowerCase
     const titleMatch = e.title && e.title.toLowerCase().includes(search.toLowerCase());
     const deptMatch = e.department && e.department.toLowerCase().includes(search.toLowerCase());
@@ -90,8 +117,10 @@ export default function ManageEvents() {
   const counts = {
     all: events.length,
     pending: events.filter((e) => e.status === "pending").length,
-    approved: events.filter((e) => e.status === "approved").length,
+    approved: events.filter((e) => e.status === "approved" && !e.isCompleted).length,
+    cancelled: events.filter((e) => e.status === "cancelled").length,
     rejected: events.filter((e) => e.status === "rejected").length,
+    completed: events.filter((e) => e.status === "approved" && e.isCompleted).length,
   };
 
   return (
@@ -154,7 +183,8 @@ export default function ManageEvents() {
             </thead>
             <tbody>
               {filtered.map((ev) => {
-                const badge = STATUS_BADGE[ev.status] || STATUS_BADGE.pending;
+                const effectiveStatus = ev.isCompleted && ev.status === "approved" ? "completed" : ev.status;
+                const badge = STATUS_BADGE[effectiveStatus] || STATUS_BADGE.pending;
                 const id = ev._id || ev.id;
                 return (
                   <tr key={id} className="me-row" onClick={() => setSelectedEvent(ev)} style={{ cursor: "pointer" }}>
@@ -163,11 +193,7 @@ export default function ManageEvents() {
                       <span className="me-event-organizer">{ev.organizer || (ev.createdBy && ev.createdBy.name) || "Unknown"}</span>
                     </td>
                     <td className="me-dept">{ev.department}</td>
-                    <td className="me-date">
-                      {ev.date ? new Date(ev.date + "T00:00").toLocaleDateString("en-IN", {
-                        day: "numeric", month: "short", year: "numeric",
-                      }) : "TBA"}
-                    </td>
+                    <td className="me-date">{formatEventDate(ev.date)}</td>
                     <td className="me-venue">{ev.venue}</td>
                     <td className="me-participants">{ev.participants || "--"}</td>
                     <td>
@@ -175,14 +201,19 @@ export default function ManageEvents() {
                     </td>
                     <td onClick={e => e.stopPropagation()}>
                       <div className="me-actions">
-                        {ev.status !== "approved" && (
+                        {ev.status === "pending" && (
                           <button className="me-btn-approve" onClick={() => handleApprove(id)} title="Approve">
                             ✓
                           </button>
                         )}
-                        {ev.status !== "rejected" && (
+                        {ev.status === "pending" && (
                           <button className="me-btn-reject" onClick={() => handleReject(id)} title="Reject">
                             ✗
+                          </button>
+                        )}
+                        {ev.status === "approved" && !ev.isCompleted && (
+                          <button className="me-btn-cancel" onClick={() => handleCancel(id)} title="Cancel">
+                            ⊘
                           </button>
                         )}
                         <button className="me-btn-delete" onClick={() => handleDelete(id)} title="Delete">

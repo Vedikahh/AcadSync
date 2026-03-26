@@ -30,6 +30,10 @@ exports.updateUserProfile = async (req, res) => {
     if (user) {
       user.name = req.body.name || user.name;
       user.department = req.body.department !== undefined ? req.body.department : user.department;
+      user.organization = req.body.organization !== undefined ? req.body.organization : user.organization;
+      user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
+      user.year = req.body.year !== undefined ? req.body.year : user.year;
+      user.designation = req.body.designation !== undefined ? req.body.designation : user.designation;
       user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
       user.avatar = req.body.avatar !== undefined ? req.body.avatar : user.avatar;
       
@@ -41,6 +45,10 @@ exports.updateUserProfile = async (req, res) => {
         email: updatedUser.email,
         role: updatedUser.role,
         department: updatedUser.department,
+        organization: updatedUser.organization,
+        phone: updatedUser.phone,
+        year: updatedUser.year,
+        designation: updatedUser.designation,
         bio: updatedUser.bio,
         avatar: updatedUser.avatar,
       });

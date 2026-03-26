@@ -2,13 +2,14 @@
    LectureCard — Light Theme
    ======================== */
 .lecture-card {
-  background: var(--bg-card, #fff);
+  background: linear-gradient(180deg, var(--bg-card, #fff) 0%, #fcfdff 100%);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 15px 16px;
   position: relative;
   box-shadow: var(--shadow-card);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
+  border-left: 4px solid #6366f1;
 }
 
 .lecture-card:hover {
@@ -59,24 +60,43 @@
   font-weight: 700;
   padding: 2px 8px;
   background: var(--indigo-100, #E0E7FF);
-  color: var(--secondary, #6366F1);
+  color: var(--indigo-600, #4F46E5);
+  border: 1px solid #c7d2fe;
   border-radius: 20px;
 }
 
 .lecture-subject {
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: var(--text-primary);
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   padding-right: 56px;
+  letter-spacing: -0.01em;
 }
 
 .lecture-meta {
   display: flex;
-  gap: 16px;
+  gap: 8px;
   font-size: 0.78rem;
   color: var(--text-muted);
   flex-wrap: wrap;
+}
+
+.lecture-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-weight: 600;
+}
+
+.lecture-meta-icon {
+  font-size: 0.75rem;
+  opacity: 0.9;
 }
 
 .lecture-type-badge {
@@ -91,3 +111,20 @@
 .lecture-type-lecture { background: #DBEAFE; color: #1D4ED8; }
 .lecture-type-exam    { background: #FFEDD5; color: #C2410C; }
 .lecture-type-lab     { background: #DCFCE7; color: #15803D; }
+
+.dark-theme .lecture-card {
+  background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+  border-color: #334155;
+}
+
+.dark-theme .lecture-meta-item {
+  background: #1f2937;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.dark-theme .lecture-dept-badge {
+  background: rgba(79, 70, 229, 0.2);
+  color: #c7d2fe;
+  border-color: rgba(129, 140, 248, 0.45);
+}

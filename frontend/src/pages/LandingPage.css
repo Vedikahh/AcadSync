@@ -795,3 +795,146 @@
 @media (max-width: 600px) {
   .lp-footer { flex-direction: column; align-items: flex-start; }
 }
+
+/* ================================================
+   Landing Page - Dark Theme Overrides
+   ================================================ */
+.dark-theme .lp-hero {
+  background: #0b1220;
+}
+
+.dark-theme .lp-bg-grid {
+  background-image:
+    linear-gradient(rgba(148,163,184,0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,184,0.09) 1px, transparent 1px);
+}
+
+.dark-theme .lp-hero-pill {
+  background: #1e3a8a;
+  color: #bfdbfe;
+  border-color: #3b82f6;
+}
+
+.dark-theme .lp-hero-title,
+.dark-theme .lp-stat-num,
+.dark-theme .lp-section-header h2,
+.dark-theme .lp-feature-title,
+.dark-theme .lp-step-title,
+.dark-theme .lp-dash-heading,
+.dark-theme .lp-fc-title {
+  color: #f8fafc;
+}
+
+.dark-theme .lp-hero-sub,
+.dark-theme .lp-section-header p,
+.dark-theme .lp-feature-desc,
+.dark-theme .lp-step-desc,
+.dark-theme .lp-stat-label,
+.dark-theme .lp-fc-sub,
+.dark-theme .lp-dash-stat-label,
+.dark-theme .lp-dash-table-head,
+.dark-theme .lp-dash-row-dept,
+.dark-theme .lp-dash-url {
+  color: #94a3b8;
+}
+
+.dark-theme .lp-stat-divider {
+  background: #334155;
+}
+
+.dark-theme .lp-btn-outline {
+  border-color: #475569;
+  color: #cbd5e1;
+  background: #1f2937;
+}
+
+.dark-theme .lp-btn-outline:hover {
+  border-color: #60a5fa;
+  color: #bfdbfe;
+  background: #1e3a8a;
+}
+
+.dark-theme .lp-dash-window,
+.dark-theme .lp-role-card,
+.dark-theme .lp-feature-card,
+.dark-theme .lp-float-card {
+  background: #111827;
+  border-color: #334155;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.dark-theme .lp-dash-topbar,
+.dark-theme .lp-dash-sidebar,
+.dark-theme .lp-features {
+  background: #0f172a;
+}
+
+.dark-theme .lp-features {
+  border-top: 1px solid #1f2937;
+  border-bottom: 1px solid #1f2937;
+}
+
+.dark-theme .lp-dash-topbar,
+.dark-theme .lp-dash-sidebar,
+.dark-theme .lp-dash-stat-card,
+.dark-theme .lp-dash-row,
+.dark-theme .lp-feature-card,
+.dark-theme .lp-role-card {
+  border-color: #334155;
+}
+
+.dark-theme .lp-dash-url {
+  background: #1f2937;
+}
+
+.dark-theme .lp-dash-nav-item,
+.dark-theme .lp-dash-row-name,
+.dark-theme .lp-role-list li {
+  color: #cbd5e1;
+}
+
+.dark-theme .lp-dash-nav-active {
+  background: #1e3a8a;
+  color: #bfdbfe;
+}
+
+.dark-theme .lp-dash-stat-card {
+  background: #0f172a;
+}
+
+.dark-theme .lp-roles,
+.dark-theme .lp-how {
+  background: #0b1220;
+}
+
+.dark-theme .lp-step-connector {
+  background: linear-gradient(90deg, #1e3a8a, #4338ca);
+}
+
+.dark-theme .lp-btn-cta-primary {
+  background: #e2e8f0;
+  color: #1e3a8a;
+}
+
+.dark-theme .lp-btn-cta-outline {
+  border-color: rgba(226,232,240,0.65);
+  color: #e2e8f0;
+}
+
+.dark-theme .lp-btn-cta-outline:hover {
+  background: rgba(226,232,240,0.12);
+  border-color: #e2e8f0;
+}
+
+.dark-theme .lp-footer {
+  background: #020617;
+}
+
+.dark-theme .lp-footer-copy,
+.dark-theme .lp-footer-links a {
+  color: #94a3b8;
+}
+
+.dark-theme .lp-footer-links a:hover {
+  color: #e2e8f0;
+}

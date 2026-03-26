@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getEvents, getNotifications, markNotificationRead } from "../services/api";
 import EventCard from "../components/EventCard";
@@ -10,6 +10,7 @@ import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,9 +20,11 @@ export default function StudentDashboard() {
       getEvents().catch(() => []),
       getNotifications().catch(() => [])
     ]).then(([eventsData, notifsData]) => {
-      // For student, show all approved campus events
-      const approvedEventsList = Array.isArray(eventsData) ? eventsData.filter(e => e.status === "approved") : [];
-      setEvents(approvedEventsList);
+      // Students can only see approved and cancelled events.
+      const visibleEvents = Array.isArray(eventsData)
+        ? eventsData.filter((e) => e.status === "approved" || e.status === "cancelled")
+        : [];
+      setEvents(visibleEvents);
       
       setNotifications(Array.isArray(notifsData) ? notifsData : []);
       setIsLoading(false);
@@ -119,7 +122,12 @@ export default function StudentDashboard() {
                   {events.map((event) => {
                     const id = event._id || event.id;
                     return (
-                      <EventCard key={id} event={{...event, id}} isAdmin={false} />
+                      <EventCard
+                        key={id}
+                        event={{...event, id}}
+                        isAdmin={false}
+                        onClick={() => navigate(`/events/${id}`, { state: { event: { ...event, id } } })}
+                      />
                     );
                   })}
                 </div>

@@ -54,6 +54,7 @@ export const getMe = () =>
 
 // ---- Event APIs ----
 export const getEvents = () => request("/api/events");
+export const getMyEvents = () => request("/api/events/my-events");
 
 export const checkEventConflicts = (event) =>
   request("/api/events/check-conflicts", { method: "POST", body: JSON.stringify(event) });
@@ -65,8 +66,15 @@ export const updateEvent = (id, event) =>
   request(`/api/events/${id}`, { method: "PATCH", body: JSON.stringify(event) });
 
 export const updateEventStatus = (id, status) => {
-  // Routes mapped to our Node.js design
-  const path = status === 'approved' ? `/api/events/${id}/approve` : `/api/events/${id}/reject`;
+  const pathMap = {
+    approved: `/api/events/${id}/approve`,
+    rejected: `/api/events/${id}/reject`,
+    cancelled: `/api/events/${id}/cancel`,
+  };
+  const path = pathMap[status];
+  if (!path) {
+    throw new Error('Unsupported event status update');
+  }
   return request(path, { method: "PATCH" });
 }
 

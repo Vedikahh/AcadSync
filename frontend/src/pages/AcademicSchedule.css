@@ -314,11 +314,18 @@
 
 .as-dept-badge {
   background: var(--indigo-100, #E0E7FF);
-  color: var(--secondary);
+  color: var(--indigo-600, #4F46E5);
+  border: 1px solid #c7d2fe;
   padding: 2px 9px;
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+.dark-theme .as-dept-badge {
+  background: rgba(79, 70, 229, 0.2);
+  color: #c7d2fe;
+  border-color: rgba(129, 140, 248, 0.45);
 }
 
 .as-type-badge {

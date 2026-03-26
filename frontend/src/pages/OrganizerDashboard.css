@@ -120,17 +120,20 @@
 
 .organizer-tabs {
   display: flex;
-  gap: 24px;
+  gap: 10px;
   overflow-x: auto;
   scrollbar-width: none; /* hide scrollbar for horizontal tabs */
+  padding-bottom: 8px;
 }
 
 .organizer-tabs::-webkit-scrollbar { display: none; }
 
 .organizer-tab {
-  padding: 0 0 12px 0;
-  background: none;
-  border: none;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
   color: var(--text-secondary, #475569);
   font-size: 0.95rem;
   font-weight: 700;
@@ -146,7 +149,7 @@
 .organizer-tab::after {
   content: "";
   position: absolute;
-  bottom: -2px; /* overlap border */
+  bottom: -8px; /* overlap wrapper border */
   left: 0;
   right: 0;
   height: 2px;
@@ -159,10 +162,14 @@
 
 .organizer-tab:hover {
   color: var(--text-primary, #0F172A);
+  background: #ffffff;
+  border-color: #cbd5e1;
 }
 
 .organizer-tab-active {
   color: var(--primary, #2563EB);
+  background: #ffffff;
+  border-color: #bfdbfe;
 }
 
 .organizer-tab-active::after {
@@ -237,7 +244,7 @@
   position: absolute;
   top: 10px;
   bottom: 20px;
-  left: 60px; /* aligns with timebox edge */
+  left: 82px; /* aligns with updated timebox edge */
   width: 2px;
   background: var(--border-light, #F1F5F9);
   z-index: 0;
@@ -251,16 +258,23 @@
 }
 
 .fac-timebox {
-  width: 60px;
+  width: 82px;
   flex-shrink: 0;
   text-align: right;
   padding-top: 16px; /* align text to card top roughly */
 }
 
 .fac-time {
-  font-size: 0.85rem;
+  display: inline-block;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--text-secondary, #475569);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 999px;
 }
 
 .fac-card-wrapper {
@@ -415,4 +429,88 @@
   .fac-timeline::before { display: none; }
   .fac-timeline-item { flex-direction: column; gap: 8px; }
   .fac-timebox { text-align: left; padding-top: 0; }
+}
+
+/* Dark theme */
+.dark-theme .fac-btn-outline {
+  background: #1f2937;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+.dark-theme .fac-btn-outline:hover {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #64748b;
+}
+
+.dark-theme .organizer-tabs-wrapper {
+  border-bottom-color: #334155;
+}
+
+.dark-theme .organizer-tab {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .organizer-tab:hover {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+.dark-theme .organizer-tab-active {
+  background: #0f172a;
+  border-color: #4f46e5;
+  color: #c7d2fe;
+}
+
+.dark-theme .organizer-tab:hover {
+  color: #f8fafc;
+}
+
+.dark-theme .fac-empty-state {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .fac-empty-icon {
+  background: #1f2937;
+  color: #94a3b8;
+}
+
+.dark-theme .fac-timeline::before {
+  background: #334155;
+}
+
+.dark-theme .fac-time {
+  background: #111827;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.dark-theme .fac-alert-banner {
+  background: #3f1d0f;
+  border-color: #9a3412;
+  color: #fdba74;
+}
+
+.dark-theme .fac-side-card {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .fac-link-item {
+  background: #1f2937;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.dark-theme .fac-link-item:hover {
+  background: #0f172a;
+  border-color: #475569;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.dark-theme .fac-notice-card {
+  background: linear-gradient(180deg, #111827, #0f172a);
 }

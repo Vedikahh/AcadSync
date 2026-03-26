@@ -207,3 +207,37 @@
   font-size: 0.85rem;
   z-index: 9999;
 }
+
+/* Dark theme */
+.dark-theme .up-panel {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .up-panel-header {
+  border-bottom-color: #334155;
+}
+
+.dark-theme .up-btn-secondary {
+  background: #1f2937;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.dark-theme .up-field input,
+.dark-theme .up-field select,
+.dark-theme .up-field textarea {
+  background: #1f2937;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+.dark-theme .up-input-disabled {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+}
+
+.dark-theme .up-toast {
+  background: #e2e8f0;
+  color: #0f172a;
+}

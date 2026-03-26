@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
 import EventCard from "../components/EventCard";
-import EventModal from "../components/EventModal";
 import socket from "../services/socket";
 import "./EventsPage.css";
 
-const FILTERS = ["all", "pending", "approved", "rejected"];
+const FILTERS = ["all", "pending", "approved", "cancelled", "rejected"];
 
 export default function EventsPage() {
   const { user } = useAuth();
@@ -18,7 +17,6 @@ export default function EventsPage() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -47,6 +45,7 @@ export default function EventsPage() {
   });
 
   const handleApprove = async (id) => {
+    if (!window.confirm("Approve this request? Once approved, it cannot be rejected.")) return;
     try {
       await updateEventStatus(id, "approved");
       setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "approved" } : e)));
@@ -54,10 +53,19 @@ export default function EventsPage() {
   };
 
   const handleReject = async (id) => {
+    if (!window.confirm("Reject this request?")) return;
     try {
       await updateEventStatus(id, "rejected");
       setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "rejected" } : e)));
     } catch (err) { console.error("Update failed", err); }
+  };
+
+  const handleCancel = async (id) => {
+    if (!window.confirm("Cancel this approved event? Once cancelled, it cannot be approved again.")) return;
+    try {
+      await updateEventStatus(id, "cancelled");
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "cancelled" } : e)));
+    } catch (err) { console.error("Cancel failed", err); }
   };
 
   const handleDelete = async (id) => {
@@ -126,20 +134,14 @@ export default function EventsPage() {
                 isAdmin={isAdmin}
                 onApprove={() => handleApprove(normalizedEvent.id)}
                 onReject={() => handleReject(normalizedEvent.id)}
+                onCancel={() => handleCancel(normalizedEvent.id)}
                 onDelete={() => handleDelete(normalizedEvent.id)}
                 onEdit={handleEdit}
-                onClick={() => setSelectedEvent(normalizedEvent)}
+                onClick={() => navigate(`/events/${normalizedEvent.id}`, { state: { event: normalizedEvent } })}
               />
             )
           })}
         </div>
-      )}
-
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-        />
       )}
     </div>
   );

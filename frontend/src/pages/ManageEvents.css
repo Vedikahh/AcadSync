@@ -137,12 +137,14 @@
 
 .badge-pend { background: #FFF3E0; color: #F57C00; }
 .badge-appr { background: #E8F5E9; color: #2E7D32; }
+.badge-canc { background: #FFF1F2; color: #BE123C; }
+.badge-comp { background: #F1F5F9; color: #334155; }
 .badge-reje { background: #FFEBEE; color: #C62828; }
 
 /* Action buttons */
 .me-actions { display: flex; gap: 6px; align-items: center; }
 
-.me-btn-approve, .me-btn-reject, .me-btn-delete {
+.me-btn-approve, .me-btn-reject, .me-btn-cancel, .me-btn-delete {
   width: 30px;
   height: 30px;
   border-radius: 8px;
@@ -161,6 +163,9 @@
 
 .me-btn-reject  { color: #C62828; }
 .me-btn-reject:hover  { background: #FFEBEE; border-color: #FFCDD2; }
+
+.me-btn-cancel { color: #BE123C; }
+.me-btn-cancel:hover { background: #FFF1F2; border-color: #FECDD3; }
 
 .me-btn-delete  { color: var(--text-muted); }
 .me-btn-delete:hover  { background: #FFEBEE; border-color: #FFCDD2; color: var(--danger); }

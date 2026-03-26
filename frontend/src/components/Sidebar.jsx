@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationsContext";
+import { useTheme } from "../context/ThemeContext";
 import "./Sidebar.css";
 
 const Icons = {
@@ -14,8 +16,11 @@ const Icons = {
   Schedule: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
   Conflict: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   Logout: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
-  ChevronLeft: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
-  ChevronRight: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  Settings: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 0l4.24-4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08 0l4.24 4.24"/></svg>,
+  Sun: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
+  Moon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  ChevronUp: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>,
+  ChevronDown: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
 };
 
 const STUDENT_LINKS = [
@@ -23,15 +28,14 @@ const STUDENT_LINKS = [
   { to: "/calendar",      icon: "Calendar",      label: "Calendar" },
   { to: "/events",        icon: "Events",        label: "Campus Events" },
   { to: "/notifications", icon: "Notifications", label: "Notifications" },
-  { to: "/profile",       icon: "Profile",       label: "Profile" },
 ];
 
 const ORGANIZER_LINKS = [
   { to: "/organizer-dashboard", icon: "Dashboard",     label: "Dashboard" },
   { to: "/calendar",          icon: "Calendar",      label: "Calendar" },
   { to: "/events",            icon: "Events",        label: "Campus Events" },
+  { to: "/my-events",         icon: "Manage",        label: "My Events" },
   { to: "/notifications",     icon: "Notifications", label: "Notifications" },
-  { to: "/profile",           icon: "Profile",       label: "Profile" },
 ];
 
 const ADMIN_LINKS = [
@@ -41,118 +45,146 @@ const ADMIN_LINKS = [
   { to: "/schedule",      icon: "Schedule",      label: "Academic Schedule" },
   { to: "/conflict",      icon: "Conflict",      label: "Conflict Reports" },
   { to: "/notifications", icon: "Notifications", label: "Notifications" },
-  { to: "/profile",       icon: "Profile",       label: "Profile" },
 ];
 
-function getLinksByRole(role) {
-  if (role === "admin")   return ADMIN_LINKS;
-  if (role === "organizer") return ORGANIZER_LINKS;
-  return STUDENT_LINKS;
-}
-
-export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }) {
+export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const links = getLinksByRole(user?.role);
 
   const handleLogout = () => {
     logout();
     navigate("/");
+    setIsMenuOpen(false);
     if (onClose) onClose();
   };
 
-  const roleLabel = {
-    admin:   "Administrator",
-    organizer: "Faculty/Committee",
-    student: "Student",
-  }[user?.role] || "Member";
+  const handleThemeToggle = () => {
+    toggleTheme();
+  };
 
-  const roleColor = {
-    admin:   "#EF4444",
-    organizer: "#F97316",
-    student: "#2563EB",
-  }[user?.role] || "#2563EB";
-
-  const ChevronIcon = collapsed ? Icons.ChevronRight : Icons.ChevronLeft;
+  const ChevronIcon = isMenuOpen ? Icons.ChevronUp : Icons.ChevronDown;
+  const ThemeIcon = isDark ? Icons.Sun : Icons.Moon;
 
   return (
     <>
       <div className={`sidebar-overlay ${isOpen ? "sidebar-overlay-active" : ""}`} onClick={onClose} />
-      <aside className={`sidebar ${isOpen ? "sidebar-open" : ""} ${collapsed ? "sidebar-collapsed" : ""}`}>
+      <aside className={`sidebar ${isOpen ? "sidebar-open" : ""}`}>
 
-        {/* Collapse toggle button — desktop only */}
-        <button
-          className="sidebar-collapse-btn"
-          onClick={onToggleCollapse}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <ChevronIcon />
-        </button>
+        {/* Profile & Menu */}
+        <div className="sidebar-profile-menu">
+          <button
+            className="sidebar-profile-btn"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            <div className="sidebar-avatar" style={{ background: getColorByRole(user?.role) }}>
+              {user?.avatar ? (
+                <img src={user.avatar} alt="Profile" className="sidebar-avatar-image" />
+              ) : (
+                user?.name?.charAt(0).toUpperCase() || "U"
+              )}
+            </div>
+            <div className="sidebar-profile-info">
+              <p className="sidebar-profile-name">{user?.name || "User"}</p>
+              <p className="sidebar-profile-role">
+                {getRoleLabel(user?.role)}
+              </p>
+            </div>
+            <div className="sidebar-menu-chevron">
+              <ChevronIcon />
+            </div>
+          </button>
 
-        {/* Profile */}
-        <div className="sidebar-profile">
-          <div className="sidebar-avatar" style={{ background: `linear-gradient(135deg, ${roleColor}, ${roleColor}dd)` }}>
-            {user?.avatar ? (
-              <img src={user.avatar} alt="Profile" className="sidebar-avatar-image" />
-            ) : (
-              user?.name?.charAt(0).toUpperCase() || "U"
-            )}
-          </div>
-          <div className="sidebar-user-info">
-            <p className="sidebar-user-name">{user?.name || "User"}</p>
-            <span
-              className="sidebar-role-badge"
-              style={{ background: roleColor + "18", color: roleColor, border: `1px solid ${roleColor}33` }}
-            >
-              {roleLabel}
-            </span>
-          </div>
+          {/* Dropdown Menu */}
+          {isMenuOpen && (
+            <div className="sidebar-dropdown-menu">
+              <div className="sidebar-dropdown-email">
+                {user?.email || "user@example.com"}
+              </div>
+              <button className="sidebar-dropdown-item">
+                Add another account
+              </button>
+              <div className="sidebar-dropdown-divider" />
+              <button className="sidebar-dropdown-item" onClick={handleThemeToggle}>
+                <ThemeIcon />
+                {isDark ? "Light Theme" : "Dark Theme"}
+              </button>
+              <button className="sidebar-dropdown-item sidebar-dropdown-logout" onClick={handleLogout}>
+                <Icons.Logout />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Nav links */}
         <nav className="sidebar-nav">
-          <div className="sidebar-nav-group">
-            <p className="sidebar-nav-label">Main Menu</p>
-            {links.map((link) => {
-              const Icon = Icons[link.icon];
-              return (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  className={({ isActive }) =>
-                    `sidebar-link ${isActive ? "sidebar-link-active" : ""}`
-                  }
-                  onClick={onClose}
-                  data-tooltip={collapsed ? link.label : undefined}
-                >
-                  <span className="sidebar-link-icon"><Icon /></span>
-                  <span className="sidebar-link-label">{link.label}</span>
-                  {link.to === "/notifications" && unreadCount > 0 && (
-                    <span className={`sidebar-badge ${collapsed ? "sidebar-badge-collapsed" : ""}`}>
-                      {unreadCount}
-                    </span>
-                  )}
-                </NavLink>
-              );
-            })}
-          </div>
+          {links.map((link) => {
+            const Icon = Icons[link.icon];
+            return (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `sidebar-link ${isActive ? "sidebar-link-active" : ""}`
+                }
+                onClick={onClose}
+              >
+                <span className="sidebar-link-icon"><Icon /></span>
+                <span className="sidebar-link-label">{link.label}</span>
+                {link.to === "/notifications" && unreadCount > 0 && (
+                  <span className="sidebar-badge">
+                    {unreadCount}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
-        {/* Logout */}
+        {/* Profile Link in Footer */}
         <div className="sidebar-footer">
-          <button
-            className="sidebar-logout"
-            onClick={handleLogout}
-            data-tooltip={collapsed ? "Sign Out" : undefined}
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              `sidebar-link ${isActive ? "sidebar-link-active" : ""}`
+            }
+            onClick={onClose}
           >
-            <span className="sidebar-link-icon"><Icons.Logout /></span>
-            <span className="sidebar-link-label">Sign Out</span>
-          </button>
+            <span className="sidebar-link-icon"><Icons.Profile /></span>
+            <span className="sidebar-link-label">Profile</span>
+          </NavLink>
         </div>
       </aside>
     </>
   );
+}
+
+// Helper functions
+function getColorByRole(role) {
+  const colors = {
+    admin: "#EF4444",
+    organizer: "#F97316",
+    student: "#2563EB",
+  };
+  return colors[role] || "#2563EB";
+}
+
+function getRoleLabel(role) {
+  const labels = {
+    admin: "Administrator",
+    organizer: "Faculty/Committee",
+    student: "Student",
+  };
+  return labels[role] || "Member";
+}
+
+function getLinksByRole(role) {
+  if (role === "admin")   return ADMIN_LINKS;
+  if (role === "organizer") return ORGANIZER_LINKS;
+  return STUDENT_LINKS;
 }

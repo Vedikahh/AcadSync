@@ -4,16 +4,39 @@ const User = require('../models/User');
 const { checkConflicts } = require('../utils/conflictChecker');
 const socket = require('../utils/socket');
 
+const parseEventDateTime = (dateValue, timeValue) => {
+  if (!dateValue || !timeValue) return null;
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const [hours, minutes] = String(timeValue).split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
+const withComputedCompletion = (eventDoc) => {
+  const event = eventDoc.toObject ? eventDoc.toObject() : eventDoc;
+  const endDateTime = parseEventDateTime(event.date, event.endTime);
+  const isCompleted = event.status === 'approved' && endDateTime && new Date() > endDateTime;
+  return { ...event, isCompleted: Boolean(isCompleted) };
+};
+
 
 // @desc    Get all events
 // @route   GET /api/events
 // @access  Private (Anyone logged in)
 exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find()
+    const query = req.user.role === 'student'
+      ? { status: { $in: ['approved', 'cancelled'] } }
+      : {};
+
+    const events = await Event.find(query)
       .populate('createdBy', 'name email department')
       .sort({ date: 1 });
-    res.json(events);
+    res.json(events.map(withComputedCompletion));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -27,7 +50,7 @@ exports.getMyEvents = async (req, res) => {
     const events = await Event.find({ createdBy: req.user.id })
       .populate('createdBy', 'name')
       .sort({ date: 1 });
-    res.json(events);
+    res.json(events.map(withComputedCompletion));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -112,6 +135,10 @@ exports.approveEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
+    if (event.status !== 'pending') {
+      return res.status(400).json({ message: 'Only pending events can be approved' });
+    }
+
     event.status = 'approved';
     await event.save();
     const populatedEvent = await Event.findById(event._id).populate('createdBy', 'name email department');
@@ -142,6 +169,10 @@ exports.rejectEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
+    if (event.status !== 'pending') {
+      return res.status(400).json({ message: 'Only pending events can be rejected' });
+    }
+
     event.status = 'rejected';
     await event.save();
     const populatedEvent = await Event.findById(event._id).populate('createdBy', 'name email department');
@@ -158,6 +189,43 @@ exports.rejectEvent = async (req, res) => {
 
     res.json(populatedEvent);
 
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc    Cancel an approved event before event start time
+// @route   PATCH /api/events/:id/cancel
+// @access  Private (Admin)
+exports.cancelEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    if (event.status !== 'approved') {
+      return res.status(400).json({ message: 'Only approved events can be cancelled' });
+    }
+
+    const eventStart = parseEventDateTime(event.date, event.startTime);
+    if (!eventStart || new Date() >= eventStart) {
+      return res.status(400).json({ message: 'Cannot cancel after event time has occurred' });
+    }
+
+    event.status = 'cancelled';
+    await event.save();
+
+    const populatedEvent = await Event.findById(event._id).populate('createdBy', 'name email department');
+
+    await Notification.create({
+      userId: event.createdBy,
+      message: `Your event "${event.title}" has been cancelled by admin.`,
+      type: 'event',
+      link: '/events'
+    });
+
+    socket.getIO().emit('calendarUpdate', { type: 'event', action: 'cancel', data: populatedEvent });
+
+    res.json(withComputedCompletion(populatedEvent));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

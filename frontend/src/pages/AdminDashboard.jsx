@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getEvents, updateEventStatus } from "../services/api";
 import EventCard from "../components/EventCard";
@@ -8,6 +8,7 @@ import "./Dashboard.css";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -125,6 +126,7 @@ export default function AdminDashboard() {
                         isAdmin 
                         onApprove={() => handleApprove(id)} 
                         onReject={() => handleReject(id)} 
+                        onClick={() => navigate(`/events/${id}`, { state: { event: { ...event, id } } })}
                       />
                     );
                   })}

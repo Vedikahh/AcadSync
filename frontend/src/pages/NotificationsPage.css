@@ -218,3 +218,56 @@
     padding-top: 12px;
   }
 }
+
+/* Dark theme */
+.dark-theme .np-unread-badge {
+  background: #1e3a8a;
+  color: #bfdbfe;
+}
+
+.dark-theme .np-action-bar {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .np-filters {
+  background: #1f2937;
+}
+
+.dark-theme .np-filter-btn {
+  color: #cbd5e1;
+}
+
+.dark-theme .np-filter-btn:hover {
+  color: #f8fafc;
+}
+
+.dark-theme .np-filter-active {
+  background: #0f172a;
+  color: #93c5fd;
+  border-color: #475569;
+}
+
+.dark-theme .np-text-primary:hover {
+  background: #1e3a8a;
+}
+
+.dark-theme .np-text-danger:hover {
+  background: #7f1d1d;
+}
+
+.dark-theme .np-empty-state {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark-theme .np-empty-icon {
+  background: #052e2b;
+  color: #34d399;
+}
+
+@media (max-width: 600px) {
+  .dark-theme .np-bulk-actions {
+    border-top-color: #334155;
+  }
+}
