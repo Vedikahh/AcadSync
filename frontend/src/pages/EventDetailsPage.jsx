@@ -85,7 +85,7 @@ export default function EventDetailsPage() {
 
   const createdById = event.createdBy?._id || event.createdBy;
   const isOwner = user?.id === createdById;
-  const canEdit = isOwner || user?.role === "admin";
+  const canEdit = isOwner && user?.role === "organizer";
 
   const dateLabel = event.date
     ? new Date(event.date).toLocaleDateString("en-IN", {

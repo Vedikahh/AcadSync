@@ -13,9 +13,9 @@ export default function EventsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isAdmin = user?.role === "admin";
+  const isOrganizer = user?.role === "organizer";
   const viewScope = searchParams.get("scope") === "my" ? "my" : "all";
-  const isPrivileged = user?.role === "organizer" || user?.role === "admin";
-  const isMyEventsMode = viewScope === "my";
+  const isMyEventsMode = viewScope === "my" && isOrganizer;
 
   const [events, setEvents] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -37,25 +37,14 @@ export default function EventsPage() {
       setError("");
       let data;
 
-      if (isMyEventsMode && isPrivileged) {
+      if (isMyEventsMode) {
         data = await getMyEvents();
       } else {
         data = await getEvents();
       }
 
       const list = Array.isArray(data) ? data : [];
-
-      if (isMyEventsMode && !isPrivileged) {
-        const myId = user?.id;
-        setEvents(
-          list.filter((event) => {
-            const ownerId = event?.createdBy?._id || event?.createdBy;
-            return !!myId && ownerId === myId;
-          })
-        );
-      } else {
-        setEvents(list);
-      }
+      setEvents(list);
     } catch (err) {
       console.error("Failed to fetch events", err);
       setError("We could not load events right now. Please try again.");
@@ -128,7 +117,7 @@ export default function EventsPage() {
           <h1>{isMyEventsMode ? "My Events" : "Campus Events"}</h1>
           <p>{filtered.length} event{filtered.length !== 1 ? "s" : ""} found</p>
         </div>
-        {(isAdmin || user?.role === "organizer") && (
+        {isOrganizer && (
           <button className="btn-request" onClick={() => navigate("/create-event")}>
             + Request Event
           </button>

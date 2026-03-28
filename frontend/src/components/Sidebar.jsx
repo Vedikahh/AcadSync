@@ -41,7 +41,6 @@ const ADMIN_LINKS = [
   { to: "/admin",         icon: "Dashboard",     label: "Dashboard" },
   { to: "/calendar",      icon: "Calendar",      label: "Calendar" },
   { to: "/manage-events", icon: "Manage",        label: "Manage Events" },
-  { to: "/events?scope=my", icon: "MyEvents",    label: "My Events" },
   { to: "/schedule",      icon: "Schedule",      label: "Academic Schedule" },
   { to: "/conflict",      icon: "Conflict",      label: "Conflict Reports" },
   { to: "/notifications", icon: "Notifications", label: "Notifications" },

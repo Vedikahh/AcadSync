@@ -167,7 +167,7 @@ function AppLayout() {
               <Route path="/calendar"      element={<ProtectedRoute><UnifiedCalendar /></ProtectedRoute>} />
               <Route path="/events"        element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
               <Route path="/events/:eventId" element={<ProtectedRoute><EventDetailsPage /></ProtectedRoute>} />
-              <Route path="/create-event"  element={<ProtectedRoute roles={["admin", "organizer"]}><CreateEvent /></ProtectedRoute>} />
+              <Route path="/create-event"  element={<ProtectedRoute roles={["organizer"]}><CreateEvent /></ProtectedRoute>} />
               <Route path="/conflict"      element={<ProtectedRoute roles={["admin", "organizer"]}><ConflictResult /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
               <Route path="/profile"       element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />

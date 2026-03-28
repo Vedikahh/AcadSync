@@ -51,7 +51,7 @@ export default function UnifiedCalendar() {
 
   const isAdmin = user?.role === "admin";
   const isOrganizer = user?.role === "organizer";
-  const canCreateEvent = isAdmin || isOrganizer;
+  const canCreateEvent = isOrganizer;
   const currentUserId = user?._id || user?.id;
 
   const roleDescription = isAdmin

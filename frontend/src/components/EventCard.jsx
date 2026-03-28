@@ -166,7 +166,7 @@ export default function EventCard({
             </>
           )}
 
-          {(isAdmin || isOwner) && (
+          {isOwner && (
             <div className="owner-actions">
               {onEdit && (
                 <button className="btn-edit" onClick={() => onEdit(event)}>
