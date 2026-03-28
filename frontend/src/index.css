@@ -235,6 +235,19 @@ button {
 
 img, svg { max-width: 100%; }
 
+/* Match app density to ~90% browser zoom on desktop across all pages */
+@media (min-width: 992px) {
+  html {
+    zoom: 0.9;
+  }
+}
+
+@media (max-width: 991px) {
+  html {
+    zoom: 1;
+  }
+}
+
 @keyframes routeFadeSlide {
   from {
     opacity: 0;

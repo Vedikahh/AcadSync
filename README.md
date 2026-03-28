@@ -108,7 +108,7 @@ CLIENT_URL=http://localhost:5173
 ```
 Notes:
 - `MONGO_URI`, `JWT_SECRET`, and `GOOGLE_CLIENT_ID` are required at backend startup.
-- In production, you must configure at least one allowed origin using `CLIENT_URL` or `ALLOWED_ORIGINS`.
+- In production, you must configure at least one allowed origin using `CLIENT_URL`, `FRONTEND_URL`, `CORS_ORIGIN`, or `ALLOWED_ORIGINS`.
 - Keep all secrets in `backend/.env` only. Never put server secrets in frontend env files.
 
 Start the server:
@@ -164,7 +164,7 @@ npm run dev
 2. Copy `frontend/.env.example` to `frontend/.env` and provide public `VITE_` values only.
 3. Ensure `backend/.env` is not tracked by git (it is ignored by default in this repository).
 4. Rotate any key that has ever been committed to git history.
-5. Keep CORS allowlists explicit in production with `CLIENT_URL` and/or `ALLOWED_ORIGINS`.
+5. Keep CORS allowlists explicit in production with `CLIENT_URL`/`FRONTEND_URL`/`CORS_ORIGIN` and/or `ALLOWED_ORIGINS`.
 
 ---
 

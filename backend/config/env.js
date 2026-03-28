@@ -18,12 +18,20 @@ const parseCsv = (value) =>
 
 const isProduction = () => process.env.NODE_ENV === 'production';
 
-const getAllowedOrigins = () => {
-  const configured = parseCsv(
-    [process.env.CLIENT_URL, process.env.ALLOWED_ORIGINS]
+const getConfiguredOrigins = () =>
+  parseCsv(
+    [
+      process.env.CLIENT_URL,
+      process.env.FRONTEND_URL,
+      process.env.CORS_ORIGIN,
+      process.env.ALLOWED_ORIGINS,
+    ]
       .filter(Boolean)
       .join(',')
   );
+
+const getAllowedOrigins = () => {
+  const configured = getConfiguredOrigins();
 
   if (configured.length > 0) {
     return configured;
@@ -51,7 +59,7 @@ const validateEnvironment = () => {
   const allowedOrigins = getAllowedOrigins();
   if (isProduction() && allowedOrigins.length === 0) {
     throw new Error(
-      'CORS allowlist is empty in production. Set CLIENT_URL or ALLOWED_ORIGINS.'
+      'CORS allowlist is empty in production. Set one of CLIENT_URL, FRONTEND_URL, CORS_ORIGIN, or ALLOWED_ORIGINS.'
     );
   }
 };
