@@ -87,6 +87,19 @@ function AppLayout() {
 
   const isAuth = !!user;
 
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isAuth) {
+      root.classList.add("auth-zoom-90");
+    } else {
+      root.classList.remove("auth-zoom-90");
+    }
+
+    return () => {
+      root.classList.remove("auth-zoom-90");
+    };
+  }, [isAuth]);
+
   return (
     <>
       <Navbar onMenuToggle={() => setSidebarOpen((v) => !v)} />

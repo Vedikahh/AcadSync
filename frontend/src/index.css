@@ -235,15 +235,15 @@ button {
 
 img, svg { max-width: 100%; }
 
-/* Match app density to ~90% browser zoom on desktop across all pages */
+/* Match app density to ~90% browser zoom on desktop only after login */
 @media (min-width: 992px) {
-  html {
+  html.auth-zoom-90 {
     zoom: 0.9;
   }
 }
 
 @media (max-width: 991px) {
-  html {
+  html.auth-zoom-90 {
     zoom: 1;
   }
 }
