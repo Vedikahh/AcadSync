@@ -5,6 +5,7 @@
   padding: 28px;
   max-width: 1100px;
   margin: 0 auto;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 .as-header {

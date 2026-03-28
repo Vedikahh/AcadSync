@@ -6,6 +6,11 @@
      ======================== */
   .event-card {
     @apply relative bg-card border border-border rounded-2xl p-5 shadow-sm transition-all duration-300 overflow-hidden flex flex-col z-0;
+    opacity: 0;
+    animation: fadeInUpSoft 0.45s cubic-bezier(0.2, 0.75, 0.2, 1) forwards;
+    animation-delay: calc(var(--item-index, 0) * 70ms);
+    transform-origin: center;
+    backdrop-filter: blur(2px);
   }
   
   /* Gradient top accent */
@@ -13,10 +18,32 @@
     content: '';
     @apply absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary opacity-0 transition-opacity duration-300 z-10;
   }
+
+  .event-card::after {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    right: -110px;
+    top: -120px;
+    background: radial-gradient(circle at center, color-mix(in srgb, var(--primary) 18%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    transition: transform 0.35s ease;
+  }
   
   .event-card:hover {
     @apply shadow-lg transform -translate-y-1;
     box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.1);
+  }
+
+  .event-card:hover::after {
+    transform: scale(1.08);
+  }
+
+  .event-card:active {
+    transform: translateY(0) scale(0.99);
   }
   
   .event-card:hover::before {
@@ -33,15 +60,35 @@
 
   .event-title {
     @apply text-lg font-bold text-text-primary m-0 leading-tight;
+    transition: color 0.2s ease;
+  }
+
+  .event-card:hover .event-title {
+    color: var(--primary);
   }
 
   .event-description {
     @apply text-sm text-text-secondary mt-1 mb-4 line-clamp-2 z-10 relative;
   }
 
+  .event-pill-row {
+    @apply flex flex-wrap gap-2 mb-3 z-10 relative;
+  }
+
+  .event-pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .event-pill-soft {
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    color: color-mix(in srgb, var(--text-primary) 88%, var(--primary));
+    border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  }
+
   /* Status Badge with animated dot */
   .status-badge {
     @apply flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap border shrink-0 z-10;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   
   .status-dot {
@@ -69,12 +116,41 @@
     @apply bg-red-500;
   }
 
+  .event-card:hover .status-badge {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  }
+
   .event-meta {
     @apply flex flex-col gap-2 mt-auto z-10 relative;
   }
 
   .meta-item {
     @apply flex items-center gap-2 text-sm text-text-secondary;
+  }
+
+  .event-countdown {
+    @apply inline-flex w-fit mt-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .event-card-cta {
+    @apply mt-3 inline-flex items-center gap-1.5 text-sm font-semibold w-fit z-10 relative;
+    color: var(--primary);
+    transition: letter-spacing 0.2s ease, transform 0.2s ease;
+  }
+
+  .event-card:hover .event-card-cta {
+    letter-spacing: 0.02em;
+    transform: translateX(2px);
+  }
+
+  .event-countdown:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.2);
   }
   
   .meta-icon {
@@ -86,8 +162,14 @@
     @apply flex gap-2 mt-4 pt-4 border-t border-border-light z-10 relative;
   }
 
+  .event-card:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+    outline-offset: 2px;
+  }
+
   .btn-approve, .btn-reject, .btn-delete, .btn-edit {
     @apply flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-colors duration-200 border;
+    transition: transform 0.18s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   }
 
   .btn-approve {
@@ -108,5 +190,20 @@
 
   .btn-delete {
     @apply bg-danger/10 text-danger border-transparent hover:bg-danger/20;
+  }
+
+  .btn-approve:hover,
+  .btn-reject:hover,
+  .btn-edit:hover,
+  .btn-delete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(15, 23, 42, 0.1);
+  }
+
+  .btn-approve:active,
+  .btn-reject:active,
+  .btn-edit:active,
+  .btn-delete:active {
+    transform: scale(0.97);
   }
 }

@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationsContext";
 import "./Sidebar.css";
@@ -7,6 +7,7 @@ const Icons = {
   Dashboard: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>,
   Calendar: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
   Events: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>,
+  MyEvents: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v4"/><path d="M16 3v4"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 11h18"/><path d="M12 16l1.4 2.8 3.1.4-2.2 2.1.5 3.1L12 22.9 9.2 24.4l.5-3.1-2.2-2.1 3.1-.4z"/></svg>,
   Create: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
   Notifications: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
   Profile: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
@@ -22,6 +23,7 @@ const STUDENT_LINKS = [
   { to: "/dashboard",     icon: "Dashboard",     label: "Dashboard" },
   { to: "/calendar",      icon: "Calendar",      label: "Calendar" },
   { to: "/events",        icon: "Events",        label: "Campus Events" },
+  { to: "/events?scope=my", icon: "MyEvents",    label: "My Events" },
   { to: "/notifications", icon: "Notifications", label: "Notifications" },
   { to: "/profile",       icon: "Profile",       label: "Profile" },
 ];
@@ -30,6 +32,7 @@ const ORGANIZER_LINKS = [
   { to: "/organizer-dashboard", icon: "Dashboard",     label: "Dashboard" },
   { to: "/calendar",          icon: "Calendar",      label: "Calendar" },
   { to: "/events",            icon: "Events",        label: "Campus Events" },
+  { to: "/events?scope=my",   icon: "MyEvents",      label: "My Events" },
   { to: "/notifications",     icon: "Notifications", label: "Notifications" },
   { to: "/profile",           icon: "Profile",       label: "Profile" },
 ];
@@ -38,6 +41,7 @@ const ADMIN_LINKS = [
   { to: "/admin",         icon: "Dashboard",     label: "Dashboard" },
   { to: "/calendar",      icon: "Calendar",      label: "Calendar" },
   { to: "/manage-events", icon: "Manage",        label: "Manage Events" },
+  { to: "/events?scope=my", icon: "MyEvents",    label: "My Events" },
   { to: "/schedule",      icon: "Schedule",      label: "Academic Schedule" },
   { to: "/conflict",      icon: "Conflict",      label: "Conflict Reports" },
   { to: "/notifications", icon: "Notifications", label: "Notifications" },
@@ -54,6 +58,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const links = getLinksByRole(user?.role);
 
@@ -118,12 +123,28 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
             <p className="sidebar-nav-label">Main Menu</p>
             {links.map((link) => {
               const Icon = Icons[link.icon];
+              const linkUrl = new URL(link.to, "https://acadsync.local");
+              const isMyEventsLink = linkUrl.pathname === "/events" && linkUrl.searchParams.get("scope") === "my";
+              const isCampusEventsLink = linkUrl.pathname === "/events" && !linkUrl.searchParams.get("scope");
+
+              const isCurrentMyEvents =
+                location.pathname === "/events" && new URLSearchParams(location.search).get("scope") === "my";
+
+              const isCurrentCampusEvents =
+                location.pathname === "/events" && new URLSearchParams(location.search).get("scope") !== "my";
+
               return (
                 <NavLink
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    `sidebar-link ${isActive ? "sidebar-link-active" : ""}`
+                    `sidebar-link ${
+                      (isMyEventsLink && isCurrentMyEvents) ||
+                      (isCampusEventsLink && isCurrentCampusEvents) ||
+                      (!isMyEventsLink && !isCampusEventsLink && isActive)
+                        ? "sidebar-link-active"
+                        : ""
+                    }`
                   }
                   onClick={onClose}
                   data-tooltip={collapsed ? link.label : undefined}

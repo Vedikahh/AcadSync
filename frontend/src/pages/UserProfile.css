@@ -3,6 +3,7 @@
   padding: 24px 16px 40px;
   max-width: 820px;
   margin: 0 auto;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 .up-container {

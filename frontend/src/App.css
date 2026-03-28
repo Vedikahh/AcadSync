@@ -18,6 +18,20 @@
   background: var(--bg-page);
 }
 
+.route-transition-shell {
+  min-height: inherit;
+}
+
+.route-transition-page {
+  min-height: calc(100vh - 64px);
+  animation: routeFadeSlide 0.38s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
+.route-transition-page :is(.as-page, .admin-db-page, .std-db-page, .events-page, .me-page, .ce-page, .notif-page-bg, .cal-page-bg, .cr-page, .up-page) {
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
 @media (max-width: 768px) {
   .app-main-with-sidebar,
   .app-main-collapsed {

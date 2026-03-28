@@ -168,7 +168,12 @@ export default function ManageEvents() {
 
       {/* Table */}
       {isLoading ? (
-        <div className="me-state" role="status" aria-live="polite">Loading events...</div>
+        <div className="me-skeleton-wrap" role="status" aria-live="polite" aria-label="Loading events">
+          <div className="app-skeleton me-skeleton-row" />
+          <div className="app-skeleton me-skeleton-row" />
+          <div className="app-skeleton me-skeleton-row" />
+          <div className="app-skeleton me-skeleton-row" />
+        </div>
       ) : error ? (
         <div className="me-state me-state-error" role="alert">
           <p>{error}</p>
@@ -195,13 +200,14 @@ export default function ManageEvents() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((ev) => {
+              {filtered.map((ev, index) => {
                 const badge = STATUS_BADGE[ev.status] || STATUS_BADGE.pending;
                 const id = ev._id || ev.id;
                 return (
                   <tr
                     key={id}
                     className="me-row"
+                    style={{ cursor: "pointer", "--item-index": index }}
                     onClick={() => setSelectedEvent(ev)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -209,7 +215,6 @@ export default function ManageEvents() {
                         setSelectedEvent(ev);
                       }
                     }}
-                    style={{ cursor: "pointer" }}
                     tabIndex={0}
                     role="button"
                     aria-label={`Open details for ${ev.title}`}

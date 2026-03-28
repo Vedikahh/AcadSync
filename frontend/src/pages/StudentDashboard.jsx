@@ -173,7 +173,11 @@ export default function StudentDashboard() {
             </div>
             <div className="std-card-body std-bg-gray">
               {isLoading ? (
-                <div style={{ padding: "2rem", textAlign: "center" }}>Loading events...</div>
+                <div className="std-skeleton-list" role="status" aria-live="polite" aria-label="Loading events">
+                  <div className="app-skeleton std-skeleton-card" />
+                  <div className="app-skeleton std-skeleton-card" />
+                  <div className="app-skeleton std-skeleton-card" />
+                </div>
               ) : events.length === 0 ? (
                 <div className="std-empty">
                   <div className="std-empty-icon">
@@ -183,10 +187,10 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="std-events-list">
-                  {events.map((event) => {
+                  {events.map((event, index) => {
                     const id = event._id || event.id;
                     return (
-                      <EventCard key={id} event={{...event, id}} isAdmin={false} />
+                      <EventCard key={id} event={{...event, id}} isAdmin={false} animationIndex={index} />
                     );
                   })}
                 </div>
@@ -210,19 +214,24 @@ export default function StudentDashboard() {
             </div>
             <div className="std-card-body std-p-0">
               {isLoading ? (
-                 <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+                 <div className="std-skeleton-list std-skeleton-list-notif" role="status" aria-live="polite" aria-label="Loading notifications">
+                  <div className="app-skeleton std-skeleton-notif" />
+                  <div className="app-skeleton std-skeleton-notif" />
+                  <div className="app-skeleton std-skeleton-notif" />
+                 </div>
               ) : notifications.length === 0 ? (
                 <div className="std-empty">
                   <p>You have no notifications.</p>
                 </div>
               ) : (
                 <div className="std-notif-list">
-                  {notifications.map((n) => {
+                  {notifications.map((n, index) => {
                     const id = n._id || n.id;
                     return (
                       <NotificationItem 
                         key={id} 
                         notification={{...n, id}} 
+                        animationIndex={index}
                         onMarkRead={() => markRead(id)}
                         onClick={() => handleNotifClick(n)}
                       />

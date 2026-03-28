@@ -6,6 +6,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 2vw 60px;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 /* ── Top bar ── */
@@ -33,6 +34,10 @@
   background: var(--bg-page);
   color: var(--text-primary, #0F172A);
   border-color: var(--border);
+}
+
+.cr-btn-back:active {
+  transform: scale(0.98);
 }
 
 .cr-back-arrow {

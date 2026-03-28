@@ -6,6 +6,7 @@
   padding: 28px 28px 48px;
   max-width: 1100px;
   margin: 0 auto;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 /* Breadcrumb */
@@ -186,6 +187,7 @@
   color: #9f1239;
   font-size: 0.84rem;
   font-weight: 700;
+  animation: statusShift 320ms ease-out both;
 }
 
 @keyframes fadeSlide {
@@ -220,6 +222,16 @@
   flex-direction: column;
   gap: 6px;
   margin-bottom: 20px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.ce-field:focus-within {
+  border-color: rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+  background: color-mix(in srgb, var(--blue-50, #EFF6FF) 28%, transparent);
 }
 
 .ce-label {
@@ -259,12 +271,17 @@
 
 .ce-input-err { border-color: var(--danger) !important; }
 
+.ce-input-err:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+}
+
 .ce-err {
   font-size: 0.72rem;
   color: var(--danger);
   display: flex;
   align-items: center;
   gap: 3px;
+  animation: statusShift 300ms ease-out both;
 }
 
 .ce-char-count {
@@ -305,7 +322,7 @@
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.18s, transform 0.18s ease;
   font-family: inherit;
   text-align: center;
 }
@@ -314,6 +331,7 @@
   background: var(--blue-50, #EFF6FF);
   border-color: #BFDBFE;
   color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .ce-cat-active {
@@ -321,6 +339,7 @@
   border-color: var(--primary);
   color: var(--primary);
   box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+  animation: statusShift 260ms ease-out both;
 }
 
 .ce-cat-icon { font-size: 1.3rem; }
@@ -344,7 +363,7 @@
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.18s, transform 0.18s ease;
   font-family: inherit;
   text-align: left;
 }
@@ -353,6 +372,7 @@
   background: var(--blue-50, #EFF6FF);
   border-color: #BFDBFE;
   color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .ce-venue-active {
@@ -361,6 +381,7 @@
   color: var(--primary);
   font-weight: 600;
   box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+  animation: statusShift 260ms ease-out both;
 }
 
 /* ── AI notice ── */
@@ -469,6 +490,12 @@
 .ce-btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 .ce-btn-submit:hover:not(:disabled) { background: #1D4ED8; transform: translateY(-1px); }
 
+.ce-btn-next:active,
+.ce-btn-submit:active,
+.ce-btn-back:active {
+  transform: scale(0.98);
+}
+
 .ce-bc-link:focus-visible,
 .ce-input:focus-visible,
 .ce-select:focus-visible,
@@ -550,13 +577,20 @@
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: statusShift 300ms ease-out both;
+}
+
+.ce-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12);
 }
 
 .ce-chip-blue   { background: var(--blue-100, #DBEAFE); color: #1D4ED8; }
 .ce-chip-purple { background: var(--indigo-50, #E0E7FF); color: #4338CA; }
 .ce-chip-green  { background: var(--green-100, #DCFCE7); color: #15803D; }
 .ce-chip-orange { background: #FFEDD5; color: #C2410C; }
-.ce-chip-gray   { background: var(--bg-page); color: var(--text-secondary); }
+.ce-chip-gray   { background: var(--bg-page); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
 .ce-preview-empty {
   text-align: center;

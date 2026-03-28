@@ -6,6 +6,7 @@
   padding: 28px 2vw 60px;
   max-width: 1280px;
   margin: 0 auto;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 /* ── Header ── */
@@ -89,6 +90,11 @@
   border-color: var(--border);
 }
 
+.std-btn-primary:active,
+.std-btn-outline:active {
+  transform: scale(0.98);
+}
+
 /* ── Stats Grid ── */
 .std-stats-grid {
   display: grid;
@@ -125,6 +131,12 @@
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
   overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.std-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
 .std-card-header {
@@ -174,6 +186,28 @@
 
 .std-link:hover { opacity: 0.7; }
 
+.std-inline-note {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--blue-50, #EFF6FF);
+  color: var(--primary, #2563EB);
+  font-size: 0.84rem;
+  font-weight: 700;
+  animation: pulse-glow 1.8s ease-in-out infinite;
+}
+
+.std-inline-error {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #FEF2F2;
+  color: #B91C1C;
+  font-size: 0.84rem;
+  font-weight: 700;
+  animation: statusShift 320ms ease-out both;
+}
+
 .std-card-body {
   padding: 24px;
 }
@@ -218,6 +252,26 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.std-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.std-skeleton-card {
+  height: 160px;
+  border-radius: 14px;
+}
+
+.std-skeleton-list-notif {
+  padding: 14px;
+}
+
+.std-skeleton-notif {
+  height: 74px;
+  border-radius: 10px;
 }
 
 /* ── Content: Conflict Action Banner ── */

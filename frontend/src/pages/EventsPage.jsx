@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
+import { getEvents, getMyEvents, updateEventStatus, deleteEvent } from "../services/api";
 import EventCard from "../components/EventCard";
-import EventModal from "../components/EventModal";
 import socket from "../services/socket";
 import "./EventsPage.css";
 
@@ -12,29 +11,51 @@ const FILTERS = ["all", "pending", "approved", "rejected"];
 export default function EventsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isAdmin = user?.role === "admin";
+  const viewScope = searchParams.get("scope") === "my" ? "my" : "all";
+  const isPrivileged = user?.role === "organizer" || user?.role === "admin";
+  const isMyEventsMode = viewScope === "my";
 
   const [events, setEvents] = useState([]);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     fetchEvents();
 
     socket.on('calendarUpdate', fetchEvents);
     return () => { socket.off('calendarUpdate', fetchEvents); };
-  }, []);
+  }, [viewScope, user?.id, user?.role]);
 
 
   const fetchEvents = async () => {
     try {
       setIsLoading(true);
       setError("");
-      const data = await getEvents();
-      setEvents(Array.isArray(data) ? data : []);
+      let data;
+
+      if (isMyEventsMode && isPrivileged) {
+        data = await getMyEvents();
+      } else {
+        data = await getEvents();
+      }
+
+      const list = Array.isArray(data) ? data : [];
+
+      if (isMyEventsMode && !isPrivileged) {
+        const myId = user?.id;
+        setEvents(
+          list.filter((event) => {
+            const ownerId = event?.createdBy?._id || event?.createdBy;
+            return !!myId && ownerId === myId;
+          })
+        );
+      } else {
+        setEvents(list);
+      }
     } catch (err) {
       console.error("Failed to fetch events", err);
       setError("We could not load events right now. Please try again.");
@@ -94,11 +115,17 @@ export default function EventsPage() {
     navigate("/create-event", { state: { eventData: event } });
   };
 
+  const handleOpenDetails = (event) => {
+    const id = event?._id || event?.id;
+    if (!id) return;
+    navigate(`/events/${id}`, { state: { event } });
+  };
+
   return (
     <div className="events-page">
       <div className="events-header">
         <div>
-          <h1>Campus Events</h1>
+          <h1>{isMyEventsMode ? "My Events" : "Campus Events"}</h1>
           <p>{filtered.length} event{filtered.length !== 1 ? "s" : ""} found</p>
         </div>
         {(isAdmin || user?.role === "organizer") && (
@@ -136,8 +163,11 @@ export default function EventsPage() {
       </div>
 
       {isLoading ? (
-        <div className="events-state" role="status" aria-live="polite">
-          Loading events...
+        <div className="events-skeleton-grid" role="status" aria-live="polite" aria-label="Loading events">
+          <div className="app-skeleton events-skeleton-card" />
+          <div className="app-skeleton events-skeleton-card" />
+          <div className="app-skeleton events-skeleton-card" />
+          <div className="app-skeleton events-skeleton-card" />
         </div>
       ) : error ? (
         <div className="events-state events-state-error" role="alert">
@@ -151,30 +181,24 @@ export default function EventsPage() {
         </div>
       ) : (
         <div className="events-grid" id="events-grid">
-          {filtered.map((event) => {
+          {filtered.map((event, index) => {
             const normalizedEvent = { ...event, id: event._id || event.id };
             return (
               <EventCard
                 key={normalizedEvent.id}
                 event={normalizedEvent}
+                animationIndex={index}
                 user={user}
                 isAdmin={isAdmin}
                 onApprove={() => handleApprove(normalizedEvent.id)}
                 onReject={() => handleReject(normalizedEvent.id)}
                 onDelete={() => handleDelete(normalizedEvent.id)}
                 onEdit={handleEdit}
-                onClick={() => setSelectedEvent(normalizedEvent)}
+                onClick={() => handleOpenDetails(normalizedEvent)}
               />
             )
           })}
         </div>
-      )}
-
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-        />
       )}
     </div>
   );

@@ -5,6 +5,7 @@
   padding: 28px;
   max-width: 1100px;
   margin: 0 auto;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 .me-sr-only {
@@ -84,6 +85,10 @@
 
 .me-filter-tab:hover { background: var(--bg-page); }
 
+.me-filter-tab:active {
+  transform: scale(0.98);
+}
+
 .me-search:focus-visible,
 .me-filter-tab:focus-visible,
 .me-btn-approve:focus-visible,
@@ -133,9 +138,18 @@
   background: var(--bg-page);
 }
 
-.me-row { border-bottom: 1px solid var(--border-light); transition: background 0.15s; }
+.me-row {
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.15s, transform 0.18s ease;
+  opacity: 0;
+  animation: fadeInUpSoft 0.42s cubic-bezier(0.2, 0.75, 0.2, 1) forwards;
+  animation-delay: calc(var(--item-index, 0) * 55ms);
+}
 .me-row:last-child { border-bottom: none; }
-.me-row:hover { background: var(--bg-page); }
+.me-row:hover {
+  background: var(--bg-page);
+  transform: translateY(-1px);
+}
 .me-row:focus-visible {
   background: var(--bg-page);
 }
@@ -159,6 +173,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   white-space: nowrap;
+  animation: statusShift 320ms ease-out both;
 }
 
 .badge-pend { background: var(--bg-card)3E0; color: #F57C00; }
@@ -175,7 +190,7 @@
   border: 1px solid var(--border);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.18s, transform 0.18s ease, box-shadow 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,13 +198,35 @@
 }
 
 .me-btn-approve { color: #2E7D32; }
-.me-btn-approve:hover { background: #E8F5E9; border-color: #C8E6C9; }
+.me-btn-approve:hover {
+  background: #E8F5E9;
+  border-color: #C8E6C9;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(46, 125, 50, 0.12);
+}
 
 .me-btn-reject  { color: #C62828; }
-.me-btn-reject:hover  { background: #FFEBEE; border-color: #FFCDD2; }
+.me-btn-reject:hover  {
+  background: #FFEBEE;
+  border-color: #FFCDD2;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(198, 40, 40, 0.12);
+}
 
 .me-btn-delete  { color: var(--text-muted); }
-.me-btn-delete:hover  { background: #FFEBEE; border-color: #FFCDD2; color: var(--danger); }
+.me-btn-delete:hover  {
+  background: #FFEBEE;
+  border-color: #FFCDD2;
+  color: var(--danger);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(198, 40, 40, 0.12);
+}
+
+.me-btn-approve:active,
+.me-btn-reject:active,
+.me-btn-delete:active {
+  transform: scale(0.96);
+}
 
 /* Empty state */
 .me-empty {
@@ -204,6 +241,17 @@
   text-align: center;
   padding: 2rem 1rem;
   color: var(--text-muted);
+}
+
+.me-skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.me-skeleton-row {
+  height: 54px;
+  border-radius: 10px;
 }
 
 .me-state-error {

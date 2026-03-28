@@ -61,6 +61,12 @@
 
   .stats-value {
     @apply text-3xl font-extrabold text-text-primary mt-1 tracking-tight;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.25s ease, transform 0.25s ease;
+  }
+
+  .stats-value.bump {
+    animation: gentlePop 260ms cubic-bezier(0.2, 0.75, 0.2, 1);
   }
 
   .stats-icon-wrapper {

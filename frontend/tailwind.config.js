@@ -73,6 +73,10 @@ export default {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        routeFadeSlide: {
+          '0%': { opacity: '0', transform: 'translateY(14px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
         slideUp: {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
@@ -88,14 +92,36 @@ export default {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' },
+        },
+        skeletonShimmer: {
+          '0%': { backgroundPosition: '-220% 0' },
+          '100%': { backgroundPosition: '220% 0' },
+        },
+        gentlePop: {
+          '0%': { transform: 'scale(0.94)', opacity: '0' },
+          '70%': { transform: 'scale(1.03)', opacity: '1' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        tooltipFloat: {
+          '0%': { opacity: '0', transform: 'translateY(8px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        statusShift: {
+          '0%': { opacity: '0.55', transform: 'translateY(4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         }
       },
       animation: {
         fadeIn: 'fadeIn 0.5s ease-out forwards',
+        routeFadeSlide: 'routeFadeSlide 0.38s cubic-bezier(0.2, 0.75, 0.2, 1) forwards',
         slideUp: 'slideUp 0.5s ease-out forwards',
         slideDown: 'slideDown 0.5s ease-out forwards',
         'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         float: 'float 3s ease-in-out infinite',
+        skeletonShimmer: 'skeletonShimmer 1.4s linear infinite',
+        gentlePop: 'gentlePop 280ms cubic-bezier(0.2, 0.75, 0.2, 1) both',
+        tooltipFloat: 'tooltipFloat 180ms ease-out both',
+        statusShift: 'statusShift 320ms ease-out both',
       },
       spacing: {
         '128': '32rem',

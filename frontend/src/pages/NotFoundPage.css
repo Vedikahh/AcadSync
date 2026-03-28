@@ -7,6 +7,7 @@
   text-align: center;
   padding: 2rem;
   background: linear-gradient(135deg, #f8f7ff, #f0fffe);
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 .nf-code {
@@ -46,4 +47,8 @@
 
 .nf-btn:hover {
   opacity: 0.9;
+}
+
+.nf-btn:active {
+  transform: scale(0.98);
 }

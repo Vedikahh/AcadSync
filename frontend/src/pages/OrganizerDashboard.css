@@ -6,6 +6,7 @@
   padding: 28px 2vw 60px;
   max-width: 1280px;
   margin: 0 auto;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 /* ── Header ── */
@@ -70,6 +71,10 @@
   background: var(--blue-700, #1D4ED8);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+}
+
+.fac-btn:active {
+  transform: scale(0.98);
 }
 
 .fac-btn-outline {

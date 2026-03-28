@@ -32,12 +32,18 @@
   padding: 6px 8px;
   border-radius: 8px;
   line-height: 1;
-  transition: all 0.2s;
+  transition: transform 0.18s ease, background-color 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
 .navbar-menu-btn:hover {
   background: var(--bg-page, #F8FAFC);
   color: var(--text-primary);
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+}
+
+.navbar-menu-btn:active {
+  transform: scale(0.97);
 }
 
 @media (min-width: 769px) {
@@ -105,10 +111,15 @@
   font-weight: 500;
   padding: 5px 10px;
   border-radius: 8px;
-  transition: all 0.2s;
+  transition: transform 0.18s ease, color 0.2s, background-color 0.2s, box-shadow 0.2s;
 }
 
-.nav-link:hover { color: var(--primary); background: var(--blue-50); }
+.nav-link:hover {
+  color: var(--primary);
+  background: var(--blue-50);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.12);
+}
 .nav-link.active { color: var(--primary); background: var(--blue-50); }
 
 .btn-login {
@@ -124,6 +135,8 @@
 
 .btn-login:hover {
   background: var(--blue-50);
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.12);
 }
 
 .btn-register {
@@ -139,6 +152,11 @@
 }
 
 .btn-register:hover { background: var(--blue-700); }
+
+.btn-register:active,
+.btn-login:active {
+  transform: scale(0.98);
+}
 
 /* User menu */
 .user-menu {
@@ -213,12 +231,13 @@
   text-decoration: none;
   font-size: 0.84rem;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: transform 0.18s ease, background-color 0.2s, color 0.2s;
 }
 
 .dropdown-link:hover {
   background: var(--blue-50);
   color: var(--primary) !important;
+  transform: translateX(2px);
 }
 
 .logout-btn {
@@ -230,12 +249,16 @@
   cursor: pointer;
   font-size: 0.84rem;
   font-weight: 600;
-  transition: background 0.2s;
+  transition: transform 0.18s ease, background 0.2s;
   text-align: left;
   width: 100%;
 }
 
 .logout-btn:hover { background: var(--red-100, #FEE2E2); }
+
+.logout-btn:active {
+  transform: scale(0.98);
+}
 
 /* ── Notification Badge ── */
 .nav-link-badge-container {
@@ -262,6 +285,7 @@
   border: 2px solid #fff;
   box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
   pointer-events: none;
+  animation: badgeGlowPulse 1.6s ease-in-out infinite;
 }
 
 .theme-toggle-btn {
@@ -274,10 +298,16 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  transition: all 0.2s;
+  transition: transform 0.18s ease, background-color 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
 .theme-toggle-btn:hover {
   background: var(--bg-page);
   color: var(--primary);
+  transform: rotate(-8deg) scale(1.04);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.15);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.96);
 }

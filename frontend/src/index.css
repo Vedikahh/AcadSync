@@ -156,6 +156,57 @@
   ::-webkit-scrollbar-track { background: var(--border-light); }
   ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+  .route-fade-slide {
+    animation: routeFadeSlide 0.38s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+    will-change: transform, opacity;
+  }
+
+  .stagger-fade-item {
+    opacity: 0;
+    animation: fadeInUpSoft 0.45s cubic-bezier(0.2, 0.75, 0.2, 1) forwards;
+    animation-delay: calc(var(--item-index, 0) * 70ms);
+  }
+
+  .app-skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: linear-gradient(110deg, rgba(148, 163, 184, 0.16) 8%, rgba(148, 163, 184, 0.3) 18%, rgba(148, 163, 184, 0.16) 33%);
+    background-size: 220% 100%;
+    animation: skeletonShimmer 1.4s linear infinite;
+  }
+
+  .badge-glow-pulse {
+    animation: badgeGlowPulse 1.6s ease-in-out infinite;
+  }
+
+  .status-transition {
+    animation: statusShift 320ms ease-out both;
+  }
+
+  .tooltip-anim {
+    animation: tooltipFloat 180ms ease-out both;
+    transform-origin: bottom center;
+  }
+
+  .micro-count {
+    font-variant-numeric: tabular-nums;
+    transition: color 220ms ease, transform 220ms ease;
+  }
+
+  .micro-count.bump {
+    animation: gentlePop 260ms cubic-bezier(0.2, 0.75, 0.2, 1);
+  }
+
+  .focus-ring-animated {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .focus-ring-animated:focus-within {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    border-color: rgba(37, 99, 235, 0.4);
+  }
 }
 
 a {
@@ -168,4 +219,91 @@ button {
   cursor: pointer;
 }
 
+[class*="btn-"] {
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+[class*="btn-"]:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+[class*="btn-"]:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.1);
+}
+
 img, svg { max-width: 100%; }
+
+@keyframes routeFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUpSoft {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes skeletonShimmer {
+  from { background-position: -220% 0; }
+  to { background-position: 220% 0; }
+}
+
+@keyframes badgeGlowPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes gentlePop {
+  0% {
+    transform: scale(0.94);
+  }
+  70% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tooltipFloat {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes statusShift {
+  from {
+    opacity: 0.55;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

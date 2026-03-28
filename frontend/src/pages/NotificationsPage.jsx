@@ -79,7 +79,12 @@ export default function NotificationsPage() {
         {/* Notifications Grid */}
         <div className="np-content-area">
           {isLoading ? (
-            <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>Loading notification data...</div>
+            <div className="np-skeleton-list" role="status" aria-live="polite" aria-label="Loading notification data">
+              <div className="app-skeleton np-skeleton-item" />
+              <div className="app-skeleton np-skeleton-item" />
+              <div className="app-skeleton np-skeleton-item" />
+              <div className="app-skeleton np-skeleton-item" />
+            </div>
           ) : filtered.length === 0 ? (
             <div className="np-empty-state">
               <div className="np-empty-icon">✓</div>
@@ -92,12 +97,13 @@ export default function NotificationsPage() {
             </div>
           ) : (
             <div className="np-list-wrapper">
-              {filtered.map((n) => {
+              {filtered.map((n, index) => {
                 const normalizedNotif = { ...n, id: n._id || n.id };
                 return (
                   <NotificationItem
                     key={normalizedNotif.id}
                     notification={normalizedNotif}
+                    animationIndex={index}
                     onMarkRead={() => markAsRead(normalizedNotif.id)}
                     onClick={() => handleClick(normalizedNotif)}
                   />

@@ -2,6 +2,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 2vw;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 .sr-only {
@@ -47,11 +48,17 @@
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.18s ease, box-shadow 0.2s;
 }
 
 .btn-request:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(72, 201, 176, 0.2);
+}
+
+.btn-request:active {
+  transform: scale(0.98);
 }
 
 .btn-request:focus-visible,
@@ -102,7 +109,11 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s, transform 0.18s ease;
+}
+
+.filter-tab:hover {
+  transform: translateY(-1px);
 }
 
 .filter-tab.active {
@@ -115,6 +126,17 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.25rem;
+}
+
+.events-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.events-skeleton-card {
+  height: 250px;
+  border-radius: 18px;
 }
 
 .events-state {
@@ -145,10 +167,13 @@
   border-radius: 9px;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.2s, box-shadow 0.2s;
 }
 
 .events-retry-btn:hover {
   background: #be123c;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(225, 29, 72, 0.2);
 }
 
 .empty-events {

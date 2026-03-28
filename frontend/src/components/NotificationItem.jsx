@@ -22,7 +22,7 @@ const TYPE_ROUTE_HINT = {
   system:       "View profile",
 };
 
-export default function NotificationItem({ notification, onMarkRead, onClick }) {
+export default function NotificationItem({ notification, onMarkRead, onClick, animationIndex = 0 }) {
   const typeLabel = TYPE_LABELS[notification.type] || "Notice";
   const routeHint = TYPE_ROUTE_HINT[notification.type] || "Go to page";
   const timeAgo   = getTimeAgo(notification.created_at);
@@ -38,6 +38,7 @@ export default function NotificationItem({ notification, onMarkRead, onClick }) 
   return (
     <div
       className={`notification-item ${notification.read ? "notif-read" : "notif-unread"} ${onClick ? "notif-clickable" : ""}`}
+      style={{ "--item-index": animationIndex }}
       onClick={handleClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}

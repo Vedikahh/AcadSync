@@ -4,9 +4,13 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 
 export default function StatsCard({ icon, value, label, color = "blue", trend, onClick }) {
   const [displayValue, setDisplayValue] = useState(0);
+  const [isBumping, setIsBumping] = useState(false);
   
   // Animate value counting effect
   useEffect(() => {
+    setIsBumping(true);
+    const bumpTimer = setTimeout(() => setIsBumping(false), 280);
+
     // Determine the numeric portion of the value for counting
     const numericValue = typeof value === 'number' 
       ? value 
@@ -45,6 +49,8 @@ export default function StatsCard({ icon, value, label, color = "blue", trend, o
     };
     
     requestAnimationFrame(animate);
+
+    return () => clearTimeout(bumpTimer);
   }, [value]);
 
   return (
@@ -57,7 +63,7 @@ export default function StatsCard({ icon, value, label, color = "blue", trend, o
       <div className="stats-content">
         <div className="stats-info">
           <span className="stats-label">{label}</span>
-          <div className="stats-value">{displayValue}</div>
+          <div className={`stats-value ${isBumping ? "bump" : ""}`}>{displayValue}</div>
         </div>
         {icon && (
           <div className="stats-icon-wrapper">

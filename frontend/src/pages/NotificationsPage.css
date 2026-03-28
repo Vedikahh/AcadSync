@@ -6,6 +6,7 @@
   min-height: calc(100vh - 64px);
   background: var(--bg-page, #F8FAFC);
   padding: 32px 2vw 60px;
+  animation: routeFadeSlide 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 .notif-page-container {
@@ -88,12 +89,13 @@
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.18s ease, all 0.2s;
   font-family: inherit;
 }
 
 .np-filter-btn:hover {
   color: var(--text-primary, #0F172A);
+  transform: translateY(-1px);
 }
 
 .np-filter-active {
@@ -135,7 +137,7 @@
   cursor: pointer;
   padding: 6px 12px;
   border-radius: 8px;
-  transition: background 0.2s;
+  transition: transform 0.18s ease, background 0.2s, box-shadow 0.2s;
   font-family: inherit;
 }
 
@@ -153,11 +155,31 @@
   background: var(--red-50, #FEF2F2); 
 }
 
+.np-btn-ghost:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.1);
+}
+
+.np-btn-ghost:active {
+  transform: scale(0.98);
+}
+
 /* ── Content Area ── */
 .np-list-wrapper {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.np-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.np-skeleton-item {
+  height: 78px;
+  border-radius: 12px;
 }
 
 /* ── Empty State ── */

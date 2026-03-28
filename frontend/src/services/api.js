@@ -54,6 +54,7 @@ export const getMe = () =>
 
 // ---- Event APIs ----
 export const getEvents = () => request("/api/events");
+export const getMyEvents = () => request("/api/events/my-events");
 
 export const checkEventConflicts = (event) =>
   request("/api/events/check-conflicts", { method: "POST", body: JSON.stringify(event) });

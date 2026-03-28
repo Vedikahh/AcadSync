@@ -60,9 +60,6 @@ export default function Navbar({ onMenuToggle }) {
               {unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}
             </Link>
 
-            <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle theme">
-              {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
 
             {/* User avatar dropdown */}
             <div className="user-menu">
@@ -82,6 +79,10 @@ export default function Navbar({ onMenuToggle }) {
             </div>
           </>
         )}
+
+        <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle theme">
+          {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+        </button>
       </div>
     </nav>
   );
