@@ -34,6 +34,24 @@ const userSchema = new mongoose.Schema({
     enum: ['local', 'google'],
     default: 'local',
   },
+  notificationPreferences: {
+    event: {
+      type: Boolean,
+      default: true,
+    },
+    approval: {
+      type: Boolean,
+      default: true,
+    },
+    rejection: {
+      type: Boolean,
+      default: true,
+    },
+    reminder: {
+      type: Boolean,
+      default: true,
+    },
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

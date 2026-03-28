@@ -1,89 +1,161 @@
+/* Import Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
 /* ================================================
    AcadSync — Global Light Theme Foundation
    ================================================ */
 
-/* Import Inter font from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@layer base {
+  :root {
+    /* === Design Tokens === */
+    
+    /* Colors - Backgrounds */
+    --bg-page:     #F8FAFC;
+    --bg-card:     #FFFFFF;
+    --bg-card-2:   #FFFFFF;
+    --bg-sidebar:  #FFFFFF;
+    --bg-navbar:   #FFFFFF;
 
-:root {
-  /* Typography */
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    /* Colors - Primary (Blue) */
+    --blue-50:  #EFF6FF;
+    --blue-100: #DBEAFE;
+    --blue-500: #3B82F6;
+    --blue-600: #2563EB;
+    --blue-700: #1D4ED8;
+    --primary:  #2563EB;
 
-  /* === Design Tokens === */
+    /* Colors - Secondary (Indigo) */
+    --indigo-50:  #EEF2FF;
+    --indigo-100: #E0E7FF;
+    --indigo-500: #6366F1;
+    --indigo-600: #4F46E5;
+    --secondary:  #6366F1;
 
-  /* Backgrounds */
-  --bg-page:     #F8FAFC;
-  --bg-card:     #FFFFFF;
-  --bg-card-2:   #FFFFFF;
-  --bg-sidebar:  #FFFFFF;
-  --bg-navbar:   #FFFFFF;
+    /* Colors - Semantic */
+    --green-50:  #F0FDF4;
+    --green-500: #22C55E;
+    --green-600: #16A34A;
+    --success:   #22C55E;
 
-  /* Primary — Deep Blue (system UI, nav, buttons) */
-  --blue-50:  #EFF6FF;
-  --blue-100: #DBEAFE;
-  --blue-500: #3B82F6;
-  --blue-600: #2563EB;
-  --blue-700: #1D4ED8;
-  --primary:  #2563EB;
+    --red-50:   #FEF2F2;
+    --red-500:  #EF4444;
+    --red-600:  #DC2626;
+    --danger:   #EF4444;
 
-  /* Secondary — Indigo (AI features, smart suggestions) */
-  --indigo-50:  #EEF2FF;
-  --indigo-100: #E0E7FF;
-  --indigo-500: #6366F1;
-  --indigo-600: #4F46E5;
-  --secondary:  #6366F1;
+    --orange-50:  #FFF7ED;
+    --orange-500: #F97316;
+    --warning:    #F97316;
 
-  /* Semantic */
-  --green-50:  #F0FDF4;
-  --green-500: #22C55E;
-  --green-600: #16A34A;
-  --success:   #22C55E;
+    --yellow-500: #EAB308;
+    --purple-500: #A855F7;
 
-  --red-50:   #FEF2F2;
-  --red-500:  #EF4444;
-  --red-600:  #DC2626;
-  --danger:   #EF4444;
+    /* Colors - Borders */
+    --border:       #E2E8F0;
+    --border-light: #F1F5F9;
 
-  --orange-50:  #FFF7ED;
-  --orange-500: #F97316;
+    /* Colors - Text */
+    --text-primary:   #0F172A;
+    --text-secondary: #475569;
+    --text-muted:     #94A3B8;
 
-  --yellow-500: #EAB308;
+    /* Shadows */
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg:  0 10px 30px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.04);
 
-  --purple-500: #A855F7;
+    /* Animations & Transitions Setup */
+    --transition-fast: 150ms;
+    --transition-normal: 300ms;
+    --transition-slow: 500ms;
+  }
 
-  /* Borders */
-  --border:       #E2E8F0;
-  --border-light: #F1F5F9;
+  .dark {
+    /* Colors - Backgrounds */
+    --bg-page:     #0F172A;
+    --bg-card:     #1E293B;
+    --bg-card-2:   #1E293B;
+    --bg-sidebar:  #1E293B;
+    --bg-navbar:   #1E293B;
 
-  /* Text */
-  --text-primary:   #0F172A;
-  --text-secondary: #475569;
-  --text-muted:     #94A3B8;
+    /* Colors - Primary (Blue) */
+    --blue-50:  #1e3a8a;
+    --blue-100: #1e40af;
+    --blue-500: #3b82f6;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --primary:  #3b82f6;
 
-  /* Shadows */
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-  --shadow-lg:  0 10px 30px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.04);
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    /* Colors - Secondary (Indigo) */
+    --indigo-50:  #312e81;
+    --indigo-100: #3730a3;
+    --indigo-500: #6366f1;
+    --indigo-600: #4f46e5;
+    --secondary:  #6366f1;
+
+    /* Colors - Semantic */
+    --green-50:  #14532d;
+    --green-500: #22c55e;
+    --green-600: #16a34a;
+    --success:   #22c55e;
+
+    --red-50:   #7f1d1d;
+    --red-500:  #ef4444;
+    --red-600:  #dc2626;
+    --danger:   #ef4444;
+
+    --orange-50:  #7c2d12;
+    --orange-500: #f97316;
+    --warning:    #f97316;
+
+    --yellow-500: #eab308;
+    --purple-500: #a855f7;
+
+    /* Colors - Borders */
+    --border:       #334155;
+    --border-light: #1E293B;
+
+    /* Colors - Text */
+    --text-primary:   #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-muted:     #94A3B8;
+
+    /* Shadows */
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md:  0 4px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-lg:  0 10px 30px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.3);
+  }
+
+  *,
+  *::before,
+  *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color-scheme: light;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-*,
-*::before,
-*::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  min-width: 320px;
-  min-height: 100vh;
-  background: var(--bg-page);
-  color: var(--text-primary);
-  font-family: 'Inter', system-ui, sans-serif;
+@layer utilities {
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--border-light); }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 }
 
 a {
@@ -97,9 +169,3 @@ button {
 }
 
 img, svg { max-width: 100%; }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--border-light); }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94A3B8; }

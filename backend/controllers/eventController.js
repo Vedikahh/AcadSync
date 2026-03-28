@@ -1,8 +1,11 @@
 const Event = require('../models/Event');
-const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { checkConflicts } = require('../utils/conflictChecker');
 const socket = require('../utils/socket');
+const {
+  createNotificationForUser,
+  createNotificationsForUsers,
+} = require('./notificationController');
 
 
 // @desc    Get all events
@@ -12,6 +15,7 @@ exports.getEvents = async (req, res) => {
   try {
     const events = await Event.find()
       .populate('createdBy', 'name email department')
+      .populate('reviewedBy', 'name email')
       .sort({ date: 1 });
     res.json(events);
   } catch (err) {
@@ -26,6 +30,7 @@ exports.getMyEvents = async (req, res) => {
   try {
     const events = await Event.find({ createdBy: req.user.id })
       .populate('createdBy', 'name')
+      .populate('reviewedBy', 'name email')
       .sort({ date: 1 });
     res.json(events);
   } catch (err) {
@@ -42,6 +47,7 @@ exports.createEvent = async (req, res) => {
       title,
       description,
       department,
+      type,
       venue,
       date,
       startTime,
@@ -52,12 +58,24 @@ exports.createEvent = async (req, res) => {
     } = req.body;
 
     // Run overlap check
-    const { conflicts } = await checkConflicts({ date, startTime, endTime, venue });
+    const conflictResult = await checkConflicts({ date, startTime, endTime, type });
+    const conflictMessages = (conflictResult.conflicts || []).map((c) => c.message || c);
+
+    if (conflictResult.blocked) {
+      return res.status(409).json({
+        message: 'Schedule conflict with a higher-priority item. Please choose another time slot.',
+        conflicts: conflictResult.conflicts,
+        blockingConflicts: conflictResult.blockingConflicts,
+        suggestions: conflictResult.suggestions,
+        blocked: true,
+      });
+    }
 
     const event = await Event.create({
       title,
       description,
       department,
+      type: type || 'event',
       venue,
       date,
       startTime,
@@ -67,31 +85,29 @@ exports.createEvent = async (req, res) => {
       category,
       createdBy: req.user.id,
       status: 'pending',
-      conflicts: conflicts // attach calculated conflicts
+      conflicts: conflictMessages // attach calculated conflicts
     });
 
     // Notify admins about the new event request
     const admins = await User.find({ role: 'admin' });
-    const notificationsToCreate = admins.map(admin => ({
-      userId: admin._id,
+    const adminIds = admins.map((admin) => admin._id);
+
+    await createNotificationsForUsers({
+      userIds: adminIds,
       message: `New event request: "${title}" is pending approval.`,
-      type: 'event', // Use 'event' type or 'system'
-      link: '/manage', // Link to admin manage events page
-    }));
+      type: 'event',
+      link: '/manage',
+      payloadBuilder: (userId) => ({ eventId: event._id, recipientId: userId }),
+    });
 
-    if (conflicts.length > 0) {
-      admins.forEach(admin => {
-        notificationsToCreate.push({
-          userId: admin._id,
-          message: `Conflict Warning: New event "${title}" has ${conflicts.length} overlapping issue(s).`,
-          type: 'conflict',
-          link: '/conflict'
-        });
+    if (conflictMessages.length > 0) {
+      await createNotificationsForUsers({
+        userIds: adminIds,
+        message: `Conflict Warning: New event "${title}" has ${conflictMessages.length} overlapping issue(s).`,
+        type: 'conflict',
+        link: '/conflict',
+        payloadBuilder: (userId) => ({ eventId: event._id, recipientId: userId, conflictCount: conflictMessages.length }),
       });
-    }
-
-    if (notificationsToCreate.length > 0) {
-      await Notification.insertMany(notificationsToCreate);
     }
 
     // Real-time Update
@@ -112,16 +128,37 @@ exports.approveEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
+    const providedNote = typeof req.body?.adminReviewNote === 'string'
+      ? req.body.adminReviewNote
+      : typeof req.body?.note === 'string'
+        ? req.body.note
+        : null;
+
+    const adminReviewNote = providedNote && providedNote.trim().length > 0
+      ? providedNote.trim()
+      : null;
+
     event.status = 'approved';
+    event.adminReviewNote = adminReviewNote;
+    event.rejectionReason = null;
+    event.reviewedBy = req.user.id;
+    event.reviewedAt = new Date();
     await event.save();
-    const populatedEvent = await Event.findById(event._id).populate('createdBy', 'name email department');
+    const populatedEvent = await Event.findById(event._id)
+      .populate('createdBy', 'name email department')
+      .populate('reviewedBy', 'name email');
 
     // Create Approval Notification for the requester
-    await Notification.create({
+    const approvalNoteLine = adminReviewNote ? ` Note: ${adminReviewNote}` : '';
+    await createNotificationForUser({
       userId: event.createdBy,
-      message: `Your event "${event.title}" has been officially approved.`,
+      message: `Your event "${event.title}" has been officially approved.${approvalNoteLine}`,
       type: 'approval',
-      link: '/events'
+      link: '/events',
+      payload: {
+        eventId: event._id,
+        reviewedBy: req.user.id,
+      },
     });
 
     // Real-time Update
@@ -142,15 +179,49 @@ exports.rejectEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
-    event.status = 'rejected';
-    await event.save();
-    const populatedEvent = await Event.findById(event._id).populate('createdBy', 'name email department');
+    const providedReason = typeof req.body?.rejectionReason === 'string'
+      ? req.body.rejectionReason
+      : typeof req.body?.reason === 'string'
+        ? req.body.reason
+        : null;
+    const rejectionReason = providedReason && providedReason.trim().length > 0
+      ? providedReason.trim()
+      : null;
 
-    await Notification.create({
+    if (!rejectionReason) {
+      return res.status(400).json({ message: 'Rejection reason is required.' });
+    }
+
+    const providedNote = typeof req.body?.adminReviewNote === 'string'
+      ? req.body.adminReviewNote
+      : typeof req.body?.note === 'string'
+        ? req.body.note
+        : null;
+    const adminReviewNote = providedNote && providedNote.trim().length > 0
+      ? providedNote.trim()
+      : null;
+
+    event.status = 'rejected';
+    event.rejectionReason = rejectionReason;
+    event.adminReviewNote = adminReviewNote;
+    event.reviewedBy = req.user.id;
+    event.reviewedAt = new Date();
+    await event.save();
+    const populatedEvent = await Event.findById(event._id)
+      .populate('createdBy', 'name email department')
+      .populate('reviewedBy', 'name email');
+
+    const noteLine = adminReviewNote ? ` Additional note: ${adminReviewNote}` : '';
+
+    await createNotificationForUser({
       userId: event.createdBy,
-      message: `Your event proposal "${event.title}" was declined.`,
+      message: `Your event proposal "${event.title}" was declined. Reason: ${rejectionReason}.${noteLine} You can edit and resubmit for review.`,
       type: 'rejection',
-      link: '/events'
+      link: '/events',
+      payload: {
+        eventId: event._id,
+        reviewedBy: req.user.id,
+      },
     });
 
     // Real-time Update
@@ -176,17 +247,28 @@ exports.updateEvent = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this event' });
     }
 
-    const { title, description, venue, date, startTime, endTime, participants, organizer, category } = req.body;
+    const { title, description, venue, date, startTime, endTime, participants, organizer, category, type } = req.body;
     
     // Only recalculate conflicts if time/venue changed
-    if (venue || date || startTime || endTime) {
-      const { conflicts } = await checkConflicts({ 
+    if (venue || date || startTime || endTime || type) {
+      const conflictResult = await checkConflicts({ 
         date: date || event.date, 
         startTime: startTime || event.startTime, 
-        endTime: endTime || event.endTime, 
-        venue: venue || event.venue 
+        endTime: endTime || event.endTime,
+        type: type || event.type
       });
-      event.conflicts = conflicts;
+
+      if (conflictResult.blocked) {
+        return res.status(409).json({
+          message: 'Schedule conflict with a higher-priority item. Please choose another time slot.',
+          conflicts: conflictResult.conflicts,
+          blockingConflicts: conflictResult.blockingConflicts,
+          suggestions: conflictResult.suggestions,
+          blocked: true,
+        });
+      }
+
+      event.conflicts = (conflictResult.conflicts || []).map((c) => c.message || c);
     }
 
     event.title = title || event.title;
@@ -195,6 +277,7 @@ exports.updateEvent = async (req, res) => {
     event.date = date || event.date;
     event.startTime = startTime || event.startTime;
     event.endTime = endTime || event.endTime;
+    event.type = type || event.type;
     event.participants = participants || event.participants;
     event.organizer = organizer || event.organizer;
     event.category = category || event.category;
@@ -203,10 +286,16 @@ exports.updateEvent = async (req, res) => {
     // Usually if an organizer edits, it should go back to pending.
     if (req.user.role !== 'admin') {
       event.status = 'pending';
+      event.adminReviewNote = null;
+      event.rejectionReason = null;
+      event.reviewedBy = null;
+      event.reviewedAt = null;
     }
 
     const updatedEvent = await event.save();
-    const populatedEvent = await Event.findById(updatedEvent._id).populate('createdBy', 'name email department');
+    const populatedEvent = await Event.findById(updatedEvent._id)
+      .populate('createdBy', 'name email department')
+      .populate('reviewedBy', 'name email');
 
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'update', data: populatedEvent });
@@ -248,9 +337,9 @@ exports.deleteEvent = async (req, res) => {
 // @access  Private (Students/Organizer)
 exports.checkEventConflicts = async (req, res) => {
   try {
-    const { date, startTime, endTime, venue } = req.body;
-    const { conflicts, suggestions } = await checkConflicts({ date, startTime, endTime, venue });
-    res.json({ conflicts, suggestions });
+    const { date, startTime, endTime, type } = req.body;
+    const { conflicts, suggestions, blockingConflicts, hasConflict, blocked } = await checkConflicts({ date, startTime, endTime, type });
+    res.json({ conflicts, suggestions, blockingConflicts, hasConflict, blocked });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

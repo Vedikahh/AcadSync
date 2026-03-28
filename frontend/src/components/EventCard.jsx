@@ -1,9 +1,10 @@
 import "./EventCard.css";
+import { Calendar, MapPin, User, CheckCircle, XCircle } from "lucide-react";
 
 const STATUS_LABELS = {
-  pending: { label: "Pending", cls: "badge-pending" },
-  approved: { label: "Approved", cls: "badge-approved" },
-  rejected: { label: "Rejected", cls: "badge-rejected" },
+  pending: { label: "Pending", cls: "pending" },
+  approved: { label: "Approved", cls: "approved" },
+  rejected: { label: "Rejected", cls: "rejected" },
 };
 
 export default function EventCard({ event, user, isAdmin, onApprove, onReject, onDelete, onEdit, onClick }) {
@@ -15,7 +16,7 @@ export default function EventCard({ event, user, isAdmin, onApprove, onReject, o
 
   return (
     <div 
-      className={`event-card ${event.status} ${onClick ? "event-card-clickable" : ""}`}
+      className={`event-card ${onClick ? "event-card-clickable" : ""}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -23,24 +24,27 @@ export default function EventCard({ event, user, isAdmin, onApprove, onReject, o
     >
       <div className="event-card-header">
         <h3 className="event-title">{event.title}</h3>
-        <span className={`badge ${status.cls}`}>{status.label}</span>
+        <div className={`status-badge status-${status.cls}`}>
+          <span className="status-dot"></span>
+          {status.label}
+        </div>
       </div>
 
       <p className="event-description">{event.description}</p>
 
       <div className="event-meta">
         <div className="meta-item">
-          <span className="meta-icon">📅</span>
+          <Calendar size={16} className="meta-icon" />
           <span>{event.date ? new Date(event.date).toLocaleDateString("en-IN", {
             day: "numeric", month: "short", year: "numeric"
           }) : "TBD"}</span>
         </div>
         <div className="meta-item">
-          <span className="meta-icon">📍</span>
+          <MapPin size={16} className="meta-icon" />
           <span>{event.venue || "To be announced"}</span>
         </div>
         <div className="meta-item">
-          <span className="meta-icon">👤</span>
+          <User size={16} className="meta-icon" />
           <span>{event.createdBy?.name || event.organizer || "Unknown"}</span>
         </div>
       </div>
@@ -51,15 +55,15 @@ export default function EventCard({ event, user, isAdmin, onApprove, onReject, o
             <>
               <button
                 className="btn-approve"
-                onClick={() => onApprove && onApprove(event.id)}
+                onClick={() => onApprove && onApprove(event._id || event.id)}
               >
-                ✓ Approve
+                <CheckCircle size={16} /> Approve
               </button>
               <button
                 className="btn-reject"
-                onClick={() => onReject && onReject(event.id)}
+                onClick={() => onReject && onReject(event._id || event.id)}
               >
-                ✗ Reject
+                <XCircle size={16} /> Reject
               </button>
             </>
           )}
@@ -72,7 +76,7 @@ export default function EventCard({ event, user, isAdmin, onApprove, onReject, o
                  </button>
                )}
                {onDelete && (
-                 <button className="btn-delete" onClick={() => onDelete(event.id)}>
+                 <button className="btn-delete" onClick={() => onDelete(event._id || event.id)}>
                    Delete
                  </button>
                )}
@@ -83,4 +87,3 @@ export default function EventCard({ event, user, isAdmin, onApprove, onReject, o
     </div>
   );
 }
-

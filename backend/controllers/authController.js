@@ -50,6 +50,7 @@ exports.registerUser = async (req, res) => {
         role: user.role,
         department: user.department,
         avatar: user.avatar,
+        notificationPreferences: user.notificationPreferences,
         token: generateToken(user._id, user.role),
       });
     } else {
@@ -79,6 +80,7 @@ exports.loginUser = async (req, res) => {
         role: user.role,
         department: user.department,
         avatar: user.avatar,
+        notificationPreferences: user.notificationPreferences,
         token: generateToken(user._id, user.role),
       });
     } else {
@@ -139,6 +141,7 @@ exports.googleLogin = async (req, res) => {
       role: user.role,
       department: user.department,
       avatar: user.avatar,
+      notificationPreferences: user.notificationPreferences,
       token: generateToken(user._id, user.role),
     });
 
@@ -185,6 +188,7 @@ exports.googleRegister = async (req, res) => {
       role: user.role,
       department: user.department,
       avatar: user.avatar,
+      notificationPreferences: user.notificationPreferences,
       token: generateToken(user._id, user.role),
     });
 

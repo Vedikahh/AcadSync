@@ -36,7 +36,7 @@
 .np-unread-badge {
   font-size: 0.72rem;
   font-weight: 800;
-  background: #DBEAFE;
+  background: var(--blue-100, #DBEAFE);
   color: #1D4ED8;
   padding: 4px 10px;
   border-radius: 20px;
@@ -59,10 +59,10 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  background: #fff;
+  background: var(--bg-card);
   padding: 12px 16px;
   border-radius: 12px;
-  border: 1px solid var(--border, #E2E8F0);
+  border: 1px solid var(--border, var(--border));
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
   margin-bottom: 24px;
 }
@@ -97,9 +97,9 @@
 }
 
 .np-filter-active {
-  background: #fff;
+  background: var(--bg-card);
   color: var(--primary, #2563EB);
-  border-color: var(--border, #E2E8F0);
+  border-color: var(--border, var(--border));
   box-shadow: 0 1px 3px rgba(15,23,42,0.05);
 }
 
@@ -143,14 +143,14 @@
   color: var(--primary, #2563EB); 
 }
 .np-text-primary:hover { 
-  background: #EFF6FF; 
+  background: var(--blue-50, #EFF6FF); 
 }
 
 .np-text-danger { 
   color: #DC2626; 
 }
 .np-text-danger:hover { 
-  background: #FEF2F2; 
+  background: var(--red-50, #FEF2F2); 
 }
 
 /* ── Content Area ── */
@@ -168,8 +168,8 @@
   justify-content: center;
   text-align: center;
   padding: 80px 20px;
-  background: #fff;
-  border: 1px dashed var(--border, #E2E8F0);
+  background: var(--bg-card);
+  border: 1px dashed var(--border, var(--border));
   border-radius: 16px;
 }
 
@@ -177,7 +177,7 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #F0FDF4;
+  background: var(--green-50, #F0FDF4);
   color: #22C55E;
   display: flex;
   align-items: center;
@@ -214,7 +214,7 @@
   }
   .np-bulk-actions {
     justify-content: center;
-    border-top: 1px solid var(--border-light, #F1F5F9);
+    border-top: 1px solid var(--border-light, var(--border));
     padding-top: 12px;
   }
 }

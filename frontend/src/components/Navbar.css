@@ -8,7 +8,7 @@
   padding: 0 1.25rem 0 1rem;
   height: 64px;
   background: var(--bg-navbar, #fff);
-  border-bottom: 1px solid var(--border, #E2E8F0);
+  border-bottom: 1px solid var(--border, var(--border));
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   position: fixed;
   top: 0;
@@ -235,7 +235,7 @@
   width: 100%;
 }
 
-.logout-btn:hover { background: #FEE2E2; }
+.logout-btn:hover { background: var(--red-100, #FEE2E2); }
 
 /* ── Notification Badge ── */
 .nav-link-badge-container {
@@ -264,3 +264,20 @@
   pointer-events: none;
 }
 
+.theme-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--bg-page);
+  color: var(--primary);
+}

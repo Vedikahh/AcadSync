@@ -14,7 +14,7 @@
   width: var(--sidebar-width);
   height: calc(100vh - 64px);
   background: var(--bg-sidebar, #FAFAFA);
-  border-right: 1px solid var(--border, #E2E8F0);
+  border-right: 1px solid var(--border, var(--border));
   display: flex;
   flex-direction: column;
   z-index: 200;
@@ -22,7 +22,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
+  scrollbar-color: var(--text-muted) transparent;
 }
 
 /* ── Collapsed state ── */
@@ -39,9 +39,9 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #fff;
-  border: 1px solid var(--border, #CBD5E1);
-  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.05);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   align-items: center;
   justify-content: center;
@@ -58,8 +58,8 @@
 }
 
 .sidebar-collapse-btn:hover {
-  background: #fff;
-  color: var(--primary, #2563EB);
+  background: var(--bg-card);
+  color: var(--primary);
   border-color: #93C5FD;
   transform: scale(1.15);
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
@@ -221,18 +221,18 @@
 }
 
 .sidebar-link:hover, .sidebar-logout:hover {
-  background: #E2E8F0;
+  background: var(--border-light);
   color: var(--text-primary, #0F172A);
 }
 
 .sidebar-link-active {
-  background: #EFF6FF;
+  background: var(--blue-50, #EFF6FF);
   color: var(--primary, #2563EB);
   font-weight: 700;
 }
 
 .sidebar-link-active:hover {
-  background: #DBEAFE;
+  background: var(--blue-100, #DBEAFE);
 }
 
 .sidebar-link-icon {
@@ -256,7 +256,7 @@
 }
 
 .sidebar-logout:hover {
-  background: #FEF2F2;
+  background: var(--red-50, #FEF2F2);
   color: #DC2626;
 }
 
@@ -304,7 +304,7 @@
 /* ── Footer / Logout ── */
 .sidebar-footer {
   padding: 16px;
-  border-top: 1px solid var(--border-light, #F1F5F9);
+  border-top: 1px solid var(--border-light, var(--border));
   flex-shrink: 0;
   width: var(--sidebar-width);
   box-sizing: border-box;

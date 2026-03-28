@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { 
-  getSchedules, createSchedule, updateSchedule, deleteSchedule, importSchedules 
+  getSchedules, createSchedule, updateSchedule, deleteSchedule, importSchedules, getImportHistory, rollbackImportVersion
 } = require('../controllers/scheduleController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
@@ -15,5 +15,7 @@ router.route('/:id')
   .delete(protect, authorizeRoles('admin'), deleteSchedule);
 
 router.post('/import', protect, authorizeRoles('admin'), importSchedules);
+router.get('/import/history', protect, authorizeRoles('admin'), getImportHistory);
+router.post('/import/rollback/:versionId', protect, authorizeRoles('admin'), rollbackImportVersion);
 
 module.exports = router;

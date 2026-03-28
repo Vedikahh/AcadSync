@@ -20,6 +20,7 @@ export default function ManageEvents() {
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
@@ -33,10 +34,12 @@ export default function ManageEvents() {
   const fetchEvents = async () => {
     try {
       setIsLoading(true);
+      setError("");
       const data = await getEvents();
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to load events", err);
+      setError("Failed to load events. Please retry.");
       showToast("❌ Failed to load events");
     } finally {
       setIsLoading(false);
@@ -50,8 +53,15 @@ export default function ManageEvents() {
 
   const handleApprove = async (id) => {
     try {
-      await updateEventStatus(id, "approved");
-      setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? { ...e, status: "approved" } : e));
+      const noteInput = window.prompt("Optional approval note for organizer (leave blank to skip):", "");
+      if (noteInput === null) return;
+
+      const payload = noteInput.trim() ? { note: noteInput.trim() } : {};
+      const updated = await updateEventStatus(id, "approved", payload);
+      setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? updated : e));
+      if (selectedEvent && (selectedEvent._id === id || selectedEvent.id === id)) {
+        setSelectedEvent(updated);
+      }
       showToast("✅ Event approved successfully!");
     } catch (err) {
       showToast("❌ Failed to approve event");
@@ -60,11 +70,31 @@ export default function ManageEvents() {
 
   const handleReject = async (id) => {
     try {
-      await updateEventStatus(id, "rejected");
-      setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? { ...e, status: "rejected" } : e));
+      const reasonInput = window.prompt("Rejection reason (required):", "");
+      if (reasonInput === null) return;
+
+      const rejectionReason = reasonInput.trim();
+      if (!rejectionReason) {
+        showToast("⚠ Rejection reason is required.");
+        return;
+      }
+
+      const noteInput = window.prompt("Optional admin note (additional context):", "");
+      if (noteInput === null) return;
+
+      const payload = {
+        rejectionReason,
+        ...(noteInput.trim() ? { note: noteInput.trim() } : {}),
+      };
+
+      const updated = await updateEventStatus(id, "rejected", payload);
+      setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? updated : e));
+      if (selectedEvent && (selectedEvent._id === id || selectedEvent.id === id)) {
+        setSelectedEvent(updated);
+      }
       showToast("❌ Event rejected.");
     } catch (err) {
-      showToast("❌ Failed to reject event");
+      showToast(`❌ ${err.message || "Failed to reject event"}`);
     }
   };
 
@@ -97,7 +127,7 @@ export default function ManageEvents() {
   return (
     <div className="me-page">
       {/* Toast */}
-      {toast && <div className="me-toast">{toast}</div>}
+      {toast && <div className="me-toast" role="status" aria-live="polite">{toast}</div>}
 
       {/* Header */}
       <div className="me-header">
@@ -109,19 +139,25 @@ export default function ManageEvents() {
 
       {/* Controls */}
       <div className="me-controls">
+        <label htmlFor="manage-events-search" className="me-sr-only">Search events</label>
         <input
+          id="manage-events-search"
           className="me-search"
           type="text"
           placeholder=" Search by title or department…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search by event title or department"
         />
-        <div className="me-filter-tabs">
+        <div className="me-filter-tabs" role="tablist" aria-label="Filter events by status">
           {FILTERS.map((f) => (
             <button
               key={f}
               className={`me-filter-tab ${filter === f ? "me-filter-active" : ""}`}
               onClick={() => setFilter(f)}
+              role="tab"
+              aria-selected={filter === f}
+              aria-controls="manage-events-table"
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
               {counts[f] !== undefined && <span className="me-tab-count">{counts[f]}</span>}
@@ -132,24 +168,30 @@ export default function ManageEvents() {
 
       {/* Table */}
       {isLoading ? (
-        <div style={{ textAlign: "center", padding: "2rem" }}>Loading events...</div>
+        <div className="me-state" role="status" aria-live="polite">Loading events...</div>
+      ) : error ? (
+        <div className="me-state me-state-error" role="alert">
+          <p>{error}</p>
+          <button type="button" className="me-retry-btn" onClick={fetchEvents}>Retry</button>
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="me-empty">
+        <div className="me-empty" role="status" aria-live="polite">
           <span>📭</span>
-          <p>No events match your filter.</p>
+          <p>No events match your current search and filter.</p>
         </div>
       ) : (
         <div className="me-table-wrapper">
-          <table className="me-table">
+          <table className="me-table" id="manage-events-table">
+            <caption className="me-sr-only">Manage events list with status and moderation actions</caption>
             <thead>
               <tr>
-                <th>Event</th>
-                <th>Department</th>
-                <th>Date</th>
-                <th>Venue</th>
-                <th>Participants</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th scope="col">Event</th>
+                <th scope="col">Department</th>
+                <th scope="col">Date</th>
+                <th scope="col">Venue</th>
+                <th scope="col">Participants</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -157,35 +199,49 @@ export default function ManageEvents() {
                 const badge = STATUS_BADGE[ev.status] || STATUS_BADGE.pending;
                 const id = ev._id || ev.id;
                 return (
-                  <tr key={id} className="me-row" onClick={() => setSelectedEvent(ev)} style={{ cursor: "pointer" }}>
+                  <tr
+                    key={id}
+                    className="me-row"
+                    onClick={() => setSelectedEvent(ev)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedEvent(ev);
+                      }
+                    }}
+                    style={{ cursor: "pointer" }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Open details for ${ev.title}`}
+                  >
                     <td>
                       <p className="me-event-name">{ev.title}</p>
                       <span className="me-event-organizer">{ev.organizer || (ev.createdBy && ev.createdBy.name) || "Unknown"}</span>
                     </td>
-                    <td className="me-dept">{ev.department}</td>
-                    <td className="me-date">
+                    <td className="me-dept" data-label="Department">{ev.department}</td>
+                    <td className="me-date" data-label="Date">
                       {ev.date ? new Date(ev.date + "T00:00").toLocaleDateString("en-IN", {
                         day: "numeric", month: "short", year: "numeric",
                       }) : "TBA"}
                     </td>
-                    <td className="me-venue">{ev.venue}</td>
-                    <td className="me-participants">{ev.participants || "--"}</td>
-                    <td>
+                    <td className="me-venue" data-label="Venue">{ev.venue}</td>
+                    <td className="me-participants" data-label="Participants">{ev.participants || "--"}</td>
+                    <td data-label="Status">
                       <span className={`me-badge ${badge.cls}`}>{badge.label}</span>
                     </td>
-                    <td onClick={e => e.stopPropagation()}>
+                    <td onClick={e => e.stopPropagation()} data-label="Actions">
                       <div className="me-actions">
                         {ev.status !== "approved" && (
-                          <button className="me-btn-approve" onClick={() => handleApprove(id)} title="Approve">
+                          <button className="me-btn-approve" onClick={() => handleApprove(id)} title="Approve" aria-label={`Approve ${ev.title}`}>
                             ✓
                           </button>
                         )}
                         {ev.status !== "rejected" && (
-                          <button className="me-btn-reject" onClick={() => handleReject(id)} title="Reject">
+                          <button className="me-btn-reject" onClick={() => handleReject(id)} title="Reject" aria-label={`Reject ${ev.title}`}>
                             ✗
                           </button>
                         )}
-                        <button className="me-btn-delete" onClick={() => handleDelete(id)} title="Delete">
+                        <button className="me-btn-delete" onClick={() => handleDelete(id)} title="Delete" aria-label={`Delete ${ev.title}`}>
                           🗑
                         </button>
                       </div>

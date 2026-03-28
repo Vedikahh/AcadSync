@@ -5,19 +5,23 @@ import NotificationItem from "../components/NotificationItem";
 import "./NotificationsPage.css";
 
 export default function NotificationsPage() {
-  const { notifications, unreadCount, fetchNotifications, markAsRead, markAllRead } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    fetchNotifications,
+    markAsRead,
+    markAllRead,
+    fetchNextPage,
+    pagination,
+    isLoading,
+  } = useNotifications();
   const [filter, setFilter] = useState("all");
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Initial fetch handled by context, but we can call it again if we want fresh data on mount
-    fetchNotifications();
+    fetchNotifications({ page: 1 });
   }, [fetchNotifications]);
-
-  const clearAll = () => {
-    // Local clear for UI if needed, but usually we'd want an API call
-  };
 
   const handleClick = (notif) => {
     const id = notif._id || notif.id;
@@ -69,11 +73,6 @@ export default function NotificationsPage() {
                 Mark all as read
               </button>
             )}
-            {notifications.length > 0 && (
-              <button className="np-btn-ghost np-text-danger" onClick={clearAll}>
-                Clear all
-              </button>
-            )}
           </div>
         </div>
 
@@ -104,6 +103,13 @@ export default function NotificationsPage() {
                   />
                 )
               })}
+              {filter === "all" && pagination?.hasNextPage && (
+                <div style={{ textAlign: "center", marginTop: "1rem" }}>
+                  <button className="np-btn-ghost np-text-primary" onClick={fetchNextPage}>
+                    Load more
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -92,7 +92,7 @@
 /* ── Cards ── */
 .admin-card {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border, #E2E8F0);
+  border: 1px solid var(--border, var(--border));
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
   overflow: hidden;
@@ -100,7 +100,7 @@
 
 .admin-card-header {
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border-light, #F1F5F9);
+  border-bottom: 1px solid var(--border-light, var(--border));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -171,7 +171,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #F0FDF4;
+  background: var(--green-50, #F0FDF4);
   color: #22C55E;
   display: flex;
   align-items: center;
@@ -278,23 +278,23 @@
 .admin-table th {
   text-align: left;
   padding: 12px 24px;
-  background: #F8FAFC;
+  background: var(--bg-page);
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted, #94A3B8);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border-light, #F1F5F9);
+  border-bottom: 1px solid var(--border-light, var(--border));
 }
 
 .admin-table td {
   padding: 16px 24px;
-  border-bottom: 1px solid var(--border-light, #F1F5F9);
+  border-bottom: 1px solid var(--border-light, var(--border));
   vertical-align: middle;
 }
 
 .admin-table tbody tr:last-child td { border-bottom: none; }
-.admin-table tbody tr:hover td { background: #F8FAFC; }
+.admin-table tbody tr:hover td { background: var(--bg-page); }
 
 .admin-td-primary {
   font-size: 0.875rem;
@@ -322,8 +322,8 @@
   text-transform: uppercase;
 }
 
-.pill-red   { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
-.pill-green { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.pill-red   { background: var(--red-50, #FEF2F2); color: #B91C1C; border: 1px solid #FECACA; }
+.pill-green { background: var(--green-50, #F0FDF4); color: #15803D; border: 1px solid #BBF7D0; }
 
 
 /* ── Content: Quick Actions Grid ── */
@@ -339,7 +339,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  background: #F8FAFC;
+  background: var(--bg-page);
   border-radius: 12px;
   color: var(--text-primary, #0F172A);
   text-decoration: none;
@@ -350,8 +350,8 @@
 }
 
 .admin-action-btn:hover {
-  background: #fff;
-  border-color: #DBEAFE;
+  background: var(--bg-card);
+  border-color: var(--blue-100);
   box-shadow: 0 4px 12px rgba(37,99,235,0.06);
   color: var(--primary, #2563EB);
   transform: translateY(-2px);

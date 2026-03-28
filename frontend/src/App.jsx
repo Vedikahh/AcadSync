@@ -1,7 +1,39 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
-import { useState } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
+
+export const ThemeContext = createContext();
+
+export const useTheme = () => useContext(ThemeContext);
+
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 
 import Navbar           from "./components/Navbar";
 import Sidebar          from "./components/Sidebar";
@@ -147,7 +179,9 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <NotificationsProvider>
-          <AppLayout />
+          <ThemeProvider>
+            <AppLayout />
+          </ThemeProvider>
         </NotificationsProvider>
       </AuthProvider>
     </BrowserRouter>

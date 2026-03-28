@@ -1,4 +1,6 @@
 import "./ConflictCard.css";
+import { AlertTriangle } from "lucide-react";
+
 
 const SEVERITY_CONFIG = {
   high:   { label: "High Risk",   cls: "severity-high"   },
@@ -13,7 +15,7 @@ export default function ConflictCard({ conflict }) {
     <div className={`conflict-card ${sev.cls}`}>
       <div className="conflict-card-header">
         <div className="conflict-badge">
-          <span className="conflict-badge-dot" />
+          <AlertTriangle size={20} className="conflict-badge-icon" style={{ marginRight: '6px' }} />
           {sev.label}
         </div>
         <span className="conflict-time">{conflict.date}</span>

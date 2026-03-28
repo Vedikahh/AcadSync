@@ -47,6 +47,7 @@ export default function UnifiedCalendar() {
   
   const [calendarItems, setCalendarItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const isAdmin = user?.role === "admin";
   const isOrganizer = user?.role === "organizer";
@@ -70,6 +71,8 @@ export default function UnifiedCalendar() {
   };
 
   const fetchCalendarData = () => {
+    setIsLoading(true);
+    setError("");
     Promise.all([
       getEvents().catch(() => []),
       getSchedules().catch(() => [])
@@ -79,7 +82,7 @@ export default function UnifiedCalendar() {
         id: e._id || e.id,
         title: e.title,
         date: normalizeDateKey(e.date),
-        type: "event",
+        type: e.type || "event",
         source: "event",
         status: e.status || "pending",
         department: e.department,
@@ -96,6 +99,7 @@ export default function UnifiedCalendar() {
         id: s._id || s.id,
         title: s.subject || "Untitled Class",
         day: s.day,
+        date: normalizeDateKey(s.date),
         type: s.type || "lecture",
         source: "schedule",
         department: s.department,
@@ -107,6 +111,11 @@ export default function UnifiedCalendar() {
       }));
       
       setCalendarItems([...mappedEvents, ...mappedSchedules]);
+      setIsLoading(false);
+    }).catch((err) => {
+      console.error("Failed to load calendar data", err);
+      setError("Unable to load calendar data right now. Please try again.");
+      setCalendarItems([]);
       setIsLoading(false);
     });
   };
@@ -194,10 +203,10 @@ export default function UnifiedCalendar() {
     const dayOfWeek = curDate.toLocaleDateString("en-US", { weekday: "long" }); // "Monday"
 
     return items.filter((item) => {
-      // Direct date match (Event APIs)
-      if (item.date && item.date === dateStr) return true;
-      // Day of week match (Schedule/Lecture APIs)
-      if (item.day && item.day === dayOfWeek) return true;
+      // Direct date match (Event APIs or dated schedules)
+      if (item.date) return item.date === dateStr;
+      // Day of week match (recurring schedules only)
+      if (item.day) return item.day === dayOfWeek;
       return false;
     }).map((match) => ({
       ...match,
@@ -257,16 +266,19 @@ export default function UnifiedCalendar() {
         {/* Legend / Action Bar */}
         <div className="cal-action-bar">
           <div className="cal-search-wrap">
+            <label htmlFor="calendar-search" className="cal-sr-only">Search calendar</label>
             <input
+              id="calendar-search"
               className="cal-search-input"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search title, venue, department, faculty..."
+              aria-label="Search calendar items"
             />
           </div>
 
-          <div className="cal-status-filters">
+          <div className="cal-status-filters" role="group" aria-label="Filter by event status">
             {[
               { key: "all", label: "All Status" },
               { key: "approved", label: "Approved" },
@@ -277,16 +289,18 @@ export default function UnifiedCalendar() {
                 key={status.key}
                 className={`cal-status-pill ${statusFilter === status.key ? "cal-status-active" : ""}`}
                 onClick={() => setStatusFilter(status.key)}
+                aria-pressed={statusFilter === status.key}
               >
                 {status.label}
               </button>
             ))}
           </div>
 
-          <div className="cal-legend-filters">
+          <div className="cal-legend-filters" role="group" aria-label="Filter by item type">
             <button
               className={`cal-legend-pill ${filterType === "all" ? "cal-legend-active" : ""}`}
               onClick={() => setFilterType("all")}
+              aria-pressed={filterType === "all"}
             >
               All Types
             </button>
@@ -295,6 +309,7 @@ export default function UnifiedCalendar() {
                 key={type}
                 className={`cal-legend-pill ${filterType === type ? "cal-legend-active" : ""}`}
                 onClick={() => setFilterType(filterType === type ? "all" : type)}
+                aria-pressed={filterType === type}
               >
                 <span className="cal-legend-dot" style={{ background: cfg.color }} />
                 {cfg.label}
@@ -324,15 +339,29 @@ export default function UnifiedCalendar() {
                 </button>
               </div>
 
+              {error && (
+                <div className="cal-inline-state cal-inline-error" role="alert">
+                  <p>{error}</p>
+                  <button type="button" onClick={fetchCalendarData}>Retry</button>
+                </div>
+              )}
+
+              {!error && !isLoading && visibleItems.length === 0 && (
+                <div className="cal-inline-state" role="status" aria-live="polite">
+                  No calendar entries match your current filters.
+                </div>
+              )}
+
               {/* Grid Header */}
-              <div className="cal-grid">
+              <div className="cal-grid-scroll" role="region" aria-label="Monthly calendar grid" tabIndex={0}>
+                <div className="cal-grid" role="grid" aria-label={`${MONTH_NAMES[month]} ${year}`}>
                 {DAY_NAMES.map((d) => (
-                  <div key={d} className="cal-day-header">{d}</div>
+                  <div key={d} className="cal-day-header" role="columnheader" aria-label={d}>{d}</div>
                 ))}
 
                 {/* Empty cells */}
                 {Array.from({ length: firstDay }).map((_, i) => (
-                  <div key={`empty-${i}`} className="cal-cell cal-cell-empty" />
+                  <div key={`empty-${i}`} className="cal-cell cal-cell-empty" role="presentation" />
                 ))}
 
                 {/* Day cells */}
@@ -346,10 +375,15 @@ export default function UnifiedCalendar() {
                   const today = isToday(day);
 
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={day}
                       className={`cal-cell ${today ? "cal-cell-today" : ""} ${isSelected ? "cal-cell-selected" : ""} ${dayEvents.length > 0 ? "cal-cell-has-events" : ""}`}
                       onClick={() => setSelected(isSelected ? null : day)}
+                      aria-label={`${MONTH_NAMES[month]} ${day}, ${year}. ${dayEvents.length} item${dayEvents.length === 1 ? "" : "s"}.`}
+                      aria-pressed={isSelected}
+                      aria-current={today ? "date" : undefined}
+                      role="gridcell"
                     >
                       <div className="cal-cell-top">
                         <span className="cal-day-num">{day}</span>
@@ -379,9 +413,10 @@ export default function UnifiedCalendar() {
                           )}
                         </div>
                       )}
-                    </div>
+                    </button>
                   );
                 })}
+                </div>
               </div>
             </div>
           </div>
@@ -402,7 +437,7 @@ export default function UnifiedCalendar() {
               
               <div className="cal-detail-body">
                 {isLoading ? (
-                  <div className="cal-detail-empty">
+                  <div className="cal-detail-empty" role="status" aria-live="polite">
                     <p>Loading database calendar elements...</p>
                   </div>
                 ) : !selected ? (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getSchedules, getEvents } from "../services/api";
+import { getSchedules, getEvents, getDashboardStats } from "../services/api";
 import { formatTime12h } from "../utils/formatTime";
 import LectureCard from "../components/LectureCard";
 import ConflictCard from "../components/ConflictCard";
@@ -19,30 +19,85 @@ export default function OrganizerDashboard() {
   const [lectures, setLectures] = useState([]);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
+  const [stats, setStats] = useState({
+    classesToday: 0,
+    conflictAlerts: 0,
+    highPriorityConflicts: 0,
+    examsThisMonth: 0,
+  });
 
   useEffect(() => {
-    Promise.all([
-      getSchedules().catch(() => []),
-      getEvents().catch(() => [])
-    ]).then(([schedData, eventsData]) => {
-      const allSchedules = Array.isArray(schedData) ? schedData : [];
-      // Filter schedules to only show today's classes for the organizer (if backend doesn't filter by user, we can optionally filter by organizer name)
-      // For now, let's filter purely by today's day of week.
-      const todaysLectures = allSchedules.filter(l => l.day === todayDay);
-      setLectures(todaysLectures);
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      setPageError("");
 
-      const allEvents = Array.isArray(eventsData) ? eventsData : [];
-      // Filter upcoming approved events
-      const upcomingEvents = allEvents.filter(e => e.status === "approved");
-      setEvents(upcomingEvents);
+      const [schedResult, eventsResult] = await Promise.allSettled([
+        getSchedules(),
+        getEvents(),
+      ]);
+
+      if (schedResult.status === "fulfilled") {
+        const allSchedules = Array.isArray(schedResult.value) ? schedResult.value : [];
+        const todaysLectures = allSchedules.filter((lecture) => lecture.day === todayDay);
+        setLectures(todaysLectures);
+      } else {
+        setLectures([]);
+        setPageError(schedResult.reason?.message || "Failed to load schedule.");
+      }
+
+      if (eventsResult.status === "fulfilled") {
+        const allEvents = Array.isArray(eventsResult.value) ? eventsResult.value : [];
+        const upcomingEvents = allEvents.filter((event) => event.status === "approved");
+        setEvents(upcomingEvents);
+      } else {
+        setEvents([]);
+        setPageError((prev) => prev || eventsResult.reason?.message || "Failed to load events.");
+      }
 
       setIsLoading(false);
-    });
+    };
+
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        setStatsError("");
+        const data = await getDashboardStats();
+        setStats({
+          classesToday: data?.stats?.classesToday ?? 0,
+          conflictAlerts: data?.stats?.conflictAlerts ?? 0,
+          highPriorityConflicts: data?.stats?.highPriorityConflicts ?? 0,
+          examsThisMonth: data?.stats?.examsThisMonth ?? 0,
+        });
+      } catch (err) {
+        console.error(err);
+        setStatsError(err.message || "Failed to load dashboard stats.");
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+    fetchStats();
   }, [user]);
 
-  const MOCK_CONFLICTS = []; // Empty out dummy conflicts
-  const totalConflicts = MOCK_CONFLICTS.length;
-  const highConflicts  = MOCK_CONFLICTS.filter((c) => c.severity === "high").length;
+  const conflictItems = events
+    .filter((event) => Array.isArray(event.conflicts) && event.conflicts.length > 0)
+    .map((event, idx) => ({
+      id: event._id || event.id || idx,
+      eventName: event.title,
+      clashWith: event.conflicts[0],
+      timeOverlap: `${event.startTime || "N/A"} - ${event.endTime || "N/A"}`,
+      date: event.date ? new Date(event.date).toLocaleDateString() : "TBD",
+      severity: event.conflicts.length > 1 ? "high" : "medium",
+    }));
+
+  const totalConflicts = statsError ? conflictItems.length : stats.conflictAlerts;
+  const highConflicts = statsError
+    ? conflictItems.filter((conflict) => conflict.severity === "high").length
+    : stats.highPriorityConflicts;
 
   return (
     <div className="organizer-db-page">
@@ -67,12 +122,15 @@ export default function OrganizerDashboard() {
         </div>
       </div>
 
-    
+      {statsLoading && <div className="organizer-inline-note">Loading dashboard stats...</div>}
+      {statsError && <div className="organizer-inline-error">{statsError}</div>}
+      {pageError && <div className="organizer-inline-error">{pageError}</div>}
+
         <div className="organizer-stats-grid">
-          <StatsCard value={lectures.length}       label="Classes Today"    color="blue"   />
+          <StatsCard value={statsError ? lectures.length : stats.classesToday} label="Classes Today"    color="blue"   />
           <StatsCard value={totalConflicts}        label="Conflict Alerts"  color="orange" />
           <StatsCard value={highConflicts}         label="High Priority"    color="red"    />
-          <StatsCard value="0"                     label="Exams This Month" color="purple" />
+          <StatsCard value={stats.examsThisMonth}  label="Exams This Month" color="purple" />
         </div>
 
         {/* Main Content Layout */}
@@ -131,7 +189,7 @@ export default function OrganizerDashboard() {
 
             {activeTab === "conflicts" && (
               <div className="fac-panel fac-panel-conflicts">
-                {MOCK_CONFLICTS.length === 0 ? (
+                {conflictItems.length === 0 ? (
                   <div className="fac-empty-state">
                     <div className="fac-empty-icon">✓</div>
                     <p>Your schedule is clear. No conflicts detected.</p>
@@ -144,7 +202,7 @@ export default function OrganizerDashboard() {
                         <strong>Review Required:</strong> The following upcoming events conflict with your regular classes. You may need to reschedule.
                       </div>
                     </div>
-                    {MOCK_CONFLICTS.map((c) => (
+                    {conflictItems.map((c) => (
                       <ConflictCard key={c.id} conflict={c} />
                     ))}
                   </div>

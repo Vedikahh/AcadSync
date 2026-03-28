@@ -19,6 +19,8 @@ frontend/dist/
 frontend/dist-ssr/
 frontend/.env
 frontend/*.local
+backend/.env
+backend/.env.*
 
 # OS
 .DS_Store

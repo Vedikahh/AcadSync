@@ -18,8 +18,8 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px 8px 12px;
-  background: #fff;
-  border: 1px solid var(--border, #E2E8F0);
+  background: var(--bg-card);
+  border: 1px solid var(--border, var(--border));
   border-radius: 8px;
   color: var(--text-secondary, #475569);
   font-size: 0.875rem;
@@ -30,9 +30,9 @@
 }
 
 .cr-btn-back:hover {
-  background: #F8FAFC;
+  background: var(--bg-page);
   color: var(--text-primary, #0F172A);
-  border-color: #CBD5E1;
+  border-color: var(--border);
 }
 
 .cr-back-arrow {
@@ -133,8 +133,8 @@
 
 /* ── Cards ── */
 .cr-card {
-  background: #fff;
-  border: 1px solid var(--border, #E2E8F0);
+  background: var(--bg-card);
+  border: 1px solid var(--border, var(--border));
   border-radius: 16px;
   padding: 28px 32px;
   box-shadow: 0 4px 12px rgba(15,23,42,0.03);
@@ -148,7 +148,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 20px;
-  border-bottom: 1px solid var(--border-light, #F1F5F9);
+  border-bottom: 1px solid var(--border-light, var(--border));
   padding-bottom: 12px;
 }
 
@@ -171,7 +171,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 20px;
-  background: #F8FAFC;
+  background: var(--bg-page);
   padding: 20px;
   border-radius: 12px;
 }
@@ -243,7 +243,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
+  background: var(--bg-card);
   border: 1px solid #E0E7FF;
   padding: 14px 20px;
   border-radius: 10px;
@@ -295,7 +295,7 @@
 .cr-slot-action {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #94A3B8;
+  color: var(--text-muted);
   transition: color 0.2s;
 }
 
@@ -311,8 +311,8 @@
 }
 
 .cr-conflicts-wrapper {
-  background: #fff;
-  border: 1px solid var(--border, #E2E8F0);
+  background: var(--bg-card);
+  border: 1px solid var(--border, var(--border));
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 12px rgba(15,23,42,0.03);
@@ -341,7 +341,7 @@
 
 /* Submit anyway box */
 .cr-action-box {
-  background: #FEF2F2;
+  background: var(--red-50, #FEF2F2);
   border: 1px dashed #FECACA;
   border-radius: 12px;
   padding: 20px;
@@ -365,7 +365,7 @@
 .cr-btn-danger-outline {
   width: 100%;
   padding: 10px 16px;
-  background: #fff;
+  background: var(--bg-card);
   border: 1px solid #FCA5A5;
   color: #DC2626;
   border-radius: 8px;
@@ -376,7 +376,7 @@
 }
 
 .cr-btn-danger-outline:hover {
-  background: #FEE2E2;
+  background: var(--red-100, #FEE2E2);
   border-color: #EF4444;
 }
 
@@ -412,15 +412,15 @@
 .cr-empty-resolution {
   text-align: center;
   padding: 80px 40px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 20px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--border);
 }
 
 .cr-empty-icon {
   width: 64px;
   height: 64px;
-  background: #DCFCE7;
+  background: var(--green-100, #DCFCE7);
   color: #16A34A;
   font-size: 2rem;
   font-weight: 900;
@@ -434,11 +434,11 @@
 .cr-empty-resolution h2 {
   font-size: 1.5rem;
   margin-bottom: 12px;
-  color: #0F172A;
+  color: var(--text-primary);
 }
 
 .cr-empty-resolution p {
-  color: #64748B;
+  color: var(--text-secondary);
   margin-bottom: 24px;
 }
 
@@ -465,8 +465,8 @@
 }
 
 .cr-res-item {
-  background: #fff;
-  border: 1px solid #E2E8F0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -483,19 +483,19 @@
   align-items: flex-start;
   margin-bottom: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--border);
 }
 
 .cr-res-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .cr-res-meta {
   font-size: 0.875rem;
-  color: #64748B;
+  color: var(--text-secondary);
 }
 
 .cr-res-action {
@@ -515,7 +515,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #FFF1F2;
+  background: var(--bg-card)1F2;
   color: #991B1B;
   padding: 10px 16px;
   border-radius: 8px;

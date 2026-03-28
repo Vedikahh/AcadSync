@@ -44,7 +44,7 @@
   width: 36px;
   height: 36px;
   border: none;
-  background: #F1F5F9;
+  background: var(--bg-page);
   color: var(--text-secondary);
   border-radius: 50%;
   font-size: 1.1rem;
@@ -58,15 +58,20 @@
 }
 
 .em-close:hover {
-  background: #E2E8F0;
-  color: #0F172A;
+  background: var(--border-light);
+  color: var(--text-primary);
   transform: rotate(90deg);
+}
+
+.em-close:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
 }
 
 .em-header {
   padding: 32px 32px 24px;
   background: linear-gradient(to bottom right, #F8FAFC, #EFF6FF);
-  border-bottom: 1px solid var(--border, #E2E8F0);
+  border-bottom: 1px solid var(--border, var(--border));
   border-radius: 20px 20px 0 0;
 }
 
@@ -82,8 +87,8 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
-.em-badge-appr { background: #DCFCE7; color: #166534; }
-.em-badge-rej  { background: #FEE2E2; color: #991B1B; }
+.em-badge-appr { background: var(--green-100, #DCFCE7); color: #166534; }
+.em-badge-rej  { background: var(--red-100, #FEE2E2); color: #991B1B; }
 .em-badge-pend { background: #FEF3C7; color: #92400E; }
 
 .em-title {
@@ -134,10 +139,10 @@
 .em-detail-item {
   display: flex;
   gap: 12px;
-  background: #F8FAFC;
+  background: var(--bg-page);
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid var(--border-light, #F1F5F9);
+  border: 1px solid var(--border-light, var(--border));
 }
 
 .em-icon {

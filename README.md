@@ -96,10 +96,21 @@ npm install
 Create a `.env` file in the `backend/` directory:
 ```env
 PORT=5000
+NODE_ENV=development
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_signing_key
 GOOGLE_CLIENT_ID=your_google_client_id
+CLIENT_URL=http://localhost:5173
+# Optional for multi-origin setups
+# ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+# Optional for backend AI features only
+# GEMINI_API_KEY=your_gemini_api_key
 ```
+Notes:
+- `MONGO_URI`, `JWT_SECRET`, and `GOOGLE_CLIENT_ID` are required at backend startup.
+- In production, you must configure at least one allowed origin using `CLIENT_URL` or `ALLOWED_ORIGINS`.
+- Keep all secrets in `backend/.env` only. Never put server secrets in frontend env files.
+
 Start the server:
 ```bash
 npm start
@@ -115,6 +126,10 @@ Create a `.env` file in the `frontend/` directory:
 VITE_API_URL=http://localhost:5000
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 ```
+Frontend env notes:
+- Only `VITE_` variables should exist in frontend env files.
+- Do not add backend secrets such as `JWT_SECRET`, `MONGO_URI`, or `GEMINI_API_KEY`.
+
 Launch the development server:
 ```bash
 npm run dev
@@ -140,6 +155,16 @@ npm run dev
 | `/schedule` | Master Schedule | Admin/Org | Timetable & Venue management |
 | `/notifications` | Inbox | Authenticated | Real-time system-wide alerts |
 | `/profile` | User Settings | Authenticated | Account & Identity Management |
+
+---
+
+## 🔒 Security Setup Checklist
+
+1. Copy `backend/.env.example` to `backend/.env` and provide real backend values.
+2. Copy `frontend/.env.example` to `frontend/.env` and provide public `VITE_` values only.
+3. Ensure `backend/.env` is not tracked by git (it is ignored by default in this repository).
+4. Rotate any key that has ever been committed to git history.
+5. Keep CORS allowlists explicit in production with `CLIENT_URL` and/or `ALLOWED_ORIGINS`.
 
 ---
 

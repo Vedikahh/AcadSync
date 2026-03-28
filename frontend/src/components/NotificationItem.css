@@ -8,8 +8,8 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid var(--border, #E2E8F0);
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   transition: background 0.15s, box-shadow 0.15s;
   position: relative;
 }
@@ -20,7 +20,7 @@
 }
 
 .notif-clickable:hover {
-  background: #F8FAFC;
+  background: var(--bg-page);
   box-shadow: 0 2px 10px rgba(0,0,0,0.06);
 }
 
@@ -30,12 +30,12 @@
 
 /* Unread styling */
 .notif-unread {
-  background: #F0F7FF;
-  border-color: #BFDBFE;
+  background: var(--blue-50);
+  border-color: var(--blue-100);
 }
 
 .notif-unread:hover {
-  background: #E8F2FF !important;
+  background: var(--bg-page) !important;
 }
 
 /* Icon circle */
@@ -65,7 +65,7 @@
 .notif-icon-announcement { background: #6366F1; }
 .notif-icon-event        { background: #2563EB; }
 .notif-icon-system       { background: #94A3B8; }
-.notif-icon-default      { background: #CBD5E1; color: #475569 !important; }
+.notif-icon-default      { background: #CBD5E1; color: var(--text-secondary) !important; }
 
 /* Content */
 .notif-content {
@@ -89,13 +89,13 @@
   border-radius: 10px;
 }
 
-.notif-label-approval     { background: #DCFCE7; color: #15803D; }
-.notif-label-rejection    { background: #FEE2E2; color: #B91C1C; }
-.notif-label-conflict     { background: #FEE2E2; color: #B91C1C; }
-.notif-label-reminder     { background: #FEF9C3; color: #854D0E; }
-.notif-label-announcement { background: #E0E7FF; color: #4338CA; }
-.notif-label-event        { background: #DBEAFE; color: #1D4ED8; }
-.notif-label-system       { background: #F1F5F9; color: #64748B; }
+.notif-label-approval     { background: var(--green-100, #DCFCE7); color: #15803D; }
+.notif-label-rejection    { background: var(--red-100, #FEE2E2); color: #B91C1C; }
+.notif-label-conflict     { background: var(--red-100, #FEE2E2); color: #B91C1C; }
+.notif-label-reminder     { background: var(--yellow-50, #FEF9C3); color: #854D0E; }
+.notif-label-announcement { background: var(--indigo-50, #E0E7FF); color: #4338CA; }
+.notif-label-event        { background: var(--blue-100, #DBEAFE); color: #1D4ED8; }
+.notif-label-system       { background: var(--bg-page); color: var(--text-secondary); }
 
 .notif-time {
   font-size: 0.72rem;

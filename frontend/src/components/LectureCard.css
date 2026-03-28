@@ -28,7 +28,7 @@
   font-size: 0.65rem;
   font-weight: 700;
   color: #15803D;
-  background: #DCFCE7;
+  background: var(--green-100, #DCFCE7);
   padding: 2px 8px;
   border-radius: 20px;
   animation: pulse-live 2s ease infinite;
@@ -88,6 +88,6 @@
   border-radius: 20px;
 }
 
-.lecture-type-lecture { background: #DBEAFE; color: #1D4ED8; }
+.lecture-type-lecture { background: var(--blue-100, #DBEAFE); color: #1D4ED8; }
 .lecture-type-exam    { background: #FFEDD5; color: #C2410C; }
-.lecture-type-lab     { background: #DCFCE7; color: #15803D; }
+.lecture-type-lab     { background: var(--green-100, #DCFCE7); color: #15803D; }

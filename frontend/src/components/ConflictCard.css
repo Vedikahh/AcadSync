@@ -6,7 +6,7 @@
   background: var(--bg-card, #fff);
   border-radius: 12px;
   padding: 16px 20px;
-  border: 1px solid var(--border, #E2E8F0);
+  border: 1px solid var(--border, var(--border));
   border-left: 4px solid transparent;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
@@ -54,7 +54,7 @@
   border-radius: 20px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: #fff;
+  background: var(--bg-card);
   border: 1px solid;
 }
 
@@ -67,21 +67,21 @@
 .severity-high .conflict-badge { 
   color: #B91C1C; 
   border-color: #FECACA; 
-  background: #FEF2F2;
+  background: var(--red-50, #FEF2F2);
 }
 .severity-high .conflict-badge-dot { background: #DC2626; box-shadow: 0 0 0 2px #FCA5A5; }
 
 .severity-medium .conflict-badge { 
   color: #C2410C; 
   border-color: #FED7AA; 
-  background: #FFF7ED;
+  background: var(--bg-card)7ED;
 }
 .severity-medium .conflict-badge-dot { background: #EA580C; box-shadow: 0 0 0 2px #FDBA74; }
 
 .severity-low .conflict-badge { 
   color: #15803D; 
   border-color: #BBF7D0; 
-  background: #F0FDF4;
+  background: var(--green-50, #F0FDF4);
 }
 .severity-low .conflict-badge-dot { background: #16A34A; box-shadow: 0 0 0 2px #86EFAC; }
 
@@ -136,7 +136,7 @@
 
 .conflict-highlight {
   color: #7F1D1D;
-  background: #FEE2E2;
+  background: var(--red-100, #FEE2E2);
   padding: 4px 8px;
   border-radius: 6px;
   width: fit-content;

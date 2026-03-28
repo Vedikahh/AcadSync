@@ -1,115 +1,108 @@
-/* ========================
-   StatsCard — Modern SaaS "Sweet Spot"
-   ======================== */
-.stats-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 22px 24px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.02);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  position: relative;
-  overflow: hidden;
-  min-height: 104px;
+@reference "../index.css";
+
+@layer components {
+  /* ========================
+     StatsCard — Academic Light UI 
+     ======================== */
+  .stats-card {
+    @apply relative bg-card border border-border rounded-2xl p-6 transition-all duration-300 shadow-card flex flex-col gap-5 overflow-hidden z-0;
+  }
+
+  .stats-card.clickable {
+    @apply cursor-pointer;
+  }
+
+  .stats-card.clickable:hover {
+    @apply transform -translate-y-1 shadow-md border-transparent;
+  }
+  
+  .stats-glow-orb {
+    @apply absolute -bottom-10 -right-10 w-32 h-32 rounded-full opacity-10 blur-3xl -z-10 transition-opacity duration-300;
+  }
+
+  .stats-card:hover .stats-glow-orb {
+    @apply opacity-20;
+  }
+
+  /* Color Variations tightly matched to root theme */
+  .color-blue .stats-glow-orb { @apply bg-primary; }
+  .color-blue .stats-icon-wrapper { @apply bg-primary/10 text-primary; }
+  
+  .color-indigo .stats-glow-orb { @apply bg-secondary; }
+  .color-indigo .stats-icon-wrapper { @apply bg-secondary/10 text-secondary; }
+
+  .color-green .stats-glow-orb { @apply bg-success; }
+  .color-green .stats-icon-wrapper { @apply bg-success/10 text-success; }
+
+  .color-orange .stats-glow-orb { @apply bg-warning; }
+  .color-orange .stats-icon-wrapper { @apply bg-warning/10 text-warning; }
+
+  .color-red .stats-glow-orb { @apply bg-danger; }
+  .color-red .stats-icon-wrapper { @apply bg-danger/10 text-danger; }
+
+  .color-purple .stats-glow-orb { @apply bg-purple-500; }
+  .color-purple .stats-icon-wrapper { @apply bg-purple-50 text-purple-600; }
+
+  .color-yellow .stats-glow-orb { @apply bg-yellow-500; }
+  .color-yellow .stats-icon-wrapper { @apply bg-yellow-50 text-yellow-600; }
+
+  /* Content */
+  .stats-content {
+    @apply flex justify-between items-start w-full z-10 relative;
+  }
+
+  .stats-info {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .stats-label {
+    @apply text-sm font-bold text-text-secondary tracking-wide uppercase;
+  }
+
+  .stats-value {
+    @apply text-3xl font-extrabold text-text-primary mt-1 tracking-tight;
+  }
+
+  .stats-icon-wrapper {
+    @apply flex items-center justify-center w-14 h-14 rounded-2xl z-10 transition-transform duration-300;
+  }
+
+  .stats-icon-wrapper svg {
+    @apply w-7 h-7;
+  }
+  
+  .stats-card:hover .stats-icon-wrapper {
+    @apply transform scale-105;
+  }
+
+  /* Trend Indicator */
+  .stats-trend {
+    @apply flex items-center gap-2 mt-auto z-10 relative;
+  }
+
+  .glow-badge {
+    @apply flex items-center gap-1 font-bold text-xs px-2.5 py-1 rounded-md transition-shadow duration-300;
+  }
+
+  .trend-up .glow-badge {
+    @apply bg-success/10 text-success;
+    box-shadow: 0 1px 5px rgba(34, 197, 94, 0.1);
+  }
+
+  .trend-down .glow-badge {
+    @apply bg-danger/10 text-danger;
+    box-shadow: 0 1px 5px rgba(239, 68, 68, 0.1);
+  }
+
+  .stats-card:hover .trend-up .glow-badge {
+    box-shadow: 0 2px 10px rgba(34, 197, 94, 0.2);
+  }
+  
+  .stats-card:hover .trend-down .glow-badge {
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.2);
+  }
+
+  .trend-text {
+    @apply text-xs font-semibold text-text-muted;
+  }
 }
-
-.stats-card.clickable {
-  cursor: pointer;
-}
-
-.stats-card.clickable:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 12px -3px rgba(15, 23, 42, 0.05), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
-  border-color: #cbd5e1;
-}
-
-/* Subtle top color strip */
-.stats-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-}
-
-.stats-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.stats-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.stats-label {
-  font-size: 0.85rem;
-  color: #64748b; /* Slate-500 */
-  font-weight: 600;
-  margin-bottom: 6px;
-  letter-spacing: 0.02em;
-}
-
-.stats-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #0f172a; /* Slate-900 */
-  line-height: 1;
-}
-
-/* Tasteful icon badge */
-.stats-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  font-size: 1.3rem;
-  flex-shrink: 0;
-}
-
-/* --- Thematic Colors --- */
-/* Blue */
-.stats-blue::before { background-color: #3b82f6; }
-.stats-blue .stats-icon-wrapper { background-color: #eff6ff; color: #3b82f6; }
-
-/* Green */
-.stats-green::before { background-color: #10b981; }
-.stats-green .stats-icon-wrapper { background-color: #ecfdf5; color: #10b981; }
-
-/* Orange */
-.stats-orange::before { background-color: #f97316; }
-.stats-orange .stats-icon-wrapper { background-color: #fff7ed; color: #f97316; }
-
-/* Red */
-.stats-red::before { background-color: #ef4444; }
-.stats-red .stats-icon-wrapper { background-color: #fef2f2; color: #ef4444; }
-
-/* Purple */
-.stats-purple::before { background-color: #8b5cf6; }
-.stats-purple .stats-icon-wrapper { background-color: #f5f3ff; color: #8b5cf6; }
-
-/* Yellow */
-.stats-yellow::before { background-color: #eab308; }
-.stats-yellow .stats-icon-wrapper { background-color: #fefce8; color: #eab308; }
-
-/* --- Trend Indicator --- */
-.stats-trend {
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.trend-up { color: #16a34a; font-weight: 600; }
-.trend-down { color: #dc2626; font-weight: 600; }
-.trend-text { color: #94a3b8; font-weight: 500; }
-

@@ -10,7 +10,7 @@ export default function ConflictResult() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasConflict, eventData, conflicts = [], suggestions = [] } = location.state || {};
+  const { hasConflict, eventData, conflicts = [], suggestions = [], blocked = false, blockingConflicts = [] } = location.state || {};
   
   const [submitting, setSubmitting] = useState(false);
   const [allEvents, setAllEvents] = useState([]);
@@ -36,6 +36,10 @@ export default function ConflictResult() {
 
   const handleSubmitEvent = async () => {
     if (!eventData) return;
+    if (blocked) {
+      alert("This time conflicts with a higher-priority schedule. Please choose another slot.");
+      return;
+    }
     try {
       setSubmitting(true);
       const eventId = eventData.id || eventData._id;
@@ -76,12 +80,18 @@ export default function ConflictResult() {
               <div className="cr-banner-icon">{hasConflict ? "!" : "✓"}</div>
               <div className="cr-banner-text">
                 <h1 className="cr-banner-title">
-                  {hasConflict ? "Scheduling Conflict Detected" : "No Conflicts Found"}
+                  {!hasConflict
+                    ? "No Conflicts Found"
+                    : blocked
+                      ? "Blocked by Higher-Priority Schedule"
+                      : "Scheduling Conflict Detected"}
                 </h1>
                 <p className="cr-banner-desc">
-                  {hasConflict
-                    ? `AcadSync AI detected ${conflicts.length} potential conflict${conflicts.length !== 1 ? "s" : ""} with existing schedules.`
-                    : "Your event schedule is clear and has been submitted for admin approval."}
+                  {!hasConflict
+                    ? "Your event schedule is clear and has been submitted for admin approval."
+                    : blocked
+                      ? `This time overlaps with ${blockingConflicts.length || conflicts.length} higher-priority schedule${(blockingConflicts.length || conflicts.length) !== 1 ? "s" : ""}. Please choose another slot.`
+                      : `AcadSync AI detected ${conflicts.length} potential conflict${conflicts.length !== 1 ? "s" : ""} with existing schedules.`}
                 </p>
               </div>
               {!hasConflict && (
@@ -153,13 +163,24 @@ export default function ConflictResult() {
                 </div>
 
                 <div className="cr-action-box">
-                  <h3 className="cr-action-title">Proceed Anyway?</h3>
-                  <p className="cr-action-desc">
-                    You can submit this event despite conflicts, but it may be rejected by the administrator.
-                  </p>
-                  <button className="cr-btn-danger-outline" onClick={handleSubmitEvent} disabled={submitting}>
-                    {submitting ? "Submitting..." : "Submit for Admin Review"}
-                  </button>
+                  {blocked ? (
+                    <>
+                      <h3 className="cr-action-title">Blocked by Higher Priority</h3>
+                      <p className="cr-action-desc">
+                        Lower-priority events cannot be scheduled over exams or lectures. Please choose a different slot.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="cr-action-title">Proceed Anyway?</h3>
+                      <p className="cr-action-desc">
+                        You can submit this event despite conflicts, but it may be rejected by the administrator.
+                      </p>
+                      <button className="cr-btn-danger-outline" onClick={handleSubmitEvent} disabled={submitting}>
+                        {submitting ? "Submitting..." : "Submit for Admin Review"}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

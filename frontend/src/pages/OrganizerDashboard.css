@@ -73,16 +73,16 @@
 }
 
 .fac-btn-outline {
-  background: #fff;
+  background: var(--bg-card);
   color: var(--text-secondary, #475569);
-  border-color: var(--border, #E2E8F0);
+  border-color: var(--border, var(--border));
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
 .fac-btn-outline:hover {
-  background: #F8FAFC;
+  background: var(--bg-page);
   color: var(--text-primary, #0F172A);
-  border-color: #CBD5E1;
+  border-color: var(--border);
 }
 
 /* ── Stats Row ── */
@@ -115,7 +115,7 @@
 
 .organizer-tabs-wrapper {
   margin-bottom: 24px;
-  border-bottom: 2px solid var(--border-light, #F1F5F9);
+  border-bottom: 2px solid var(--border-light, var(--border));
 }
 
 .organizer-tabs {
@@ -197,19 +197,19 @@
   justify-content: center;
   text-align: center;
   padding: 80px 20px;
-  background: #fff;
-  border: 1px dashed var(--border, #E2E8F0);
+  background: var(--bg-card);
+  border: 1px dashed var(--border, var(--border));
   border-radius: 16px;
 }
 
 .fac-empty-icon {
   font-size: 2rem;
-  color: #CBD5E1;
+  color: var(--text-muted);
   font-weight: 800;
   margin-bottom: 12px;
   width: 56px;
   height: 56px;
-  background: #F8FAFC;
+  background: var(--bg-page);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -280,7 +280,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  background: #FFF7ED;
+  background: var(--bg-card)7ED;
   border: 1px solid #FFEDD5;
   border-radius: 12px;
   color: #9A3412;
@@ -321,8 +321,8 @@
 }
 
 .fac-side-card {
-  background: #fff;
-  border: 1px solid var(--border, #E2E8F0);
+  background: var(--bg-card);
+  border: 1px solid var(--border, var(--border));
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 12px rgba(15,23,42,0.02);
@@ -347,7 +347,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #F8FAFC;
+  background: var(--bg-page);
   border-radius: 10px;
   color: var(--text-secondary, #475569);
   text-decoration: none;
@@ -358,9 +358,9 @@
 }
 
 .fac-link-item:hover {
-  background: #fff;
+  background: var(--bg-card);
   color: var(--primary, #2563EB);
-  border-color: #DBEAFE;
+  border-color: var(--blue-100);
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
   transform: translateX(4px);
 }
@@ -373,7 +373,7 @@
 
 /* News/Notice list */
 .fac-notice-card {
-  background: linear-gradient(180deg, #fff, #F8FAFC);
+  background: var(--bg-card);
 }
 
 .fac-news-list {

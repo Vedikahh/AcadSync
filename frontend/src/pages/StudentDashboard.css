@@ -72,9 +72,9 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #fff;
+  background: var(--bg-card);
   color: var(--text-secondary, #475569);
-  border: 1px solid var(--border, #E2E8F0);
+  border: 1px solid var(--border, var(--border));
   border-radius: 10px;
   font-size: 0.875rem;
   font-weight: 700;
@@ -84,9 +84,9 @@
 }
 
 .std-btn-outline:hover {
-  background: #F8FAFC;
+  background: var(--bg-page);
   color: var(--text-primary, #0F172A);
-  border-color: #CBD5E1;
+  border-color: var(--border);
 }
 
 /* ── Stats Grid ── */
@@ -121,7 +121,7 @@
 /* ── Cards ── */
 .std-card {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border, #E2E8F0);
+  border: 1px solid var(--border, var(--border));
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
   overflow: hidden;
@@ -129,7 +129,7 @@
 
 .std-card-header {
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border-light, #F1F5F9);
+  border-bottom: 1px solid var(--border-light, var(--border));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -160,7 +160,7 @@
   letter-spacing: 0.04em;
 }
 
-.std-badge-blue   { background: #DBEAFE; color: #1D4ED8; }
+.std-badge-blue   { background: var(--blue-100, #DBEAFE); color: #1D4ED8; }
 .std-badge-purple { background: #F3E8FF; color: #7E22CE; }
 .std-badge-orange { background: #FFEDD5; color: #C2410C; }
 
@@ -179,7 +179,7 @@
 }
 
 .std-p-0 { padding: 0 !important; }
-.std-bg-gray { background: #F8FAFC; }
+.std-bg-gray { background: var(--bg-page); }
 .std-mt-10 { margin-top: 10px; }
 
 /* ── Content: Empty State ── */
@@ -196,8 +196,8 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #F1F5F9;
-  color: #94A3B8;
+  background: var(--bg-page);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -223,7 +223,7 @@
 /* ── Content: Conflict Action Banner ── */
 .std-conflict-section {
   border-color: #FECACA;
-  background: #FFF5F5;
+  background: var(--bg-card)5F5;
   box-shadow: 0 4px 16px rgba(239, 68, 68, 0.08);
 }
 
@@ -251,7 +251,7 @@
 
 .std-conflict-section .std-link {
   color: #DC2626;
-  background: #FEE2E2;
+  background: var(--red-100, #FEE2E2);
   padding: 6px 12px;
   border-radius: 8px;
   transition: background 0.2s;
@@ -304,7 +304,7 @@
   align-items: center;
   gap: 14px;
   padding: 16px;
-  background: #F8FAFC;
+  background: var(--bg-page);
   border-radius: 12px;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -312,8 +312,8 @@
 }
 
 .std-quick-link:hover {
-  background: #fff;
-  border-color: #DBEAFE;
+  background: var(--bg-card);
+  border-color: var(--blue-100);
   box-shadow: 0 4px 12px rgba(37,99,235,0.06);
   transform: translateX(4px);
 }

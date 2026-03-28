@@ -39,6 +39,7 @@ const EMPTY_FORM = {
   title: "",
   description: "",
   department: "",
+  type: "event",
   venue: "",
   date: "",
   startTime: "",
@@ -61,6 +62,7 @@ export default function CreateEvent() {
     return {
       ...EMPTY_FORM,
       ...data,
+      type: data.type || "event",
       // Ensure date is in YYYY-MM-DD for the input
       date: data.date ? new Date(data.date).toISOString().split('T')[0] : "",
       // Maintain ID if it exists (for editing)
@@ -71,6 +73,7 @@ export default function CreateEvent() {
   const [form, setForm] = useState(getInitialForm());
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [step, setStep] = useState(1);
 
   const handleChange = (e) => {
@@ -102,6 +105,7 @@ export default function CreateEvent() {
   const handleNextStep = () => {
     const errs = validateStep1();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setSubmitError("");
     setStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -112,33 +116,42 @@ export default function CreateEvent() {
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
     try {
+      setSubmitError("");
       setLoading(true);
       const res = await checkEventConflicts(form);
       const conflicts = res.conflicts || [];
+      const blockingConflicts = res.blockingConflicts || [];
+      const blocked = Boolean(res.blocked);
       const suggestions = res.suggestions || [];
       const hasConflict = conflicts.length > 0;
       
-      const formattedConflicts = conflicts.map((c, i) => ({
-        id: i,
-        eventName: form.title,
-        severity: "high",
-        clashWith: c,
-        timeOverlap: `${formatTime12h(form.startTime)} – ${formatTime12h(form.endTime)}`,
-        venue: form.venue,
-        date: form.date,
-        affectedStudents: form.participants || "Unknown"
-      }));
+      const formattedConflicts = conflicts.map((c, i) => {
+        const message = typeof c === "string" ? c : c.message;
+        const isBlocking = typeof c === "object" && c.isBlocking;
+        return ({
+          id: i,
+          eventName: form.title,
+          severity: isBlocking ? "high" : "medium",
+          clashWith: message,
+          timeOverlap: `${formatTime12h(form.startTime)} – ${formatTime12h(form.endTime)}`,
+          venue: form.venue,
+          date: form.date,
+          affectedStudents: form.participants || "Unknown"
+        });
+      });
 
       navigate("/conflict", {
         state: {
           hasConflict,
+          blocked,
+          blockingConflicts,
           eventData: form,
           conflicts: formattedConflicts,
           suggestions
         },
       });
     } catch (err) {
-      alert("Failed to check conflicts: " + err.message);
+      setSubmitError(err?.message ? `Failed to check conflicts: ${err.message}` : "Failed to check conflicts. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -165,12 +178,12 @@ export default function CreateEvent() {
       </div>
 
       {/* ── Step wizard ── */}
-      <div className="ce-steps">
+      <div className="ce-steps" role="list" aria-label="Create event steps">
         {[
           { num: 1, label: "Event Details",  desc: "Title, category & dept" },
           { num: 2, label: "Schedule & Venue", desc: "Date, time & location" },
         ].map((s, i) => (
-          <div key={s.num} className="ce-step-item">
+          <div key={s.num} className="ce-step-item" role="listitem" aria-current={step === s.num ? "step" : undefined}>
             <div className={`ce-step-circle ${step >= s.num ? "ce-step-active" : ""} ${step > s.num ? "ce-step-done" : ""}`}>
               {step > s.num ? "✓" : s.num}
             </div>
@@ -188,7 +201,13 @@ export default function CreateEvent() {
 
         {/* Form card */}
         <div className="ce-card">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
+
+            {submitError && (
+              <div className="ce-submit-error" role="alert" aria-live="assertive">
+                {submitError}
+              </div>
+            )}
 
             {/* ── STEP 1 ── */}
             {step === 1 && (
@@ -197,22 +216,27 @@ export default function CreateEvent() {
 
                 {/* Title */}
                 <div className="ce-field">
-                  <label className="ce-label">Event Title <span className="ce-req">*</span></label>
+                  <label className="ce-label" htmlFor="ce-title">Event Title <span className="ce-req">*</span></label>
                   <input
+                    id="ce-title"
                     name="title"
                     type="text"
                     placeholder="e.g. Annual Tech Fest 2025"
                     value={form.title}
                     onChange={handleChange}
                     className={`ce-input ${errors.title ? "ce-input-err" : ""}`}
+                    aria-invalid={Boolean(errors.title)}
+                    aria-describedby={errors.title ? "ce-title-error" : undefined}
+                    required
                   />
-                  {errors.title && <span className="ce-err">{errors.title}</span>}
+                  {errors.title && <span className="ce-err" id="ce-title-error">{errors.title}</span>}
                 </div>
 
                 {/* Organizer */}
                 <div className="ce-field">
-                  <label className="ce-label">Organiser / Club Name</label>
+                  <label className="ce-label" htmlFor="ce-organizer">Organiser / Club Name</label>
                   <input
+                    id="ce-organizer"
                     name="organizer"
                     type="text"
                     placeholder="e.g. IEEE Student Chapter"
@@ -224,30 +248,35 @@ export default function CreateEvent() {
 
                 {/* Description */}
                 <div className="ce-field">
-                  <label className="ce-label">Description <span className="ce-req">*</span></label>
+                  <label className="ce-label" htmlFor="ce-description">Description <span className="ce-req">*</span></label>
                   <textarea
+                    id="ce-description"
                     name="description"
                     placeholder="Describe the event — its purpose, activities, and target audience…"
                     value={form.description}
                     onChange={handleChange}
                     rows={4}
                     className={`ce-textarea ${errors.description ? "ce-input-err" : ""}`}
+                    aria-invalid={Boolean(errors.description)}
+                    aria-describedby={errors.description ? "ce-description-error" : undefined}
+                    required
                   />
                   <span className="ce-char-count">{form.description.length} chars</span>
-                  {errors.description && <span className="ce-err">{errors.description}</span>}
+                  {errors.description && <span className="ce-err" id="ce-description-error">{errors.description}</span>}
                 </div>
 
                 {/* Category pills */}
                 <div className="ce-field">
                   <label className="ce-label">Category <span className="ce-req">*</span></label>
-                  {errors.category && <span className="ce-err">{errors.category}</span>}
-                  <div className="ce-cat-grid">
+                  {errors.category && <span className="ce-err" id="ce-category-error">{errors.category}</span>}
+                  <div className="ce-cat-grid" role="group" aria-label="Select category" aria-describedby={errors.category ? "ce-category-error" : undefined}>
                     {CATEGORIES.map((c) => (
                       <button
                         key={c}
                         type="button"
                         className={`ce-cat-pill ${form.category === c ? "ce-cat-active" : ""}`}
                         onClick={() => { setForm((p) => ({ ...p, category: c })); setErrors((p) => ({ ...p, category: "" })); }}
+                        aria-pressed={form.category === c}
                       >
                         {c}
                       </button>
@@ -257,17 +286,21 @@ export default function CreateEvent() {
 
                 {/* Department */}
                 <div className="ce-field">
-                  <label className="ce-label">Department / Organising Body <span className="ce-req">*</span></label>
+                  <label className="ce-label" htmlFor="ce-department">Department / Organising Body <span className="ce-req">*</span></label>
                   <select
+                    id="ce-department"
                     name="department"
                     value={form.department}
                     onChange={handleChange}
                     className={`ce-select ${errors.department ? "ce-input-err" : ""}`}
+                    aria-invalid={Boolean(errors.department)}
+                    aria-describedby={errors.department ? "ce-department-error" : undefined}
+                    required
                   >
                     <option value="">— Select department —</option>
                     {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
                   </select>
-                  {errors.department && <span className="ce-err">{errors.department}</span>}
+                  {errors.department && <span className="ce-err" id="ce-department-error">{errors.department}</span>}
                 </div>
 
                 <div className="ce-form-actions ce-form-actions-right">
@@ -287,22 +320,27 @@ export default function CreateEvent() {
                 <div className="ce-row">
                   {/* Date */}
                   <div className="ce-field">
-                    <label className="ce-label">Event Date <span className="ce-req">*</span></label>
+                    <label className="ce-label" htmlFor="ce-date">Event Date <span className="ce-req">*</span></label>
                     <input
+                      id="ce-date"
                       name="date"
                       type="date"
                       value={form.date}
                       onChange={handleChange}
                       min={new Date().toISOString().split("T")[0]}
                       className={`ce-input ${errors.date ? "ce-input-err" : ""}`}
+                      aria-invalid={Boolean(errors.date)}
+                      aria-describedby={errors.date ? "ce-date-error" : undefined}
+                      required
                     />
-                    {errors.date && <span className="ce-err">{errors.date}</span>}
+                    {errors.date && <span className="ce-err" id="ce-date-error">{errors.date}</span>}
                   </div>
 
                   {/* Participants */}
                   <div className="ce-field">
-                    <label className="ce-label">Expected Participants</label>
+                    <label className="ce-label" htmlFor="ce-participants">Expected Participants</label>
                     <input
+                      id="ce-participants"
                       name="participants"
                       type="number"
                       placeholder="e.g. 250"
@@ -317,47 +355,56 @@ export default function CreateEvent() {
                 <div className="ce-row">
                   {/* Start time */}
                   <div className="ce-field">
-                    <label className="ce-label">Start Time <span className="ce-req">*</span></label>
+                    <label className="ce-label" htmlFor="ce-start-time">Start Time <span className="ce-req">*</span></label>
                     <input
+                      id="ce-start-time"
                       name="startTime"
                       type="time"
                       value={form.startTime}
                       onChange={handleChange}
                       className={`ce-input ${errors.startTime ? "ce-input-err" : ""}`}
+                      aria-invalid={Boolean(errors.startTime)}
+                      aria-describedby={errors.startTime ? "ce-start-time-error" : undefined}
+                      required
                     />
-                    {errors.startTime && <span className="ce-err">{errors.startTime}</span>}
+                    {errors.startTime && <span className="ce-err" id="ce-start-time-error">{errors.startTime}</span>}
                   </div>
 
                   {/* End time */}
                   <div className="ce-field">
-                    <label className="ce-label">End Time <span className="ce-req">*</span></label>
+                    <label className="ce-label" htmlFor="ce-end-time">End Time <span className="ce-req">*</span></label>
                     <input
+                      id="ce-end-time"
                       name="endTime"
                       type="time"
                       value={form.endTime}
                       onChange={handleChange}
                       className={`ce-input ${errors.endTime ? "ce-input-err" : ""}`}
+                      aria-invalid={Boolean(errors.endTime)}
+                      aria-describedby={errors.endTime ? "ce-end-time-error" : undefined}
+                      required
                     />
-                    {errors.endTime && <span className="ce-err">{errors.endTime}</span>}
+                    {errors.endTime && <span className="ce-err" id="ce-end-time-error">{errors.endTime}</span>}
                   </div>
                 </div>
 
                 {/* Venue */}
                 <div className="ce-field">
                   <label className="ce-label">Venue <span className="ce-req">*</span></label>
-                  <div className="ce-venue-grid">
+                  <div className="ce-venue-grid" role="group" aria-label="Select venue" aria-describedby={errors.venue ? "ce-venue-error" : undefined}>
                     {VENUES.map((v) => (
                       <button
                         key={v}
                         type="button"
                         className={`ce-venue-pill ${form.venue === v ? "ce-venue-active" : ""}`}
                         onClick={() => { setForm((p) => ({ ...p, venue: v })); setErrors((p) => ({ ...p, venue: "" })); }}
+                        aria-pressed={form.venue === v}
                       >
                         {v}
                       </button>
                     ))}
                   </div>
-                  {errors.venue && <span className="ce-err">{errors.venue}</span>}
+                  {errors.venue && <span className="ce-err" id="ce-venue-error">{errors.venue}</span>}
                 </div>
 
                 {/* AI Notice */}

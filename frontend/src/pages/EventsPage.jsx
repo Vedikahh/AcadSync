@@ -18,6 +18,7 @@ export default function EventsPage() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
@@ -31,10 +32,12 @@ export default function EventsPage() {
   const fetchEvents = async () => {
     try {
       setIsLoading(true);
+      setError("");
       const data = await getEvents();
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to fetch events", err);
+      setError("We could not load events right now. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -48,15 +51,34 @@ export default function EventsPage() {
 
   const handleApprove = async (id) => {
     try {
-      await updateEventStatus(id, "approved");
-      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "approved" } : e)));
+      const noteInput = window.prompt("Optional approval note for organizer (leave blank to skip):", "");
+      if (noteInput === null) return;
+
+      const updated = await updateEventStatus(
+        id,
+        "approved",
+        noteInput.trim() ? { note: noteInput.trim() } : {}
+      );
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? updated : e)));
     } catch (err) { console.error("Update failed", err); }
   };
 
   const handleReject = async (id) => {
     try {
-      await updateEventStatus(id, "rejected");
-      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "rejected" } : e)));
+      const reasonInput = window.prompt("Rejection reason (required):", "");
+      if (reasonInput === null) return;
+
+      const rejectionReason = reasonInput.trim();
+      if (!rejectionReason) return;
+
+      const noteInput = window.prompt("Optional admin note (additional context):", "");
+      if (noteInput === null) return;
+
+      const updated = await updateEventStatus(id, "rejected", {
+        rejectionReason,
+        ...(noteInput.trim() ? { note: noteInput.trim() } : {}),
+      });
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? updated : e)));
     } catch (err) { console.error("Update failed", err); }
   };
 
@@ -87,19 +109,25 @@ export default function EventsPage() {
       </div>
 
       <div className="events-controls">
+        <label htmlFor="events-search" className="sr-only">Search events</label>
         <input
+          id="events-search"
           className="search-input"
           type="text"
           placeholder="Search events…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search events by title"
         />
-        <div className="filter-tabs">
+        <div className="filter-tabs" role="tablist" aria-label="Filter events by status">
           {FILTERS.map((f) => (
             <button
               key={f}
               className={`filter-tab ${filter === f ? "active" : ""}`}
               onClick={() => setFilter(f)}
+              role="tab"
+              aria-selected={filter === f}
+              aria-controls="events-grid"
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
@@ -108,14 +136,21 @@ export default function EventsPage() {
       </div>
 
       {isLoading ? (
-        <div style={{ textAlign: "center", padding: "2rem" }}>Loading events...</div>
+        <div className="events-state" role="status" aria-live="polite">
+          Loading events...
+        </div>
+      ) : error ? (
+        <div className="events-state events-state-error" role="alert">
+          <p>{error}</p>
+          <button className="events-retry-btn" onClick={fetchEvents}>Retry</button>
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="empty-events">
+        <div className="empty-events" role="status" aria-live="polite">
           <span>📭</span>
-          <p>No events match your filter.</p>
+          <p>No events match your current search and filter.</p>
         </div>
       ) : (
-        <div className="events-grid">
+        <div className="events-grid" id="events-grid">
           {filtered.map((event) => {
             const normalizedEvent = { ...event, id: event._id || event.id };
             return (

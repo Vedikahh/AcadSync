@@ -11,6 +11,13 @@ function Toast({ message, onDone }) {
   return message ? <div className="up-toast" onAnimationEnd={onDone}>{message}</div> : null;
 }
 
+const DEFAULT_NOTIFICATION_PREFERENCES = {
+  event: true,
+  approval: true,
+  rejection: true,
+  reminder: true,
+};
+
 export default function UserProfile() {
   const { user, login } = useAuth();
 
@@ -19,6 +26,10 @@ export default function UserProfile() {
     department: user?.department || "",
     bio: user?.bio || "",
     avatar: user?.avatar || "",
+    notificationPreferences: {
+      ...DEFAULT_NOTIFICATION_PREFERENCES,
+      ...(user?.notificationPreferences || {}),
+    },
   });
 
   const [loading, setLoading] = useState(false);
@@ -28,6 +39,16 @@ export default function UserProfile() {
 
   const handleEditChange = (e) =>
     setEditForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+  const handlePreferenceToggle = (key) => {
+    setEditForm((prev) => ({
+      ...prev,
+      notificationPreferences: {
+        ...prev.notificationPreferences,
+        [key]: !prev.notificationPreferences[key],
+      },
+    }));
+  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
@@ -147,6 +168,28 @@ export default function UserProfile() {
                 value={editForm.bio}
                 onChange={handleEditChange}
               />
+            </div>
+
+            <div className="up-pref-section">
+              <h3>Notification Preferences</h3>
+              <p>Choose which alerts you want to receive.</p>
+              <div className="up-pref-grid">
+                {[
+                  ["event", "New event requests"],
+                  ["approval", "Event approvals"],
+                  ["rejection", "Event rejections"],
+                  ["reminder", "Event reminders"],
+                ].map(([key, label]) => (
+                  <label key={key} className="up-pref-item">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(editForm.notificationPreferences?.[key])}
+                      onChange={() => handlePreferenceToggle(key)}
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="up-form-footer">

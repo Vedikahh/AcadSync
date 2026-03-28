@@ -64,10 +64,14 @@ export const createEvent = (event) =>
 export const updateEvent = (id, event) =>
   request(`/api/events/${id}`, { method: "PATCH", body: JSON.stringify(event) });
 
-export const updateEventStatus = (id, status) => {
+export const updateEventStatus = (id, status, payload = {}) => {
   // Routes mapped to our Node.js design
   const path = status === 'approved' ? `/api/events/${id}/approve` : `/api/events/${id}/reject`;
-  return request(path, { method: "PATCH" });
+  const hasPayload = payload && Object.keys(payload).length > 0;
+  return request(path, {
+    method: "PATCH",
+    ...(hasPayload ? { body: JSON.stringify(payload) } : {}),
+  });
 }
 
 export const deleteEvent = (id) =>
@@ -85,14 +89,28 @@ export const updateSchedule = (id, schedule) =>
 export const deleteSchedule = (id) =>
   request(`/api/schedule/${id}`, { method: "DELETE" });
 
-export const importSchedules = (rows, mode = "replace") =>
+export const importSchedules = (rows, mode = "replace", dryRun = false) =>
   request("/api/schedule/import", {
     method: "POST",
-    body: JSON.stringify({ rows, mode }),
+    body: JSON.stringify({ rows, mode, dryRun }),
+  });
+
+export const getScheduleImportHistory = () =>
+  request("/api/schedule/import/history", { method: "GET" });
+
+export const rollbackScheduleImport = (versionId) =>
+  request(`/api/schedule/import/rollback/${versionId}`, {
+    method: "POST",
   });
 
 // ---- Notification APIs ----
-export const getNotifications = () => request("/api/notifications");
+export const getNotifications = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return request(`/api/notifications${suffix}`);
+};
 
 export const markNotificationRead = (id) =>
   request(`/api/notifications/${id}/read`, { method: "PATCH" });

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getEvents, updateEventStatus } from "../services/api";
+import { getEvents, getDashboardStats, updateEventStatus } from "../services/api";
 import EventCard from "../components/EventCard";
 import StatsCard from "../components/StatsCard";
 import "./Dashboard.css";
@@ -10,26 +10,56 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState("");
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    pendingApprovals: 0,
+    approvedEvents: 0,
+    activeDepartments: 0,
+  });
 
   useEffect(() => {
     fetchEvents();
+    fetchStats();
   }, []);
 
   const fetchEvents = async () => {
     try {
       setIsLoading(true);
+      setEventsError("");
       const data = await getEvents();
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setEventsError(err.message || "Failed to load events.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true);
+      setStatsError("");
+      const data = await getDashboardStats();
+      setStats({
+        totalStudents: data?.stats?.totalStudents ?? 0,
+        pendingApprovals: data?.stats?.pendingApprovals ?? 0,
+        approvedEvents: data?.stats?.approvedEvents ?? 0,
+        activeDepartments: data?.stats?.activeDepartments ?? 0,
+      });
+    } catch (err) {
+      console.error(err);
+      setStatsError(err.message || "Failed to load dashboard stats.");
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const pending  = events.filter((e) => e.status === "pending");
   const approved = events.filter((e) => e.status === "approved");
-  const MOCK_STUDENTS    = 0; // Set to 0 until actual user API exists
   
   // Calculate dynamic department activity from events
   const deptCounts = events.reduce((acc, event) => {
@@ -40,7 +70,7 @@ export default function AdminDashboard() {
   
   const DEPT_ACTIVITY = Object.entries(deptCounts).map(([dept, count]) => ({ dept, count })).slice(0, 5);
   const maxCount = Math.max(1, ...DEPT_ACTIVITY.map((d) => d.count));
-  const activeDepartmentsCount = Object.keys(deptCounts).length;
+  const activeDepartmentsCount = statsError ? Object.keys(deptCounts).length : stats.activeDepartments;
 
   const conflictsList = events
     .filter((e) => e.conflicts && e.conflicts.length > 0)
@@ -55,14 +85,35 @@ export default function AdminDashboard() {
 
   const handleApprove = async (id) => {
     try {
-      await updateEventStatus(id, "approved");
-      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "approved" } : e)));
+      const noteInput = window.prompt("Optional approval note for organizer (leave blank to skip):", "");
+      if (noteInput === null) return;
+
+      const updated = await updateEventStatus(
+        id,
+        "approved",
+        noteInput.trim() ? { note: noteInput.trim() } : {}
+      );
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? updated : e)));
+      fetchStats();
     } catch (err) { console.error("Failed to approve", err); }
   };
   const handleReject = async (id) => {
     try {
-      await updateEventStatus(id, "rejected");
-      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? { ...e, status: "rejected" } : e)));
+      const reasonInput = window.prompt("Rejection reason (required):", "");
+      if (reasonInput === null) return;
+
+      const rejectionReason = reasonInput.trim();
+      if (!rejectionReason) return;
+
+      const noteInput = window.prompt("Optional admin note (additional context):", "");
+      if (noteInput === null) return;
+
+      const updated = await updateEventStatus(id, "rejected", {
+        rejectionReason,
+        ...(noteInput.trim() ? { note: noteInput.trim() } : {}),
+      });
+      setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? updated : e)));
+      fetchStats();
     } catch (err) { console.error("Failed to reject", err); }
   };
 
@@ -81,11 +132,14 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      
+      {statsLoading && <div className="admin-inline-note">Loading dashboard stats...</div>}
+      {statsError && <div className="admin-inline-error">{statsError}</div>}
+      {eventsError && <div className="admin-inline-error">{eventsError}</div>}
+
         <div className="admin-stats-grid">
-          <StatsCard value={MOCK_STUDENTS}       label="Total Students"   color="blue"   />
-          <StatsCard value={pending.length}      label="Needs Approval"   color="orange" />
-          <StatsCard value={approved.length}     label="Approved Events"  color="green"  />
+          <StatsCard value={stats.totalStudents} label="Total Students"   color="blue"   />
+          <StatsCard value={stats.pendingApprovals} label="Needs Approval"   color="orange" />
+          <StatsCard value={stats.approvedEvents} label="Approved Events"  color="green"  />
           <StatsCard value={activeDepartmentsCount} label="Active Depts"  color="purple" />
         </div>
 

@@ -1,4 +1,6 @@
 import "./NotificationItem.css";
+import { CheckCircle, Bell } from "lucide-react";
+
 
 const TYPE_LABELS = {
   event:        "Event",
@@ -44,7 +46,7 @@ export default function NotificationItem({ notification, onMarkRead, onClick }) 
       {/* Type icon circle */}
       <div className={`notif-icon notif-icon-${notification.type || "default"}`}>
         <span className="notif-type-letter">
-          {typeLabel.charAt(0)}
+          <Bell size={20} />
         </span>
       </div>
 
@@ -71,7 +73,7 @@ export default function NotificationItem({ notification, onMarkRead, onClick }) 
               onMarkRead();
             }}
           >
-            ✓
+            <CheckCircle size={20} />
           </button>
           <span className="unread-dot" />
         </div>

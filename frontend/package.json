@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-oauth/google": "^0.13.4",
     "@vercel/analytics": "^2.0.1",
+    "lucide-react": "^1.7.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1",

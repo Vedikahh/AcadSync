@@ -3,10 +3,13 @@ import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationsContext";
 import logo from "../assets/logoo.png";
 import "./Navbar.css";
+import { Menu, Moon, Sun } from "lucide-react";
+import { useTheme } from "../App";
 
 export default function Navbar({ onMenuToggle }) {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,7 +30,7 @@ export default function Navbar({ onMenuToggle }) {
       <div className="navbar-left">
         {user && (
           <button className="navbar-menu-btn" onClick={onMenuToggle} aria-label="Toggle sidebar">
-            ☰
+            <Menu size={24} />
           </button>
         )}
         <div className="navbar-brand">
@@ -56,6 +59,10 @@ export default function Navbar({ onMenuToggle }) {
               Alerts
               {unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}
             </Link>
+
+            <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle theme">
+              {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
 
             {/* User avatar dropdown */}
             <div className="user-menu">

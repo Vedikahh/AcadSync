@@ -1,5 +1,12 @@
 const User = require('../models/User');
 
+const normalizeNotificationPreferences = (preferences = {}) => ({
+  event: preferences.event !== false,
+  approval: preferences.approval !== false,
+  rejection: preferences.rejection !== false,
+  reminder: preferences.reminder !== false,
+});
+
 // @desc    Get user profile
 // @route   GET /api/users/profile
 // @access  Private
@@ -32,6 +39,12 @@ exports.updateUserProfile = async (req, res) => {
       user.department = req.body.department !== undefined ? req.body.department : user.department;
       user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
       user.avatar = req.body.avatar !== undefined ? req.body.avatar : user.avatar;
+      if (req.body.notificationPreferences && typeof req.body.notificationPreferences === 'object') {
+        user.notificationPreferences = normalizeNotificationPreferences({
+          ...user.notificationPreferences,
+          ...req.body.notificationPreferences,
+        });
+      }
       
       const updatedUser = await user.save();
 
@@ -43,6 +56,7 @@ exports.updateUserProfile = async (req, res) => {
         department: updatedUser.department,
         bio: updatedUser.bio,
         avatar: updatedUser.avatar,
+        notificationPreferences: normalizeNotificationPreferences(updatedUser.notificationPreferences || {}),
       });
     } else {
       res.status(404).json({ message: 'User not found' });

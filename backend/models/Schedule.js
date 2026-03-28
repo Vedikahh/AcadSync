@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const scheduleSchema = new mongoose.Schema({
   subject: {
     type: String,
-    required: true,
+    required: function () { return !this.title; },
+  },
+  title: {
+    type: String,
+    trim: true,
   },
   faculty: {
     type: String,
@@ -15,7 +19,10 @@ const scheduleSchema = new mongoose.Schema({
   },
   day: {
     type: String,
-    required: true, // e.g., 'Monday', 'Tuesday'
+    required: function () { return !this.date; }, // e.g., 'Monday', 'Tuesday' (required if date is not provided)
+  },
+  date: {
+    type: Date,
   },
   startTime: {
     type: String,
@@ -34,6 +41,10 @@ const scheduleSchema = new mongoose.Schema({
     enum: ['lecture', 'lab', 'exam'],
     default: 'lecture',
     required: true,
+  },
+  importVersion: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ScheduleImportVersion',
   }
 }, { timestamps: true });
 

@@ -11,14 +11,14 @@
 
 .up-panel {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border, #E2E8F0);
+  border: 1px solid var(--border, var(--border));
   border-radius: 14px;
   overflow: hidden;
 }
 
 .up-panel-header {
   padding: 20px;
-  border-bottom: 1px solid var(--border-light, #F1F5F9);
+  border-bottom: 1px solid var(--border-light, var(--border));
 }
 
 .up-panel-header h2 {
@@ -81,9 +81,9 @@
   display: inline-block;
   width: fit-content;
   padding: 7px 12px;
-  border: 1px solid var(--border, #CBD5E1);
+  border: 1px solid var(--border, var(--border));
   border-radius: 8px;
-  background: #fff;
+  background: var(--bg-card);
   color: var(--text-secondary, #475569);
   cursor: pointer;
   font-size: 0.86rem;
@@ -132,7 +132,7 @@
 .up-field select,
 .up-field textarea {
   padding: 10px 12px;
-  border: 1px solid var(--border, #CBD5E1);
+  border: 1px solid var(--border, var(--border));
   border-radius: 9px;
   font-size: 0.92rem;
   color: var(--text-primary, #0F172A);
@@ -148,8 +148,8 @@
 }
 
 .up-input-disabled {
-  background: #F8FAFC !important;
-  color: #94A3B8 !important;
+  background: var(--bg-page) !important;
+  color: var(--text-muted) !important;
 }
 
 .up-hint {
@@ -161,6 +161,55 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 4px;
+}
+
+.up-pref-section {
+  border: 1px solid var(--border-light, var(--border));
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--bg-page);
+}
+
+.up-pref-section h3 {
+  margin: 0;
+  color: var(--text-primary, #0F172A);
+  font-size: 0.95rem;
+}
+
+.up-pref-section p {
+  margin: 6px 0 0;
+  color: var(--text-muted, #64748B);
+  font-size: 0.82rem;
+}
+
+.up-pref-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .up-pref-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.up-pref-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border, var(--border));
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-secondary, #334155);
+  font-size: 0.86rem;
+}
+
+.up-pref-item input {
+  width: 16px;
+  height: 16px;
 }
 
 .up-btn-primary {

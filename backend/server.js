@@ -1,25 +1,23 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const connectDB = require('./config/db');
+const { validateEnvironment, getAllowedOrigins } = require('./config/env');
+
+try {
+  validateEnvironment();
+} catch (error) {
+  console.error(`[Startup Error] ${error.message}`);
+  process.exit(1);
+}
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
 
-const parseAllowedOrigins = () => {
-  const combined = [process.env.CLIENT_URL, process.env.ALLOWED_ORIGINS]
-    .filter(Boolean)
-    .join(',');
-
-  return combined
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean);
-};
-
-const allowedOrigins = parseAllowedOrigins();
+const allowedOrigins = getAllowedOrigins();
 
 const corsOptions = {
   origin(origin, callback) {
@@ -28,17 +26,25 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    // Safe fallback: if no origin is configured, keep existing open behavior.
-    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
     return callback(new Error('Not allowed by CORS'));
   },
+  credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
 };
 
 // Middleware
+app.disable('x-powered-by');
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
 
@@ -48,6 +54,7 @@ const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -55,6 +62,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Basic Route for testing
 app.get('/', (req, res) => {

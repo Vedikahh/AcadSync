@@ -4,6 +4,18 @@
   padding: 2rem 2vw;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .events-header {
   display: flex;
   justify-content: space-between;
@@ -40,6 +52,14 @@
 
 .btn-request:hover {
   opacity: 0.9;
+}
+
+.btn-request:focus-visible,
+.filter-tab:focus-visible,
+.search-input:focus-visible,
+.events-retry-btn:focus-visible {
+  outline: 3px solid rgba(108, 99, 255, 0.25);
+  outline-offset: 2px;
 }
 
 .events-controls {
@@ -86,7 +106,7 @@
 }
 
 .filter-tab.active {
-  background: #fff;
+  background: var(--bg-card);
   color: #6c63ff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -95,6 +115,40 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.25rem;
+}
+
+.events-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-secondary);
+}
+
+.events-state-error {
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: var(--bg-card)1f2;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.events-state-error p {
+  margin: 0 0 0.75rem;
+  color: #9f1239;
+  font-weight: 600;
+}
+
+.events-retry-btn {
+  border: none;
+  background: #e11d48;
+  color: #fff;
+  padding: 0.55rem 1rem;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.events-retry-btn:hover {
+  background: #be123c;
 }
 
 .empty-events {
@@ -111,6 +165,40 @@
 
 .empty-events p {
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .events-page {
+    padding: 1rem;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+    gap: 0.95rem;
+  }
+
+  .events-controls {
+    align-items: stretch;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .filter-tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-tab {
+    flex: 1;
+    text-align: center;
+    padding-inline: 0.45rem;
+  }
+
+  .btn-request {
+    width: 100%;
+  }
 }
 
 /* Form */
@@ -158,7 +246,7 @@
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: #6c63ff;
-  background: #fff;
+  background: var(--bg-card);
 }
 
 .form-row {

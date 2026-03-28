@@ -1,5 +1,7 @@
 import { formatTime12h } from "../utils/formatTime";
 import "./LectureCard.css";
+import { Clock, MapPin, User } from "lucide-react";
+
 
 const TYPE_LABELS = {
   lecture: "Lecture",
@@ -24,13 +26,15 @@ export default function LectureCard({ lecture }) {
     <div className={`lecture-card ${ongoing ? "lecture-card-ongoing" : ""}`}>
       {ongoing && <div className="lecture-live-badge">Live</div>}
       <div className="lecture-card-header">
-        <span className="lecture-time">{formatTime12h(lecture.startTime)} – {formatTime12h(lecture.endTime)}</span>
+        <span className="lecture-time" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Clock size={16} /> {formatTime12h(lecture.startTime)} – {formatTime12h(lecture.endTime)}
+        </span>
         <span className="lecture-dept-badge">{lecture.department}</span>
       </div>
       <h4 className="lecture-subject">{lecture.subject}</h4>
-      <div className="lecture-meta">
-        <span>{lecture.faculty}</span>
-        <span>Room {lecture.room}</span>
+      <div className="lecture-meta" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><User size={16} /> {lecture.faculty}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={16} /> Room {lecture.room}</span>
       </div>
       {lecture.type && (
         <span className={`lecture-type-badge lecture-type-${lecture.type}`}>

@@ -13,6 +13,11 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  type: {
+    type: String,
+    enum: ['event', 'lecture', 'exam'],
+    default: 'event',
+  },
   venue: {
     type: String,
     required: true,
@@ -50,6 +55,23 @@ const eventSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending',
+  },
+  adminReviewNote: {
+    type: String,
+    default: null,
+  },
+  rejectionReason: {
+    type: String,
+    default: null,
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
+  reviewedAt: {
+    type: Date,
+    default: null,
   },
   conflicts: [{
     type: String

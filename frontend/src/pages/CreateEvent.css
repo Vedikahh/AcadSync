@@ -40,7 +40,7 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: #EFF6FF;
+  background: var(--blue-50, #EFF6FF);
   border: 1px solid #BFDBFE;
   display: flex;
   align-items: center;
@@ -69,7 +69,7 @@
   gap: 0;
   margin-bottom: 28px;
   padding: 18px 24px;
-  background: #fff;
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: var(--shadow-card);
@@ -94,7 +94,7 @@
   font-weight: 700;
   border: 2px solid var(--border);
   color: var(--text-muted);
-  background: #F8FAFC;
+  background: var(--bg-page);
   flex-shrink: 0;
   transition: all 0.25s;
 }
@@ -164,7 +164,7 @@
 
 /* ── Form card ── */
 .ce-card {
-  background: #fff;
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: var(--shadow-card);
@@ -174,6 +174,18 @@
 .ce-step-content {
   padding: 28px;
   animation: fadeSlide 0.2s ease;
+}
+
+.ce-submit-error {
+  margin: 0 28px 0;
+  margin-top: 20px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: var(--bg-card)1f2;
+  color: #9f1239;
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 @keyframes fadeSlide {
@@ -226,7 +238,7 @@
   border-radius: 10px;
   font-size: 0.9rem;
   color: var(--text-primary);
-  background: #fff;
+  background: var(--bg-card);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   font-family: inherit;
@@ -288,7 +300,7 @@
   padding: 12px 8px;
   border-radius: 10px;
   border: 1.5px solid var(--border);
-  background: #fff;
+  background: var(--bg-card);
   color: var(--text-secondary);
   font-size: 0.78rem;
   font-weight: 600;
@@ -299,13 +311,13 @@
 }
 
 .ce-cat-pill:hover {
-  background: #EFF6FF;
+  background: var(--blue-50, #EFF6FF);
   border-color: #BFDBFE;
   color: var(--primary);
 }
 
 .ce-cat-active {
-  background: #EFF6FF;
+  background: var(--blue-50, #EFF6FF);
   border-color: var(--primary);
   color: var(--primary);
   box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
@@ -327,7 +339,7 @@
   padding: 10px 12px;
   border-radius: 10px;
   border: 1.5px solid var(--border);
-  background: #fff;
+  background: var(--bg-card);
   color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 500;
@@ -338,13 +350,13 @@
 }
 
 .ce-venue-pill:hover {
-  background: #EFF6FF;
+  background: var(--blue-50, #EFF6FF);
   border-color: #BFDBFE;
   color: var(--primary);
 }
 
 .ce-venue-active {
-  background: #EFF6FF;
+  background: var(--blue-50, #EFF6FF);
   border-color: var(--primary);
   color: var(--primary);
   font-weight: 600;
@@ -368,7 +380,7 @@
   flex-shrink: 0;
   width: 40px;
   height: 40px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -406,7 +418,7 @@
   padding: 10px 20px;
   border-radius: 10px;
   border: 1.5px solid var(--border);
-  background: #fff;
+  background: var(--bg-card);
   color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 600;
@@ -415,7 +427,7 @@
   font-family: inherit;
 }
 
-.ce-btn-back:hover { background: #F8FAFC; color: var(--text-primary); }
+.ce-btn-back:hover { background: var(--bg-page); color: var(--text-primary); }
 
 .ce-btn-next {
   display: inline-flex;
@@ -457,6 +469,19 @@
 .ce-btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 .ce-btn-submit:hover:not(:disabled) { background: #1D4ED8; transform: translateY(-1px); }
 
+.ce-bc-link:focus-visible,
+.ce-input:focus-visible,
+.ce-select:focus-visible,
+.ce-textarea:focus-visible,
+.ce-cat-pill:focus-visible,
+.ce-venue-pill:focus-visible,
+.ce-btn-back:focus-visible,
+.ce-btn-next:focus-visible,
+.ce-btn-submit:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+}
+
 .ce-spinner {
   width: 14px;
   height: 14px;
@@ -480,7 +505,7 @@
 
 /* Preview card */
 .ce-preview-card {
-  background: #fff;
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px;
@@ -527,11 +552,11 @@
   font-weight: 600;
 }
 
-.ce-chip-blue   { background: #DBEAFE; color: #1D4ED8; }
-.ce-chip-purple { background: #E0E7FF; color: #4338CA; }
-.ce-chip-green  { background: #DCFCE7; color: #15803D; }
+.ce-chip-blue   { background: var(--blue-100, #DBEAFE); color: #1D4ED8; }
+.ce-chip-purple { background: var(--indigo-50, #E0E7FF); color: #4338CA; }
+.ce-chip-green  { background: var(--green-100, #DCFCE7); color: #15803D; }
 .ce-chip-orange { background: #FFEDD5; color: #C2410C; }
-.ce-chip-gray   { background: #F1F5F9; color: #475569; }
+.ce-chip-gray   { background: var(--bg-page); color: var(--text-secondary); }
 
 .ce-preview-empty {
   text-align: center;
@@ -544,7 +569,7 @@
 
 /* Tips card */
 .ce-tips-card {
-  background: #FFFBEB;
+  background: var(--bg-card)BEB;
   border: 1px solid #FDE68A;
   border-radius: 14px;
   padding: 16px;
@@ -573,9 +598,31 @@
 
 @media (max-width: 768px) {
   .ce-page { padding: 14px 14px 36px; }
-  .ce-steps { padding: 14px 16px; }
+
+  .ce-steps {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .ce-step-item {
+    min-width: 100%;
+  }
+
+  .ce-step-line {
+    display: none;
+  }
+
   .ce-step-desc { display: none; }
   .ce-step-content { padding: 18px; }
+  .ce-submit-error {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
   .ce-cat-grid { grid-template-columns: repeat(2, 1fr); }
   .ce-venue-grid { grid-template-columns: 1fr; }
+
+  .ce-sidebar {
+    position: static;
+  }
 }

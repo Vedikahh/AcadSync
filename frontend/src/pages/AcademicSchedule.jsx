@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { getSchedules, importSchedules, deleteSchedule } from "../services/api";
+import {
+  getSchedules,
+  importSchedules,
+  deleteSchedule,
+  getScheduleImportHistory,
+  rollbackScheduleImport,
+} from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import socket from "../services/socket";
 import { formatTime12h } from "../utils/formatTime";
@@ -28,6 +34,11 @@ export default function AcademicSchedule() {
   const [toast, setToast] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isImporting, setIsImporting] = useState(false);
+  const [importMode, setImportMode] = useState("replace");
+  const [pendingImport, setPendingImport] = useState(null);
+  const [importHistory, setImportHistory] = useState([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [isRollingBackId, setIsRollingBackId] = useState("");
 
   useEffect(() => {
     fetchSchedules();
@@ -35,6 +46,12 @@ export default function AcademicSchedule() {
     socket.on('calendarUpdate', fetchSchedules);
     return () => { socket.off('calendarUpdate', fetchSchedules); };
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchImportHistory();
+    }
+  }, [isAdmin]);
 
 
   const fetchSchedules = async () => {
@@ -47,6 +64,19 @@ export default function AcademicSchedule() {
       showToast("❌ Failed to load schedules");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchImportHistory = async () => {
+    if (!isAdmin) return;
+    try {
+      setIsHistoryLoading(true);
+      const history = await getScheduleImportHistory();
+      setImportHistory(Array.isArray(history) ? history : []);
+    } catch (err) {
+      console.error("Failed to load import history", err);
+    } finally {
+      setIsHistoryLoading(false);
     }
   };
 
@@ -66,7 +96,7 @@ export default function AcademicSchedule() {
     if (dayFilter !== "All" && l.day !== dayFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const hay = [l.subject, l.faculty, l.department, l.room, l.day, l.type]
+      const hay = [l.subject, l.title, l.faculty, l.department, l.room, l.day, l.type]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -122,11 +152,23 @@ export default function AcademicSchedule() {
     const headers = splitCsvLine(lines[0]).map((h) =>
       h.replace(/^\uFEFF/, "").replace(/^"|"$/g, "").trim()
     );
-    const required = ["subject", "faculty", "department", "day", "startTime", "endTime", "room"];
+    const required = ["faculty", "department", "startTime", "endTime", "room"];
 
     const missing = required.filter((field) => !headers.includes(field));
     if (missing.length > 0) {
       throw new Error(`Missing required CSV columns: ${missing.join(", ")}`);
+    }
+
+    const hasSubject = headers.includes("subject");
+    const hasTitle = headers.includes("title");
+    if (!hasSubject && !hasTitle) {
+      throw new Error("CSV must include either a subject or title column");
+    }
+
+    const hasDay = headers.includes("day");
+    const hasDate = headers.includes("date");
+    if (!hasDay && !hasDate) {
+      throw new Error("CSV must include either a day or date column");
     }
 
     return lines.slice(1).map((line) => {
@@ -149,15 +191,66 @@ export default function AcademicSchedule() {
       setIsImporting(true);
       const csvText = await file.text();
       const rows = parseCsvToRows(csvText);
-      const result = await importSchedules(rows, "replace");
-      showToast(`✅ ${result.insertedCount || rows.length} schedule row(s) imported`);
-      await fetchSchedules();
+      const preview = await importSchedules(rows, importMode, true);
+      setPendingImport({
+        fileName: file.name,
+        rows,
+        mode: importMode,
+        report: preview.report,
+        rowErrors: preview.rowErrors || [],
+        previewRows: preview.previewRows || [],
+      });
+      showToast("Validation complete. Review preview before import.");
     } catch (err) {
       console.error(err);
       showToast(`❌ Import failed: ${err.message}`);
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const handleCommitImport = async () => {
+    if (!pendingImport) return;
+
+    try {
+      setIsImporting(true);
+      const result = await importSchedules(pendingImport.rows, pendingImport.mode, false);
+      showToast(`✅ ${result.insertedCount || pendingImport.report?.validRows || 0} schedule row(s) imported`);
+      setPendingImport(null);
+      await fetchSchedules();
+      await fetchImportHistory();
+    } catch (err) {
+      console.error(err);
+      showToast(`❌ Import failed: ${err.message}`);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleRollback = async (versionId) => {
+    if (!versionId) return;
+
+    const proceed = window.confirm("Rollback to the schedule set before this import? This replaces current schedule data.");
+    if (!proceed) return;
+
+    try {
+      setIsRollingBackId(versionId);
+      const result = await rollbackScheduleImport(versionId);
+      showToast(`✅ Rollback completed. Restored ${result.restoredCount || 0} row(s).`);
+      await fetchSchedules();
+      await fetchImportHistory();
+    } catch (err) {
+      console.error(err);
+      showToast(`❌ Rollback failed: ${err.message}`);
+    } finally {
+      setIsRollingBackId("");
+    }
+  };
+
+  const formatHistoryMeta = (item) => {
+    const when = item?.createdAt ? new Date(item.createdAt).toLocaleString() : "-";
+    const actor = item?.createdBy?.name || item?.createdBy?.email || "Admin";
+    return `${when} by ${actor}`;
   };
 
   const handleDelete = async (id) => {
@@ -183,6 +276,15 @@ export default function AcademicSchedule() {
         </div>
         {isAdmin && (
           <div className="as-header-actions">
+            <select
+              className="as-mode-select"
+              value={importMode}
+              onChange={(e) => setImportMode(e.target.value)}
+              disabled={isImporting || Boolean(pendingImport)}
+            >
+              <option value="replace">Replace Existing</option>
+              <option value="append">Append to Existing</option>
+            </select>
             <input
               ref={csvInputRef}
               type="file"
@@ -191,7 +293,7 @@ export default function AcademicSchedule() {
               onChange={handleCsvUpload}
             />
             <button className="as-btn-csv" onClick={() => csvInputRef.current?.click()} disabled={isImporting}>
-              {isImporting ? "Uploading CSV..." : "↑ Upload CSV"}
+              {isImporting ? "Validating CSV..." : "Upload CSV"}
             </button>
           </div>
         )}
@@ -199,8 +301,126 @@ export default function AcademicSchedule() {
 
       {isAdmin && (
         <div className="as-import-note">
-          <strong>CSV-only updates enabled.</strong> Upload a CSV file to replace the schedule data.
-          Required columns: subject, faculty, department, day, startTime, endTime, room. Optional: type (lecture/lab/exam).
+          <strong>Admin import workflow:</strong> Upload CSV for validation preview, review row-level issues, then commit.
+          Modes: Replace overwrites all schedule rows, Append adds new rows. Required columns: subject (or title), faculty, department, startTime, endTime, room, and either day or date. Optional: type (lecture/lab/exam).
+        </div>
+      )}
+
+      {isAdmin && pendingImport && (
+        <div className="as-preview-card">
+          <div className="as-preview-head">
+            <div>
+              <h3>Import Preview</h3>
+              <p>{pendingImport.fileName} • mode: {pendingImport.mode}</p>
+            </div>
+            <div className="as-preview-actions">
+              <button
+                className="as-clear-btn"
+                onClick={() => setPendingImport(null)}
+                disabled={isImporting}
+              >
+                Cancel
+              </button>
+              <button
+                className="as-btn-submit"
+                onClick={handleCommitImport}
+                disabled={isImporting || pendingImport.rowErrors.length > 0}
+                title={pendingImport.rowErrors.length > 0 ? "Fix row errors before committing" : "Commit import"}
+              >
+                {isImporting ? "Importing..." : "Commit Import"}
+              </button>
+            </div>
+          </div>
+
+          <div className="as-preview-stats">
+            <div><span>Total Rows</span><strong>{pendingImport.report?.totalRows || 0}</strong></div>
+            <div><span>Valid Rows</span><strong>{pendingImport.report?.validRows || 0}</strong></div>
+            <div><span>Invalid Rows</span><strong>{pendingImport.report?.invalidRows || 0}</strong></div>
+          </div>
+
+          {pendingImport.rowErrors.length > 0 ? (
+            <div className="as-error-report">
+              <h4>Row-level Errors</h4>
+              <div className="as-error-list">
+                {pendingImport.rowErrors.map((err, idx) => (
+                  <div key={`${err.rowNumber}-${idx}`} className="as-error-item">
+                    <div className="as-error-row">CSV Row {err.rowNumber}</div>
+                    <div className="as-error-msg">{(err.errors || []).join("; ")}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="as-preview-table-wrap">
+              <h4>Validated Preview (first {pendingImport.previewRows.length} rows)</h4>
+              <table className="as-preview-table">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Faculty</th>
+                    <th>Department</th>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Room</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingImport.previewRows.map((row, idx) => (
+                    <tr key={`${row.subject}-${idx}`}>
+                      <td>{row.subject}</td>
+                      <td>{row.faculty}</td>
+                      <td>{row.department}</td>
+                      <td>{row.day}</td>
+                      <td>{row.startTime} - {row.endTime}</td>
+                      <td>{row.room}</td>
+                      <td>{row.type}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className="as-history-card">
+          <div className="as-history-head">
+            <h3>Recent Import Versions</h3>
+            <button className="as-clear-btn" onClick={fetchImportHistory} disabled={isHistoryLoading}>Refresh</button>
+          </div>
+
+          {isHistoryLoading ? (
+            <p className="as-history-empty">Loading import history...</p>
+          ) : importHistory.length === 0 ? (
+            <p className="as-history-empty">No import versions available yet.</p>
+          ) : (
+            <div className="as-history-list">
+              {importHistory.map((item) => (
+                <div key={item._id} className="as-history-item">
+                  <div>
+                    <div className="as-history-title">
+                      <strong>{String(item.mode || "-").toUpperCase()}</strong>
+                      <span>{formatHistoryMeta(item)}</span>
+                    </div>
+                    <div className="as-history-meta">
+                      total: {item.totalRows} | valid: {item.validRows} | invalid: {item.invalidRows} | inserted: {item.insertedCount}
+                    </div>
+                  </div>
+                  {item.mode !== "rollback" && (
+                    <button
+                      className="as-btn-csv"
+                      onClick={() => handleRollback(item._id)}
+                      disabled={Boolean(isRollingBackId) || Boolean(pendingImport)}
+                    >
+                      {isRollingBackId === item._id ? "Rolling Back..." : "Rollback"}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -266,7 +486,7 @@ export default function AcademicSchedule() {
             return (
               <div key={id} className="as-mobile-card">
                 <div className="as-mobile-head">
-                  <span className="as-subject">{l.subject}</span>
+                  <span className="as-subject">{l.subject || l.title || "Untitled"}</span>
                   <span className="as-type-badge" style={{ background: typeCfg.bg, color: typeCfg.color }}>
                     {typeCfg.label}
                   </span>
@@ -298,7 +518,7 @@ export default function AcademicSchedule() {
                 const id = l._id || l.id;
                 return (
                   <tr key={id} className="as-row">
-                    <td><span className="as-subject">{l.subject}</span></td>
+                    <td><span className="as-subject">{l.subject || l.title || "Untitled"}</span></td>
                     <td className="as-faculty">{l.faculty}</td>
                     <td><span className="as-dept-badge">{l.department}</span></td>
                     <td className="as-day">{l.day}</td>

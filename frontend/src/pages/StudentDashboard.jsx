@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { AlertTriangle, Calendar, User as UserIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getEvents, getNotifications, markNotificationRead } from "../services/api";
+import { getEvents, getNotifications, getDashboardStats, markNotificationRead } from "../services/api";
 import EventCard from "../components/EventCard";
 import NotificationItem from "../components/NotificationItem";
 import ConflictCard from "../components/ConflictCard";
@@ -13,24 +14,83 @@ export default function StudentDashboard() {
   const [events, setEvents] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
+  const [stats, setStats] = useState({
+    campusEvents: 0,
+    activeDay: "Today",
+    classesToday: 0,
+    conflictAlerts: 0,
+    unreadNotifications: 0,
+  });
 
   useEffect(() => {
-    Promise.all([
-      getEvents().catch(() => []),
-      getNotifications().catch(() => [])
-    ]).then(([eventsData, notifsData]) => {
-      // For student, show all approved campus events
-      const approvedEventsList = Array.isArray(eventsData) ? eventsData.filter(e => e.status === "approved") : [];
-      setEvents(approvedEventsList);
-      
-      setNotifications(Array.isArray(notifsData) ? notifsData : []);
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      setPageError("");
+
+      const [eventsResult, notifsResult] = await Promise.allSettled([
+        getEvents(),
+        getNotifications(),
+      ]);
+
+      if (eventsResult.status === "fulfilled") {
+        const approvedEventsList = Array.isArray(eventsResult.value)
+          ? eventsResult.value.filter((event) => event.status === "approved")
+          : [];
+        setEvents(approvedEventsList);
+      } else {
+        setEvents([]);
+        setPageError(eventsResult.reason?.message || "Failed to load events.");
+      }
+
+      if (notifsResult.status === "fulfilled") {
+        setNotifications(Array.isArray(notifsResult.value) ? notifsResult.value : []);
+      } else {
+        setNotifications([]);
+        setPageError((prev) => prev || notifsResult.reason?.message || "Failed to load notifications.");
+      }
+
       setIsLoading(false);
-    });
+    };
+
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        setStatsError("");
+        const data = await getDashboardStats();
+        setStats({
+          campusEvents: data?.stats?.campusEvents ?? 0,
+          activeDay: data?.stats?.activeDay || "Today",
+          classesToday: data?.stats?.classesToday ?? 0,
+          conflictAlerts: data?.stats?.conflictAlerts ?? 0,
+          unreadNotifications: data?.stats?.unreadNotifications ?? 0,
+        });
+      } catch (err) {
+        console.error(err);
+        setStatsError(err.message || "Failed to load dashboard stats.");
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+    fetchStats();
   }, [user]);
 
-  const unreadCount    = notifications.filter((n) => !n.read).length;
-  const totalApproved  = events.length;
-  const MOCK_CONFLICTS = []; // Empty out dummy conflicts
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const totalApproved = events.length;
+  const conflicts = events
+    .filter((event) => Array.isArray(event.conflicts) && event.conflicts.length > 0)
+    .map((event, idx) => ({
+      id: event._id || event.id || idx,
+      eventName: event.title,
+      clashWith: event.conflicts[0],
+      timeOverlap: `${event.startTime || "N/A"} - ${event.endTime || "N/A"}`,
+      date: event.date ? new Date(event.date).toLocaleDateString() : "TBD",
+      severity: event.conflicts.length > 1 ? "high" : "medium",
+    }));
 
   const markRead = async (id) => {
     try {
@@ -60,12 +120,15 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      
+      {statsLoading && <div className="std-inline-note">Loading dashboard stats...</div>}
+      {statsError && <div className="std-inline-error">{statsError}</div>}
+      {pageError && <div className="std-inline-error">{pageError}</div>}
+
         <div className="std-stats-grid">
-          <StatsCard value={totalApproved}  label="Campus Events" color="purple" />
-          <StatsCard value="Today"          label="Active Day"    color="green"  />
-          <StatsCard value="8"              label="Classes Today" color="orange" />
-          <StatsCard value={unreadCount}    label="Unread Alerts" color="blue"  />
+          <StatsCard value={statsError ? totalApproved : stats.campusEvents} label="Campus Events" color="purple" />
+          <StatsCard value={stats.activeDay} label="Active Day"    color="green"  />
+          <StatsCard value={statsError ? "-" : stats.classesToday} label="Classes Today" color="orange" />
+          <StatsCard value={statsError ? unreadCount : stats.unreadNotifications} label="Unread Alerts" color="blue"  />
         </div>
 
         {/* Layout Grid */}
@@ -75,11 +138,13 @@ export default function StudentDashboard() {
         <div className="std-main-col">
           
           {/* Conflict Alerts */}
-          {MOCK_CONFLICTS.length > 0 && (
+          {conflicts.length > 0 && (
             <section className="std-card std-conflict-section">
               <div className="std-card-header std-conflict-header">
                 <div className="std-card-title-wrap">
-                  <div className="std-alert-icon">!</div>
+                  <div className="std-alert-icon">
+                    <AlertTriangle size={24} />
+                  </div>
                   <h2 className="std-card-title">Action Required: Schedule Conflict</h2>
                 </div>
                 <Link to="/conflict" className="std-link">Resolve →</Link>
@@ -89,7 +154,7 @@ export default function StudentDashboard() {
                   One or more of your events conflicts with the official academic calendar. Please review.
                 </p>
                 <div className="std-conflict-list">
-                  {MOCK_CONFLICTS.map((c) => (
+                  {conflicts.map((c) => (
                     <ConflictCard key={c.id} conflict={c} />
                   ))}
                 </div>
@@ -111,7 +176,9 @@ export default function StudentDashboard() {
                 <div style={{ padding: "2rem", textAlign: "center" }}>Loading events...</div>
               ) : events.length === 0 ? (
                 <div className="std-empty">
-                  <div className="std-empty-icon">◈</div>
+                  <div className="std-empty-icon">
+                    <Calendar size={24} />
+                  </div>
                   <p>No upcoming events at the moment.</p>
                 </div>
               ) : (
@@ -174,14 +241,18 @@ export default function StudentDashboard() {
             <div className="std-card-body">
               <div className="std-quick-links">
                 <Link to="/calendar" className="std-quick-link">
-                  <div className="std-ql-icon bg-purple">▦</div>
+                  <div className="std-ql-icon bg-purple">
+                    <Calendar size={24} strokeWidth={2} color="white" />
+                  </div>
                   <div className="std-ql-text">
                     <span className="std-ql-title">Academic Calendar</span>
                     <span className="std-ql-sub">View classes & exams</span>
                   </div>
                 </Link>
                 <Link to="/profile" className="std-quick-link">
-                  <div className="std-ql-icon bg-blue">◯</div>
+                  <div className="std-ql-icon bg-blue">
+                    <UserIcon size={24} strokeWidth={2} color="white" />
+                  </div>
                   <div className="std-ql-text">
                     <span className="std-ql-title">My Profile</span>
                     <span className="std-ql-sub">Manage account details</span>
