@@ -56,12 +56,6 @@ const validateEnvironment = () => {
     );
   }
 
-  const allowedOrigins = getAllowedOrigins();
-  if (isProduction() && allowedOrigins.length === 0) {
-    throw new Error(
-      'CORS allowlist is empty in production. Set one of CLIENT_URL, FRONTEND_URL, CORS_ORIGIN, or ALLOWED_ORIGINS.'
-    );
-  }
 };
 
 module.exports = {

@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const connectDB = require('./config/db');
-const { validateEnvironment, getAllowedOrigins } = require('./config/env');
+const { validateEnvironment, getAllowedOrigins, isProduction } = require('./config/env');
 
 try {
   validateEnvironment();
@@ -19,10 +19,20 @@ const app = express();
 
 const allowedOrigins = getAllowedOrigins();
 
+if (isProduction() && allowedOrigins.length === 0) {
+  console.warn(
+    '[Startup Warning] CORS allowlist is empty in production. Temporarily allowing all origins. Set CLIENT_URL, FRONTEND_URL, CORS_ORIGIN, or ALLOWED_ORIGINS to lock this down.'
+  );
+}
+
 const corsOptions = {
   origin(origin, callback) {
     // Allow non-browser tools (no Origin header) like health checks and curl.
     if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.length === 0) {
       return callback(null, true);
     }
 

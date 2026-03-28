@@ -108,7 +108,7 @@ CLIENT_URL=http://localhost:5173
 ```
 Notes:
 - `MONGO_URI`, `JWT_SECRET`, and `GOOGLE_CLIENT_ID` are required at backend startup.
-- In production, you must configure at least one allowed origin using `CLIENT_URL`, `FRONTEND_URL`, `CORS_ORIGIN`, or `ALLOWED_ORIGINS`.
+- In production, you should configure at least one allowed origin using `CLIENT_URL`, `FRONTEND_URL`, `CORS_ORIGIN`, or `ALLOWED_ORIGINS`. If omitted, the API now boots with a startup warning and temporarily allows all origins until configured.
 - Keep all secrets in `backend/.env` only. Never put server secrets in frontend env files.
 
 Start the server:
