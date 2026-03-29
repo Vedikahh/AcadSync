@@ -152,6 +152,12 @@ export const markAllNotificationsRead = () =>
 export const updateUserProfile = (data) =>
   request("/api/users/update", { method: "PUT", body: JSON.stringify(data) });
 
+export const changeUserPassword = (data) =>
+  request("/api/users/change-password", { method: "POST", body: JSON.stringify(data) });
+
+export const deleteUserAccount = (data) =>
+  request("/api/users/delete-account", { method: "DELETE", body: JSON.stringify(data) });
+
 // ---- Dashboard APIs (Currently placeholder map) ----
 export const getDashboardStats = () => request("/api/dashboard/stats");
 

@@ -3,11 +3,58 @@ import { getMe } from "../services/api";
 
 const AuthContext = createContext(null);
 
+const DEFAULT_NOTIFICATION_CHANNELS = {
+  event: { inApp: true, email: true },
+  approval: { inApp: true, email: true },
+  rejection: { inApp: true, email: true },
+  reminder: { inApp: true, email: true },
+};
+
+function normalizeUserPayload(payload) {
+  if (!payload) return null;
+
+  const legacyNotification = payload.notificationPreferences || {};
+  const legacyEmail = payload.emailPreferences || {};
+  const emailEnabled = legacyEmail.enabled !== false;
+  const channels = payload.notificationChannels || {};
+
+  const notificationChannels = {
+    event: {
+      inApp: typeof channels.event?.inApp === "boolean" ? channels.event.inApp : legacyNotification.event !== false,
+      email: typeof channels.event?.email === "boolean" ? channels.event.email : (emailEnabled && legacyEmail.event !== false),
+    },
+    approval: {
+      inApp: typeof channels.approval?.inApp === "boolean" ? channels.approval.inApp : legacyNotification.approval !== false,
+      email: typeof channels.approval?.email === "boolean" ? channels.approval.email : (emailEnabled && legacyEmail.approval !== false),
+    },
+    rejection: {
+      inApp: typeof channels.rejection?.inApp === "boolean" ? channels.rejection.inApp : legacyNotification.rejection !== false,
+      email: typeof channels.rejection?.email === "boolean" ? channels.rejection.email : (emailEnabled && legacyEmail.rejection !== false),
+    },
+    reminder: {
+      inApp: typeof channels.reminder?.inApp === "boolean" ? channels.reminder.inApp : legacyNotification.reminder !== false,
+      email: typeof channels.reminder?.email === "boolean" ? channels.reminder.email : (emailEnabled && legacyEmail.reminder !== false),
+    },
+  };
+
+  return {
+    ...payload,
+    id: payload.id || payload._id,
+    avatar: payload.avatar || "",
+    bio: payload.bio || "",
+    year: payload.year || "",
+    interests: Array.isArray(payload.interests) ? payload.interests : [],
+    phone: payload.phone || "",
+    alternateContact: payload.alternateContact || "",
+    notificationChannels: { ...DEFAULT_NOTIFICATION_CHANNELS, ...notificationChannels },
+  };
+}
+
 function getStoredUser() {
   const stored = localStorage.getItem("acadsync_user");
   if (!stored) return null;
   try {
-    return JSON.parse(stored);
+    return normalizeUserPayload(JSON.parse(stored));
   } catch {
     localStorage.removeItem("acadsync_user");
     return null;
@@ -41,10 +88,11 @@ export function AuthProvider({ children }) {
       try {
         // Ping our secure /api/auth/me endpoint using the stored JWT
         const userData = await getMe();
+        const normalized = normalizeUserPayload(userData);
         
         // Update user payload dynamically (e.g if name changed)
-        setUser(userData);
-        localStorage.setItem("acadsync_user", JSON.stringify(userData));
+        setUser(normalized);
+        localStorage.setItem("acadsync_user", JSON.stringify(normalized));
       } catch (err) {
         console.error("Session validation failed:", err.message);
         // If token is expired/invalid, force logout
@@ -58,8 +106,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (userData, token) => {
-    setUser(userData);
-    localStorage.setItem("acadsync_user", JSON.stringify(userData));
+    const normalized = normalizeUserPayload(userData);
+    setUser(normalized);
+    localStorage.setItem("acadsync_user", JSON.stringify(normalized));
     if (token) localStorage.setItem("acadsync_token", token);
   };
 

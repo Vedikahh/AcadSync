@@ -11,18 +11,28 @@ const PREF_KEY_BY_TYPE = {
   reminder: 'reminder',
 };
 
-const shouldDeliverNotification = (notificationType, notificationPreferences = {}) => {
+const shouldDeliverNotification = (notificationType, notificationPreferences = {}, notificationChannels = {}) => {
   const prefKey = PREF_KEY_BY_TYPE[notificationType];
   if (!prefKey) return true;
+
+  const channelSetting = notificationChannels?.[prefKey]?.inApp;
+  if (typeof channelSetting === 'boolean') {
+    return channelSetting;
+  }
 
   const enabled = notificationPreferences[prefKey];
   return enabled !== false;
 };
 
-const shouldSendEmail = (notificationType, emailPreferences = {}) => {
+const shouldSendEmail = (notificationType, emailPreferences = {}, notificationChannels = {}) => {
   if (!emailPreferences.enabled) return false;
   const prefKey = PREF_KEY_BY_TYPE[notificationType];
   if (!prefKey) return false;
+
+  const channelSetting = notificationChannels?.[prefKey]?.email;
+  if (typeof channelSetting === 'boolean') {
+    return channelSetting;
+  }
 
   const enabled = emailPreferences[prefKey];
   return enabled !== false;
@@ -30,7 +40,7 @@ const shouldSendEmail = (notificationType, emailPreferences = {}) => {
 
 const sendEmailNotification = async (user, notification) => {
   try {
-    if (!shouldSendEmail(notification.type, user.emailPreferences || {})) {
+    if (!shouldSendEmail(notification.type, user.emailPreferences || {}, user.notificationChannels || {})) {
       return;
     }
 
@@ -101,9 +111,9 @@ const shapeListResponse = ({ items, page, limit, totalItems }) => {
 exports.createNotificationForUser = async ({ userId, message, type = 'system', link, payload }) => {
   if (!userId || !message) return null;
 
-  const user = await User.findById(userId).select('notificationPreferences emailPreferences name email');
+  const user = await User.findById(userId).select('notificationPreferences notificationChannels emailPreferences name email');
   if (!user) return null;
-  if (!shouldDeliverNotification(type, user.notificationPreferences || {})) return null;
+  if (!shouldDeliverNotification(type, user.notificationPreferences || {}, user.notificationChannels || {})) return null;
 
   const notification = await Notification.create({ userId, message, type, link, payload });
 
@@ -121,14 +131,14 @@ exports.createNotificationsForUsers = async ({ userIds = [], message, type = 'sy
   if (!Array.isArray(userIds) || userIds.length === 0 || !message) return [];
 
   const uniqueUserIds = [...new Set(userIds.map((id) => String(id)))];
-  const users = await User.find({ _id: { $in: uniqueUserIds } }).select('_id name email notificationPreferences emailPreferences');
+  const users = await User.find({ _id: { $in: uniqueUserIds } }).select('_id name email notificationPreferences notificationChannels emailPreferences');
 
   const notificationsToInsert = [];
   const allowedUsers = [];
   const emailUsers = [];
 
   users.forEach((user) => {
-    if (!shouldDeliverNotification(type, user.notificationPreferences || {})) return;
+    if (!shouldDeliverNotification(type, user.notificationPreferences || {}, user.notificationChannels || {})) return;
 
     const userId = String(user._id);
     const payload = typeof payloadBuilder === 'function' ? payloadBuilder(userId) : undefined;
@@ -139,7 +149,7 @@ exports.createNotificationsForUsers = async ({ userIds = [], message, type = 'sy
     notificationsToInsert.push(notification);
     allowedUsers.push(userId);
 
-    if (shouldSendEmail(type, user.emailPreferences || {})) {
+    if (shouldSendEmail(type, user.emailPreferences || {}, user.notificationChannels || {})) {
       emailUsers.push({ user, notification });
     }
   });

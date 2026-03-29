@@ -29,14 +29,7 @@ export default function LoginPage() {
       const response = await apiLogin(form);
       
       // Store user payload & JWT safely
-      login({
-        id: response._id,
-        name: response.name,
-        email: response.email,
-        role: response.role,
-        department: response.department,
-        avatar: response.avatar || ""
-      }, response.token);
+      login({ ...response, id: response._id }, response.token);
 
       // Route based on newly verified database role
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
@@ -67,14 +60,7 @@ export default function LoginPage() {
         return; // Halt and show the complete profile form
       }
 
-      login({
-        id: response._id,
-        name: response.name,
-        email: response.email,
-        role: response.role,
-        department: response.department,
-        avatar: response.avatar || ""
-      }, response.token);
+      login({ ...response, id: response._id }, response.token);
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
     } catch (err) {
       setError(err.message || "Google login failed");
@@ -97,14 +83,7 @@ export default function LoginPage() {
         role: completeProfile.role,
         department: completeProfile.department
       });
-      login({
-        id: response._id,
-        name: response.name,
-        email: response.email,
-        role: response.role,
-        department: response.department,
-        avatar: response.avatar || ""
-      }, response.token);
+      login({ ...response, id: response._id }, response.token);
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
     } catch (err) {
       setError(err.message || "Failed to complete profile");

@@ -77,7 +77,7 @@ export default function EventDetailsPage() {
       <div className="event-details-page">
         <div className="event-details-empty">
           <p>{error || "Event details are unavailable."}</p>
-          <button className="event-details-btn" onClick={() => navigate("/events")}>Back to Events</button>
+          <button className="event-details-btn" onClick={() => navigate(location.state?.fromManageEvents ? "/manage-events" : "/events")}>Back to Events</button>
         </div>
       </div>
     );
@@ -86,6 +86,7 @@ export default function EventDetailsPage() {
   const createdById = event.createdBy?._id || event.createdBy;
   const isOwner = user?.id === createdById;
   const canEdit = isOwner && user?.role === "organizer";
+  const backPath = location.state?.fromManageEvents ? "/manage-events" : "/events";
 
   const dateLabel = event.date
     ? new Date(event.date).toLocaleDateString("en-IN", {
@@ -163,7 +164,7 @@ export default function EventDetailsPage() {
         </section>
 
         <footer className="event-details-actions">
-          <button className="event-details-btn" onClick={() => navigate("/events")}>Browse Events</button>
+          <button className="event-details-btn" onClick={() => navigate(backPath)}>Browse Events</button>
           {canEdit ? (
             <button
               className="event-details-btn event-details-btn-primary"

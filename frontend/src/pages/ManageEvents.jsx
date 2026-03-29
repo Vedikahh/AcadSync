@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
-import EventModal from "../components/EventModal";
 import socket from "../services/socket";
 import "./ManageEvents.css";
 
@@ -15,13 +15,13 @@ const STATUS_BADGE = {
 
 export default function ManageEvents() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -59,9 +59,6 @@ export default function ManageEvents() {
       const payload = noteInput.trim() ? { note: noteInput.trim() } : {};
       const updated = await updateEventStatus(id, "approved", payload);
       setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? updated : e));
-      if (selectedEvent && (selectedEvent._id === id || selectedEvent.id === id)) {
-        setSelectedEvent(updated);
-      }
       showToast("✅ Event approved successfully!");
     } catch (err) {
       showToast("❌ Failed to approve event");
@@ -89,9 +86,6 @@ export default function ManageEvents() {
 
       const updated = await updateEventStatus(id, "rejected", payload);
       setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? updated : e));
-      if (selectedEvent && (selectedEvent._id === id || selectedEvent.id === id)) {
-        setSelectedEvent(updated);
-      }
       showToast("❌ Event rejected.");
     } catch (err) {
       showToast(`❌ ${err.message || "Failed to reject event"}`);
@@ -208,11 +202,11 @@ export default function ManageEvents() {
                     key={id}
                     className="me-row"
                     style={{ cursor: "pointer", "--item-index": index }}
-                    onClick={() => setSelectedEvent(ev)}
+                    onClick={() => navigate(`/events/${id}`, { state: { event: ev, fromManageEvents: true } })}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        setSelectedEvent(ev);
+                        navigate(`/events/${id}`, { state: { event: ev, fromManageEvents: true } });
                       }
                     }}
                     tabIndex={0}
@@ -259,12 +253,6 @@ export default function ManageEvents() {
         </div>
       )}
 
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-        />
-      )}
     </div>
   );
 }

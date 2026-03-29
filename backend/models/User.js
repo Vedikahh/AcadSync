@@ -25,6 +25,22 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String,
   },
+  year: {
+    type: String,
+    default: '',
+  },
+  interests: {
+    type: [String],
+    default: [],
+  },
+  phone: {
+    type: String,
+    default: '',
+  },
+  alternateContact: {
+    type: String,
+    default: '',
+  },
   avatar: {
     type: String,
     default: '',
@@ -72,6 +88,48 @@ const userSchema = new mongoose.Schema({
     reminder: {
       type: Boolean,
       default: true,
+    },
+  },
+  notificationChannels: {
+    event: {
+      inApp: {
+        type: Boolean,
+        default: true,
+      },
+      email: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    approval: {
+      inApp: {
+        type: Boolean,
+        default: true,
+      },
+      email: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    rejection: {
+      inApp: {
+        type: Boolean,
+        default: true,
+      },
+      email: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    reminder: {
+      inApp: {
+        type: Boolean,
+        default: true,
+      },
+      email: {
+        type: Boolean,
+        default: true,
+      },
     },
   },
   emailPreferences: {
