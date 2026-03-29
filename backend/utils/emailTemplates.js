@@ -122,6 +122,32 @@ ${actionUrl ? `<p><a href="${actionUrl}" class="btn">Learn More</a></p>` : ''}
     `;
     return getBaseTemplate(body, title);
   },
+
+  passwordReset: (name, actionUrl, expiresInMinutes) => {
+    const body = `
+<h2>Reset your password</h2>
+<p>Hello ${name || 'there'},</p>
+<p>We received a request to reset your AcadSync password.</p>
+<p><a href="${actionUrl}" class="btn">Reset Password</a></p>
+<p>This link expires in ${expiresInMinutes} minutes and can be used only once.</p>
+<p>If you did not request this, you can safely ignore this email.</p>
+    `;
+    return getBaseTemplate(body, 'Password reset request');
+  },
+
+  emailVerification: (name, otpCode, expiresInMinutes) => {
+    const body = `
+<h2>Verify your email</h2>
+<p>Hello ${name || 'there'},</p>
+<p>Please enter this one-time password (OTP) to complete your AcadSync account setup:</p>
+<div class="highlight">
+    <strong style="font-size: 22px; letter-spacing: 4px;">${otpCode}</strong>
+</div>
+<p>This OTP expires in ${expiresInMinutes} minutes.</p>
+<p>If you did not request this, you can safely ignore this email.</p>
+    `;
+    return getBaseTemplate(body, 'Verify your AcadSync email');
+  },
 };
 
 module.exports = templates;

@@ -41,6 +41,9 @@ import Sidebar          from "./components/Sidebar";
 import LandingPage      from "./pages/LandingPage";
 import LoginPage        from "./pages/LoginPage";
 import RegisterPage     from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import AdminDashboard   from "./pages/AdminDashboard";
@@ -164,6 +167,9 @@ function AppLayout() {
                   ) : <RegisterPage />
                 }
               />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
 
               {/* Student */}
               <Route path="/dashboard" element={<ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>} />

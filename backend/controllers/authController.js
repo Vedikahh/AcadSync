@@ -1,9 +1,108 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const dns = require('dns').promises;
 const { OAuth2Client } = require('google-auth-library');
+const mailService = require('../utils/mailService');
+const emailTemplates = require('../utils/emailTemplates');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const PASSWORD_RESET_TTL_MINUTES = Number(process.env.PASSWORD_RESET_TTL_MINUTES || 15);
+const EMAIL_VERIFY_OTP_TTL_MINUTES = Number(process.env.EMAIL_VERIFY_OTP_TTL_MINUTES || 10);
+
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+const isEmailFormatValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isPasswordValid = (password) => typeof password === 'string' && password.length >= 8;
+const isEmailVerificationEnabled = () => true;
+const getFrontendBaseUrl = () => process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173';
+
+const RESERVED_EMAIL_DOMAINS = new Set([
+  'example.com',
+  'example.net',
+  'example.org',
+  'localhost',
+  'test',
+  'invalid',
+]);
+
+const hasValidMailDomain = async (email) => {
+  const domain = String(email || '').split('@')[1];
+  if (!domain) return false;
+
+  const normalizedDomain = domain.trim().toLowerCase();
+  if (
+    RESERVED_EMAIL_DOMAINS.has(normalizedDomain) ||
+    normalizedDomain.endsWith('.test') ||
+    normalizedDomain.endsWith('.invalid') ||
+    normalizedDomain.endsWith('.localhost')
+  ) {
+    return false;
+  }
+
+  try {
+    const mxRecords = await dns.resolveMx(normalizedDomain);
+    return Array.isArray(mxRecords) && mxRecords.length > 0;
+  } catch {
+    try {
+      // RFC fallback: a domain can technically accept mail via A/AAAA when MX is absent.
+      const [aRecords, aaaaRecords] = await Promise.all([
+        dns.resolve4(normalizedDomain).catch(() => []),
+        dns.resolve6(normalizedDomain).catch(() => []),
+      ]);
+      return aRecords.length > 0 || aaaaRecords.length > 0;
+    } catch {
+      return false;
+    }
+  }
+};
+
+const createTokenPair = () => {
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+  return { rawToken, hashedToken };
+};
+
+const createVerificationOtpPair = () => {
+  const otp = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+  const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+  return { otp, hashedOtp };
+};
+
+const buildAuthPayload = (user) => ({
+  _id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  department: user.department,
+  avatar: user.avatar,
+  notificationPreferences: user.notificationPreferences,
+  isEmailVerified: user.isEmailVerified,
+  token: generateToken(user._id, user.role),
+});
+
+const sendPasswordResetEmail = async (user, rawToken) => {
+  const resetUrl = `${getFrontendBaseUrl()}/reset-password?token=${encodeURIComponent(rawToken)}`;
+  const html = emailTemplates.passwordReset(user.name, resetUrl, PASSWORD_RESET_TTL_MINUTES);
+
+  await mailService.sendMail({
+    to: user.email,
+    subject: 'AcadSync password reset',
+    html,
+    text: `Reset your password: ${resetUrl}`,
+  });
+};
+
+const sendVerificationOtpEmail = async (user, otpCode) => {
+  const html = emailTemplates.emailVerification(user.name, otpCode, EMAIL_VERIFY_OTP_TTL_MINUTES);
+
+  await mailService.sendMail({
+    to: user.email,
+    subject: 'Verify your AcadSync account',
+    html,
+    text: `Your AcadSync verification OTP is ${otpCode}. It expires in ${EMAIL_VERIFY_OTP_TTL_MINUTES} minutes.`,
+  });
+};
 
 // Generate JWT token
 const generateToken = (id, role) => {
@@ -17,10 +116,23 @@ const generateToken = (id, role) => {
 // @access  Public
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, department } = req.body;
+    const { name, password, role, department } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please add all required fields' });
+    }
+
+    if (!isEmailFormatValid(email)) {
+      return res.status(400).json({ message: 'Please enter a valid email id' });
+    }
+
+    if (!(await hasValidMailDomain(email))) {
+      return res.status(400).json({ message: 'Please enter a valid email id' });
+    }
+
+    if (!isPasswordValid(password)) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
     }
 
     // Check if user exists
@@ -39,23 +151,33 @@ exports.registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       role: role || 'student', // default to student if not provided
-      department
+      department,
+      provider: 'local',
+      isEmailVerified: !isEmailVerificationEnabled(),
     });
 
-    if (user) {
-      res.status(201).json({
-        _id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        department: user.department,
-        avatar: user.avatar,
-        notificationPreferences: user.notificationPreferences,
-        token: generateToken(user._id, user.role),
-      });
-    } else {
+    if (!user) {
       res.status(400).json({ message: 'Invalid user data received' });
+      return;
     }
+
+    if (isEmailVerificationEnabled()) {
+      const { otp, hashedOtp } = createVerificationOtpPair();
+      user.emailVerificationToken = hashedOtp;
+      user.emailVerificationExpires = new Date(Date.now() + EMAIL_VERIFY_OTP_TTL_MINUTES * 60 * 1000);
+      await user.save({ validateBeforeSave: false });
+
+      await sendVerificationOtpEmail(user, otp);
+
+      res.status(201).json({
+        message: 'Registration successful. Please verify your email using the OTP sent to your inbox.',
+        verificationRequired: true,
+        email: user.email,
+      });
+      return;
+    }
+
+    res.status(201).json(buildAuthPayload(user));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -66,26 +188,34 @@ exports.registerUser = async (req, res) => {
 // @access  Public
 exports.loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const { password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
+    if (!isEmailFormatValid(email) || !(await hasValidMailDomain(email))) {
+      return res.status(400).json({ message: 'Please enter a valid email id' });
+    }
 
     // Check for user email
     const user = await User.findOne({ email });
 
     // Compare raw password with hashed
-    if (user && (await bcrypt.compare(password, user.password))) {
-      res.json({
-        _id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        department: user.department,
-        avatar: user.avatar,
-        notificationPreferences: user.notificationPreferences,
-        token: generateToken(user._id, user.role),
-      });
-    } else {
+    if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
       res.status(401).json({ message: 'Invalid email or password' });
+      return;
     }
+
+    if (user.provider === 'local' && isEmailVerificationEnabled() && !user.isEmailVerified) {
+      return res.status(403).json({
+        message: 'Please verify your email before signing in.',
+        verificationRequired: true,
+      });
+    }
+
+    res.json(buildAuthPayload(user));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -118,7 +248,8 @@ exports.googleLogin = async (req, res) => {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     
-    const { name, email } = ticket.getPayload();
+    const { name } = ticket.getPayload();
+    const email = normalizeEmail(ticket.getPayload().email);
 
     // Check if user exists by email
     let user = await User.findOne({ email });
@@ -135,14 +266,7 @@ exports.googleLogin = async (req, res) => {
     }
 
     res.json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      department: user.department,
-      avatar: user.avatar,
-      notificationPreferences: user.notificationPreferences,
-      token: generateToken(user._id, user.role),
+      ...buildAuthPayload(user),
     });
 
   } catch (error) {
@@ -165,7 +289,8 @@ exports.googleRegister = async (req, res) => {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     
-    const { name, email } = ticket.getPayload();
+    const { name } = ticket.getPayload();
+    const email = normalizeEmail(ticket.getPayload().email);
 
     let user = await User.findOne({ email });
     if (user) {
@@ -178,21 +303,202 @@ exports.googleRegister = async (req, res) => {
       email,
       role: role || 'student',
       department,
-      provider: 'google'
+      provider: 'google',
+      isEmailVerified: true,
+      emailVerifiedAt: new Date(),
     });
 
     res.status(201).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      department: user.department,
-      avatar: user.avatar,
-      notificationPreferences: user.notificationPreferences,
-      token: generateToken(user._id, user.role),
+      ...buildAuthPayload(user),
     });
 
   } catch (error) {
     res.status(500).json({ message: 'Google Register Error: ' + error.message });
+  }
+};
+
+// @desc    Send forgot password email with reset token
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const safeMessage = {
+      message: 'If an account with that email exists, a password reset link has been sent.',
+    };
+
+    if (!email || !isEmailFormatValid(email)) {
+      return res.status(200).json(safeMessage);
+    }
+
+    if (!(await hasValidMailDomain(email))) {
+      return res.status(200).json(safeMessage);
+    }
+
+    const user = await User.findOne({ email, provider: 'local' });
+    if (!user) {
+      return res.status(200).json(safeMessage);
+    }
+
+    const { rawToken, hashedToken } = createTokenPair();
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = new Date(Date.now() + PASSWORD_RESET_TTL_MINUTES * 60 * 1000);
+    user.passwordResetUsedAt = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    await sendPasswordResetEmail(user, rawToken);
+
+    return res.status(200).json(safeMessage);
+  } catch (error) {
+    return res.status(500).json({ message: 'Unable to process request right now. Please try again.' });
+  }
+};
+
+// @desc    Reset password using token
+// @route   POST /api/auth/reset-password
+// @access  Public
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !isPasswordValid(password)) {
+      return res.status(400).json({ message: 'Invalid reset request' });
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(String(token)).digest('hex');
+
+    const user = await User.findOne({
+      provider: 'local',
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: new Date() },
+      $or: [{ passwordResetUsedAt: { $exists: false } }, { passwordResetUsedAt: null }],
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Reset token is invalid or expired' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    user.passwordResetUsedAt = new Date();
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({ message: 'Password reset successful. You can now sign in.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Unable to reset password right now. Please try again.' });
+  }
+};
+
+// @desc    Verify email using token
+// @route   GET /api/auth/verify-email/:token
+// @access  Public
+exports.verifyEmail = async (req, res) => {
+  try {
+    const token = req.params.token;
+    if (!token) {
+      return res.status(400).json({ message: 'Invalid verification link' });
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(String(token)).digest('hex');
+    const user = await User.findOne({
+      provider: 'local',
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Verification link is invalid or expired' });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerifiedAt = new Date();
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      message: 'Email verified successfully.',
+      ...buildAuthPayload(user),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Unable to verify email right now. Please try again.' });
+  }
+};
+
+// @desc    Request a new email verification link
+// @route   POST /api/auth/verify-email/request
+// @access  Public
+exports.requestEmailVerification = async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const safeMessage = {
+      message: 'If that account exists and is eligible, a verification OTP has been sent.',
+    };
+
+    if (!email || !isEmailFormatValid(email)) {
+      return res.status(200).json(safeMessage);
+    }
+
+    if (!(await hasValidMailDomain(email))) {
+      return res.status(200).json(safeMessage);
+    }
+
+    const user = await User.findOne({ email, provider: 'local' });
+    if (!user || user.isEmailVerified) {
+      return res.status(200).json(safeMessage);
+    }
+
+    const { otp, hashedOtp } = createVerificationOtpPair();
+    user.emailVerificationToken = hashedOtp;
+    user.emailVerificationExpires = new Date(Date.now() + EMAIL_VERIFY_OTP_TTL_MINUTES * 60 * 1000);
+    await user.save({ validateBeforeSave: false });
+
+    await sendVerificationOtpEmail(user, otp);
+
+    return res.status(200).json(safeMessage);
+  } catch (error) {
+    return res.status(500).json({ message: 'Unable to process request right now. Please try again.' });
+  }
+};
+
+// @desc    Verify email using OTP
+// @route   POST /api/auth/verify-email/otp
+// @access  Public
+exports.verifyEmailOtp = async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const otp = String(req.body.otp || '').trim();
+
+    if (!email || !isEmailFormatValid(email) || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: 'Invalid OTP verification request' });
+    }
+
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+    const user = await User.findOne({
+      email,
+      provider: 'local',
+      emailVerificationToken: hashedOtp,
+      emailVerificationExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'OTP is invalid or expired' });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerifiedAt = new Date();
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      message: 'Email verified successfully.',
+      ...buildAuthPayload(user),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Unable to verify email right now. Please try again.' });
   }
 };

@@ -113,12 +113,18 @@ CLIENT_URL=http://localhost:5173
 # SMTP_USER=your_email@gmail.com
 # SMTP_PASS=your_app_password
 # SMTP_FROM=noreply@acadync.com
+# Auth verification settings
+# EMAIL_VERIFY_OTP_TTL_MINUTES=10
+# PASSWORD_RESET_TTL_MINUTES=15
 ```
 Notes:
 - `MONGO_URI`, `JWT_SECRET`, and `GOOGLE_CLIENT_ID` are required at backend startup.
 - In production, you should configure at least one allowed origin using `CLIENT_URL`, `FRONTEND_URL`, `CORS_ORIGIN`, or `ALLOWED_ORIGINS`. If omitted, the API now boots with a startup warning and temporarily allows all origins until configured.
 - Keep all secrets in `backend/.env` only. Never put server secrets in frontend env files.
 - Email configuration is *optional*. If not configured, the system will gracefully skip email delivery with clear logs.
+- Password recovery is available by default (`/forgot-password` and `/reset-password`).
+- Email verification is mandatory for all local signups.
+- Users must verify email via OTP before sign-in.
 
 #### Email Configuration Guide
 Email delivery is **optional** and integrates seamlessly with the notification system. Users can toggle email preferences in their profile.
@@ -154,6 +160,13 @@ MAIL_PROVIDER=test
 - ✅ Safe fallback behavior (no crash if email config is missing)
 - ✅ Clear logs for debugging email delivery
 
+**Auth Recovery & Verification:**
+- ✅ Secure password reset tokens are hashed in DB, short-lived, and single-use.
+- ✅ Signup verification uses a 6-digit OTP sent by email (short-lived, one-time use).
+- ✅ Safe forgot-password and verification responses prevent account enumeration.
+- ✅ Endpoint-level rate limiting guards auth-sensitive routes.
+- ✅ Google-auth users remain compatible and are treated as verified.
+
 Start the server:
 ```bash
 npm start
@@ -187,6 +200,9 @@ npm run dev
 | `/` | Landing Page | Public | Platform Introduction |
 | `/login` | Authentication | Public | JWT & Google Login Portal |
 | `/register` | Signup | Public | New User Registration |
+| `/forgot-password` | Forgot Password | Public | Request password reset link |
+| `/reset-password` | Reset Password | Public | Set a new password using reset token |
+| `/verify-email` | Verify Email | Public | Enter OTP sent to email / request resend OTP |
 | `/dashboard` | Portal | Student | Personal Event & Alert Hub |
 | `/organizer-dashboard`| Portal | Organizer | Event Lifecycle Management |
 | `/admin` | Portal | Admin | Institutional Analytics & Control |

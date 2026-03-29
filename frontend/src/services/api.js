@@ -52,6 +52,35 @@ export const register = (payload) =>
 export const getMe = () => 
   request("/api/auth/me", { method: "GET" });
 
+export const forgotPassword = (email) =>
+  request("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+
+export const resetPassword = (token, password) =>
+  request("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, password }),
+  });
+
+export const verifyEmail = (token) =>
+  request(`/api/auth/verify-email/${encodeURIComponent(token)}`, {
+    method: "GET",
+  });
+
+export const verifyEmailOtp = (email, otp) =>
+  request("/api/auth/verify-email/otp", {
+    method: "POST",
+    body: JSON.stringify({ email, otp }),
+  });
+
+export const requestEmailVerification = (email) =>
+  request("/api/auth/verify-email/request", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+
 // ---- Event APIs ----
 export const getEvents = () => request("/api/events");
 export const getMyEvents = () => request("/api/events/my-events");

@@ -46,6 +46,16 @@ export default function RegisterPage() {
       };
 
       const response = await apiRegister(payload);
+
+      if (response.verificationRequired) {
+        navigate("/verify-email", {
+          state: {
+            message: response.message || "Please verify your email before signing in.",
+            email: response.email || form.email,
+          },
+        });
+        return;
+      }
       
       // Store new authenticated session directly
       login({
@@ -152,10 +162,10 @@ export default function RegisterPage() {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Min. 6 characters"
+                placeholder="Min. 8 characters"
                 value={form.password}
                 onChange={handleChange}
-                minLength="6"
+                minLength="8"
                 required
               />
               <button
@@ -179,7 +189,7 @@ export default function RegisterPage() {
                 placeholder="Repeat password"
                 value={form.confirm}
                 onChange={handleChange}
-                minLength="6"
+                minLength="8"
                 required
               />
               <button

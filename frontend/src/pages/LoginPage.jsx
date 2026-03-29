@@ -41,7 +41,11 @@ export default function LoginPage() {
       // Route based on newly verified database role
       navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
     } catch (err) {
-      setError(err.message || "Failed to log in");
+      if (err.message && err.message.toLowerCase().includes("verify")) {
+        setError("Please verify your email before signing in. You can request a new verification link below.");
+      } else {
+        setError(err.message || "Failed to log in");
+      }
     } finally {
       setLoading(false);
     }
@@ -219,9 +223,16 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <p className="auth-footer-text" style={{ marginTop: "0.8rem" }}>
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </p>
+
         <p className="auth-footer-text">
           Don&apos;t have an account?{" "}
           <Link to="/register">Create one →</Link>
+        </p>
+        <p className="auth-footer-text" style={{ marginTop: "0.45rem" }}>
+          Need a verification link? <Link to="/verify-email">Resend verification</Link>
         </p>
       </div>
     </div>
