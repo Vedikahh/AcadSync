@@ -7,6 +7,14 @@ const normalizeNotificationPreferences = (preferences = {}) => ({
   reminder: preferences.reminder !== false,
 });
 
+const normalizeEmailPreferences = (preferences = {}) => ({
+  enabled: preferences.enabled !== false,
+  event: preferences.event !== false,
+  approval: preferences.approval !== false,
+  rejection: preferences.rejection !== false,
+  reminder: preferences.reminder !== false,
+});
+
 // @desc    Get user profile
 // @route   GET /api/users/profile
 // @access  Private
@@ -14,7 +22,11 @@ exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (user) {
-      res.json(user);
+      res.json({
+        ...user.toObject(),
+        notificationPreferences: normalizeNotificationPreferences(user.notificationPreferences || {}),
+        emailPreferences: normalizeEmailPreferences(user.emailPreferences || {}),
+      });
     } else {
       res.status(404).json({ message: 'User not found' });
     }
@@ -39,10 +51,20 @@ exports.updateUserProfile = async (req, res) => {
       user.department = req.body.department !== undefined ? req.body.department : user.department;
       user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
       user.avatar = req.body.avatar !== undefined ? req.body.avatar : user.avatar;
+      
+      // Update in-app notification preferences
       if (req.body.notificationPreferences && typeof req.body.notificationPreferences === 'object') {
         user.notificationPreferences = normalizeNotificationPreferences({
           ...user.notificationPreferences,
           ...req.body.notificationPreferences,
+        });
+      }
+
+      // Update email notification preferences
+      if (req.body.emailPreferences && typeof req.body.emailPreferences === 'object') {
+        user.emailPreferences = normalizeEmailPreferences({
+          ...user.emailPreferences,
+          ...req.body.emailPreferences,
         });
       }
       
@@ -57,6 +79,7 @@ exports.updateUserProfile = async (req, res) => {
         bio: updatedUser.bio,
         avatar: updatedUser.avatar,
         notificationPreferences: normalizeNotificationPreferences(updatedUser.notificationPreferences || {}),
+        emailPreferences: normalizeEmailPreferences(updatedUser.emailPreferences || {}),
       });
     } else {
       res.status(404).json({ message: 'User not found' });

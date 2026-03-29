@@ -6,6 +6,7 @@ const {
   createNotificationForUser,
   createNotificationsForUsers,
 } = require('./notificationController');
+const { scheduleEventReminder, cancelEventReminder } = require('../utils/eventReminderJob');
 
 
 // @desc    Get all events
@@ -161,6 +162,9 @@ exports.approveEvent = async (req, res) => {
       },
     });
 
+    // Schedule 24h reminder for the event
+    scheduleEventReminder(event);
+
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'approve', data: populatedEvent });
 
@@ -223,6 +227,9 @@ exports.rejectEvent = async (req, res) => {
         reviewedBy: req.user.id,
       },
     });
+
+    // Cancel any scheduled reminders for this event
+    cancelEventReminder(event._id);
 
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'reject', data: populatedEvent });
@@ -319,6 +326,9 @@ exports.deleteEvent = async (req, res) => {
     if (event.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to delete this event' });
     }
+
+    // Cancel any scheduled reminders for this event
+    cancelEventReminder(event._id);
 
     await event.deleteOne();
 

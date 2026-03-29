@@ -18,6 +18,14 @@ const DEFAULT_NOTIFICATION_PREFERENCES = {
   reminder: true,
 };
 
+const DEFAULT_EMAIL_PREFERENCES = {
+  enabled: true,
+  event: true,
+  approval: true,
+  rejection: true,
+  reminder: true,
+};
+
 export default function UserProfile() {
   const { user, login } = useAuth();
 
@@ -29,6 +37,10 @@ export default function UserProfile() {
     notificationPreferences: {
       ...DEFAULT_NOTIFICATION_PREFERENCES,
       ...(user?.notificationPreferences || {}),
+    },
+    emailPreferences: {
+      ...DEFAULT_EMAIL_PREFERENCES,
+      ...(user?.emailPreferences || {}),
     },
   });
 
@@ -46,6 +58,16 @@ export default function UserProfile() {
       notificationPreferences: {
         ...prev.notificationPreferences,
         [key]: !prev.notificationPreferences[key],
+      },
+    }));
+  };
+
+  const handleEmailPreferenceToggle = (key) => {
+    setEditForm((prev) => ({
+      ...prev,
+      emailPreferences: {
+        ...prev.emailPreferences,
+        [key]: !prev.emailPreferences[key],
       },
     }));
   };
@@ -190,6 +212,38 @@ export default function UserProfile() {
                   </label>
                 ))}
               </div>
+            </div>
+
+            <div className="up-pref-section">
+              <h3>Email Notifications</h3>
+              <p>Receive notifications via email for selected events.</p>
+              <label className="up-pref-item up-pref-master">
+                <input
+                  type="checkbox"
+                  checked={Boolean(editForm.emailPreferences?.enabled)}
+                  onChange={() => handleEmailPreferenceToggle("enabled")}
+                />
+                <span><strong>Enable email notifications</strong></span>
+              </label>
+              {editForm.emailPreferences?.enabled && (
+                <div className="up-pref-grid" style={{ marginTop: "12px" }}>
+                  {[
+                    ["event", "New events in my department"],
+                    ["approval", "Event approvals"],
+                    ["rejection", "Event rejections"],
+                    ["reminder", "Reminders 24h before events"],
+                  ].map(([key, label]) => (
+                    <label key={key} className="up-pref-item">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(editForm.emailPreferences?.[key])}
+                        onChange={() => handleEmailPreferenceToggle(key)}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="up-form-footer">

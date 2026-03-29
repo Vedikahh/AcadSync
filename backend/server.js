@@ -93,3 +93,9 @@ const server = app.listen(PORT, () => {
 const socketIO = require('./utils/socket');
 socketIO.init(server, corsOptions);
 
+// Initialize event reminder job system
+const { initializeReminders } = require('./utils/eventReminderJob');
+initializeReminders().catch((error) => {
+  console.error('[Startup] Failed to initialize event reminders:', error.message);
+});
+

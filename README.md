@@ -105,11 +105,54 @@ CLIENT_URL=http://localhost:5173
 # ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 # Optional for backend AI features only
 # GEMINI_API_KEY=your_gemini_api_key
+# Optional for email notifications (see Email Setup below)
+# MAIL_PROVIDER=smtp
+# SMTP_HOST=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_SECURE=false
+# SMTP_USER=your_email@gmail.com
+# SMTP_PASS=your_app_password
+# SMTP_FROM=noreply@acadync.com
 ```
 Notes:
 - `MONGO_URI`, `JWT_SECRET`, and `GOOGLE_CLIENT_ID` are required at backend startup.
 - In production, you should configure at least one allowed origin using `CLIENT_URL`, `FRONTEND_URL`, `CORS_ORIGIN`, or `ALLOWED_ORIGINS`. If omitted, the API now boots with a startup warning and temporarily allows all origins until configured.
 - Keep all secrets in `backend/.env` only. Never put server secrets in frontend env files.
+- Email configuration is *optional*. If not configured, the system will gracefully skip email delivery with clear logs.
+
+#### Email Configuration Guide
+Email delivery is **optional** and integrates seamlessly with the notification system. Users can toggle email preferences in their profile.
+
+**Option 1: SMTP (Gmail, Outlook, etc.)**
+```env
+MAIL_PROVIDER=smtp
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-16-char-app-password
+SMTP_FROM=noreply@acadync.com
+```
+**For Gmail:** Generate an [App Password](https://support.google.com/accounts/answer/185833) (16 characters) instead of your account password.
+
+**Option 2: SendGrid**
+```env
+MAIL_PROVIDER=sendgrid
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=noreply@acadync.com
+```
+
+**Option 3: Test/Development Mode** (logs emails to console)
+```env
+MAIL_PROVIDER=test
+```
+
+**Email Features:**
+- ✅ Automatic reminders 24 hours before approved events
+- ✅ Notifications for event approvals, rejections, and requests
+- ✅ User controls in Profile → Email Notifications section
+- ✅ Safe fallback behavior (no crash if email config is missing)
+- ✅ Clear logs for debugging email delivery
 
 Start the server:
 ```bash

@@ -52,6 +52,28 @@ const userSchema = new mongoose.Schema({
       default: true,
     },
   },
+  emailPreferences: {
+    enabled: {
+      type: Boolean,
+      default: true,
+    },
+    event: {
+      type: Boolean,
+      default: true,
+    },
+    approval: {
+      type: Boolean,
+      default: true,
+    },
+    rejection: {
+      type: Boolean,
+      default: true,
+    },
+    reminder: {
+      type: Boolean,
+      default: true,
+    },
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

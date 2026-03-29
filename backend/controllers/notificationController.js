@@ -1,6 +1,8 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const socket = require('../utils/socket');
+const mailService = require('../utils/mailService');
+const emailTemplates = require('../utils/emailTemplates');
 
 const PREF_KEY_BY_TYPE = {
   event: 'event',
@@ -15,6 +17,64 @@ const shouldDeliverNotification = (notificationType, notificationPreferences = {
 
   const enabled = notificationPreferences[prefKey];
   return enabled !== false;
+};
+
+const shouldSendEmail = (notificationType, emailPreferences = {}) => {
+  if (!emailPreferences.enabled) return false;
+  const prefKey = PREF_KEY_BY_TYPE[notificationType];
+  if (!prefKey) return false;
+
+  const enabled = emailPreferences[prefKey];
+  return enabled !== false;
+};
+
+const sendEmailNotification = async (user, notification) => {
+  try {
+    if (!shouldSendEmail(notification.type, user.emailPreferences || {})) {
+      return;
+    }
+
+    const { type, message, link, payload } = notification;
+    let htmlContent;
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const actionUrl = link ? `${baseUrl}${link}` : baseUrl;
+
+    const eventName = payload?.eventName || 'Event';
+    const eventDetails = payload?.eventDetails || '';
+    const requesterName = payload?.requesterName || 'Admin';
+    const reason = payload?.reason || '';
+    const eventTime = payload?.eventTime || '';
+    const conflictDetails = payload?.conflictDetails || '';
+
+    switch (type) {
+      case 'event':
+        htmlContent = emailTemplates.eventNotification(eventName, eventDetails, actionUrl);
+        break;
+      case 'approval':
+        htmlContent = emailTemplates.approvalNotification(eventName, requesterName, actionUrl);
+        break;
+      case 'rejection':
+        htmlContent = emailTemplates.rejectionNotification(eventName, reason, actionUrl);
+        break;
+      case 'reminder':
+        htmlContent = emailTemplates.remindNotification(eventName, eventTime, actionUrl);
+        break;
+      case 'conflict':
+        htmlContent = emailTemplates.conflictNotification(eventName, conflictDetails, actionUrl);
+        break;
+      default:
+        htmlContent = emailTemplates.systemNotification(eventName, message, actionUrl);
+    }
+
+    await mailService.sendMail({
+      to: user.email,
+      subject: message,
+      html: htmlContent,
+      text: message,
+    });
+  } catch (error) {
+    console.error(`[NotificationController] Error sending email to ${user.email}:`, error.message);
+  }
 };
 
 const normalizePagination = (query = {}) => {
@@ -41,13 +101,19 @@ const shapeListResponse = ({ items, page, limit, totalItems }) => {
 exports.createNotificationForUser = async ({ userId, message, type = 'system', link, payload }) => {
   if (!userId || !message) return null;
 
-  const user = await User.findById(userId).select('notificationPreferences');
+  const user = await User.findById(userId).select('notificationPreferences emailPreferences name email');
   if (!user) return null;
   if (!shouldDeliverNotification(type, user.notificationPreferences || {})) return null;
 
   const notification = await Notification.create({ userId, message, type, link, payload });
 
   socket.emitToUser(userId, 'notification:new', notification);
+
+  // Send email asynchronously (non-blocking)
+  sendEmailNotification(user, notification).catch((error) => {
+    console.error(`[NotificationController] Failed to send email notification:`, error);
+  });
+
   return notification;
 };
 
@@ -55,10 +121,11 @@ exports.createNotificationsForUsers = async ({ userIds = [], message, type = 'sy
   if (!Array.isArray(userIds) || userIds.length === 0 || !message) return [];
 
   const uniqueUserIds = [...new Set(userIds.map((id) => String(id)))];
-  const users = await User.find({ _id: { $in: uniqueUserIds } }).select('_id notificationPreferences');
+  const users = await User.find({ _id: { $in: uniqueUserIds } }).select('_id name email notificationPreferences emailPreferences');
 
   const notificationsToInsert = [];
   const allowedUsers = [];
+  const emailUsers = [];
 
   users.forEach((user) => {
     if (!shouldDeliverNotification(type, user.notificationPreferences || {})) return;
@@ -71,6 +138,10 @@ exports.createNotificationsForUsers = async ({ userIds = [], message, type = 'sy
     }
     notificationsToInsert.push(notification);
     allowedUsers.push(userId);
+
+    if (shouldSendEmail(type, user.emailPreferences || {})) {
+      emailUsers.push({ user, notification });
+    }
   });
 
   if (!notificationsToInsert.length) return [];
@@ -78,6 +149,13 @@ exports.createNotificationsForUsers = async ({ userIds = [], message, type = 'sy
   const inserted = await Notification.insertMany(notificationsToInsert);
   inserted.forEach((notification, idx) => {
     socket.emitToUser(allowedUsers[idx], 'notification:new', notification);
+  });
+
+  // Send emails asynchronously (non-blocking)
+  emailUsers.forEach((item, idx) => {
+    sendEmailNotification(item.user, inserted[idx]).catch((error) => {
+      console.error(`[NotificationController] Failed to send batch email:`, error);
+    });
   });
 
   return inserted;

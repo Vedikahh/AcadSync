@@ -213,6 +213,13 @@
   height: 16px;
 }
 
+.up-pref-master {
+  background: var(--indigo-50, #EEF2FF) !important;
+  border-color: var(--indigo-100, #E0E7FF) !important;
+  font-weight: 600;
+  padding: 10px 12px !important;
+}
+
 .up-btn-primary {
   display: inline-flex;
   align-items: center;
