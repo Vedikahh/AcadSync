@@ -155,6 +155,9 @@ export const markAllNotificationsRead = () =>
 export const updateUserProfile = (data) =>
   request("/api/users/update", { method: "PUT", body: JSON.stringify(data) });
 
+export const getPublicUserProfile = (userId) =>
+  request(`/api/users/public/${encodeURIComponent(userId)}`, { method: "GET" });
+
 export const changeUserPassword = (data) =>
   request("/api/users/change-password", { method: "POST", body: JSON.stringify(data) });
 

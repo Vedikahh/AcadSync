@@ -14,6 +14,15 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const navigateByRole = (role, onboardingCompleted = false) => {
+    if (!onboardingCompleted) {
+      navigate("/onboarding");
+      return;
+    }
+    const path = role === "admin" ? "/admin" : role === "organizer" ? "/organizer-dashboard" : "/dashboard";
+    navigate(path);
+  };
+
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setError("");
@@ -32,7 +41,7 @@ export default function LoginPage() {
       login({ ...response, id: response._id }, response.token);
 
       // Route based on newly verified database role
-      navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
+      navigateByRole(response.role, response.onboardingCompleted);
     } catch (err) {
       if (err.message && err.message.toLowerCase().includes("verify")) {
         setError("Please verify your email before signing in. You can request a new verification link below.");
@@ -61,7 +70,7 @@ export default function LoginPage() {
       }
 
       login({ ...response, id: response._id }, response.token);
-      navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
+      navigateByRole(response.role, response.onboardingCompleted);
     } catch (err) {
       setError(err.message || "Google login failed");
     } finally {
@@ -84,7 +93,7 @@ export default function LoginPage() {
         department: completeProfile.department
       });
       login({ ...response, id: response._id }, response.token);
-      navigate(response.role === "admin" ? "/admin" : response.role === "organizer" ? "/organizer-dashboard" : "/dashboard");
+      navigateByRole(response.role, response.onboardingCompleted);
     } catch (err) {
       setError(err.message || "Failed to complete profile");
     } finally {
@@ -110,7 +119,7 @@ export default function LoginPage() {
                 value={completeProfile.role}
                 onChange={(e) => setCompleteProfile({...completeProfile, role: e.target.value})}
                 required
-                style={{ width: '100%', padding: '0.8rem', borderRadius: '4px', border: '1px solid #ddd', fontSize: '1rem', marginTop: '0.5rem', background: '#fff' }}
+                  className="complete-profile-select"
               >
                 <option value="student">Student</option>
                 <option value="organizer">Faculty/Committee</option>
@@ -151,14 +160,14 @@ export default function LoginPage() {
           
           {/* Note: Roles are now database bound, we don't ask users to select their role at login anymore */}
 
-          <div className="google-login-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <div className="google-login-container">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
             />
           </div>
           
-          <div className="divider" style={{ textAlign: 'center', margin: '1rem 0', color: '#666', fontSize: '0.9rem' }}>
+          <div className="divider">
             OR SIGN IN WITH EMAIL
           </div>
           <div className="form-group">
@@ -202,7 +211,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="auth-footer-text" style={{ marginTop: "0.8rem" }}>
+        <p className="auth-footer-text auth-footer-tight">
           <Link to="/forgot-password">Forgot your password?</Link>
         </p>
 
@@ -210,7 +219,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link to="/register">Create one →</Link>
         </p>
-        <p className="auth-footer-text" style={{ marginTop: "0.45rem" }}>
+        <p className="auth-footer-text auth-footer-compact">
           Need a verification link? <Link to="/verify-email">Resend verification</Link>
         </p>
       </div>

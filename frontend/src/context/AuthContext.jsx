@@ -10,6 +10,12 @@ const DEFAULT_NOTIFICATION_CHANNELS = {
   reminder: { inApp: true, email: true },
 };
 
+const hasText = (value) => typeof value === "string" && value.trim().length > 0;
+const inferOnboardingCompleted = (payload = {}) => {
+  if (typeof payload.onboardingCompleted === "boolean") return payload.onboardingCompleted;
+  return hasText(payload.department) && hasText(payload.year);
+};
+
 function normalizeUserPayload(payload) {
   if (!payload) return null;
 
@@ -46,6 +52,7 @@ function normalizeUserPayload(payload) {
     interests: Array.isArray(payload.interests) ? payload.interests : [],
     phone: payload.phone || "",
     alternateContact: payload.alternateContact || "",
+    onboardingCompleted: inferOnboardingCompleted(payload),
     notificationChannels: { ...DEFAULT_NOTIFICATION_CHANNELS, ...notificationChannels },
   };
 }

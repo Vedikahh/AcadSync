@@ -8,6 +8,7 @@ const NOTIFICATION_TYPES = ['event', 'approval', 'rejection', 'reminder'];
 const MAX_AVATAR_LENGTH = 3 * 1024 * 1024;
 const MAX_BIO_LENGTH = 500;
 const MAX_INTERESTS = 10;
+const MAX_PUBLIC_BIO_LENGTH = 320;
 const ALLOWED_YEARS = new Set([
   '',
   'First Year',
@@ -23,6 +24,9 @@ const normalizeText = (value, maxLength = 120) => {
   const text = String(value).trim();
   return text.slice(0, maxLength);
 };
+
+const hasText = (value) => typeof value === 'string' && value.trim().length > 0;
+const isOnboardingCompleted = (user) => hasText(user?.department) && hasText(user?.year);
 
 const isPhoneValid = (value) => {
   if (!value) return true;
@@ -112,8 +116,21 @@ const buildProfileResponse = (user) => {
     notificationChannels,
     notificationPreferences,
     emailPreferences,
+    onboardingCompleted: isOnboardingCompleted(user),
   };
 };
+
+const buildPublicProfileResponse = (user) => ({
+  _id: user._id,
+  name: user.name,
+  role: user.role,
+  department: user.department || '',
+  year: user.year || '',
+  bio: normalizeText(user.bio || '', MAX_PUBLIC_BIO_LENGTH),
+  interests: Array.isArray(user.interests) ? user.interests.slice(0, MAX_INTERESTS) : [],
+  avatar: user.avatar || '',
+  onboardingCompleted: isOnboardingCompleted(user),
+});
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -128,6 +145,24 @@ exports.getUserProfile = async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc    Get a user's public profile
+// @route   GET /api/users/public/:userId
+// @access  Private
+exports.getPublicUserProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select('-password -email -passwordResetToken -passwordResetExpires -passwordResetUsedAt -emailVerificationToken -emailVerificationExpires');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.json(buildPublicProfileResponse(user));
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 };
 

@@ -14,6 +14,20 @@ const EMAIL_VERIFY_OTP_TTL_MINUTES = Number(process.env.EMAIL_VERIFY_OTP_TTL_MIN
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 const isEmailFormatValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isPasswordValid = (password) => typeof password === 'string' && password.length >= 8;
+const hasText = (value) => typeof value === 'string' && value.trim().length > 0;
+const sanitizeText = (value) => String(value || '').trim();
+const parseInterests = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeText(item)).filter(Boolean).slice(0, 10);
+  }
+
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 10);
+};
+const isOnboardingCompleted = (user) => hasText(user?.department) && hasText(user?.year);
 const isEmailVerificationEnabled = () => true;
 const getFrontendBaseUrl = () => process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173';
 
@@ -86,6 +100,7 @@ const buildAuthPayload = (user) => ({
   notificationPreferences: user.notificationPreferences,
   emailPreferences: user.emailPreferences,
   isEmailVerified: user.isEmailVerified,
+  onboardingCompleted: isOnboardingCompleted(user),
   token: generateToken(user._id, user.role),
 });
 
@@ -124,11 +139,27 @@ const generateToken = (id, role) => {
 // @access  Public
 exports.registerUser = async (req, res) => {
   try {
-    const { name, password, role, department } = req.body;
+    const { password } = req.body;
+    const name = sanitizeText(req.body.name);
     const email = normalizeEmail(req.body.email);
+    const role = sanitizeText(req.body.role) || 'student';
+    const department = sanitizeText(req.body.department);
+    const year = sanitizeText(req.body.year);
+    const phone = sanitizeText(req.body.phone);
+    const alternateContact = sanitizeText(req.body.alternateContact);
+    const bio = sanitizeText(req.body.bio);
+    const interests = parseInterests(req.body.interests);
+
+    if (!['student', 'organizer', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role selected' });
+    }
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please add all required fields' });
+    }
+
+    if (!department || !year) {
+      return res.status(400).json({ message: 'Department and academic year are required' });
     }
 
     if (!isEmailFormatValid(email)) {
@@ -158,8 +189,13 @@ exports.registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || 'student', // default to student if not provided
+      role,
       department,
+      year,
+      phone,
+      alternateContact,
+      bio,
+      interests,
       provider: 'local',
       isEmailVerified: !isEmailVerificationEnabled(),
     });
@@ -235,7 +271,15 @@ exports.loginUser = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    res.status(200).json(user);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const payload = {
+      ...user.toObject(),
+      onboardingCompleted: isOnboardingCompleted(user),
+    };
+    res.status(200).json(payload);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -287,7 +331,19 @@ exports.googleLogin = async (req, res) => {
 // @access  Public
 exports.googleRegister = async (req, res) => {
   try {
-    const { token, role, department } = req.body;
+    const { token } = req.body;
+    const role = sanitizeText(req.body.role) || 'student';
+    const department = sanitizeText(req.body.department);
+    const year = sanitizeText(req.body.year);
+    const phone = sanitizeText(req.body.phone);
+    const alternateContact = sanitizeText(req.body.alternateContact);
+    const bio = sanitizeText(req.body.bio);
+    const interests = parseInterests(req.body.interests);
+
+    if (!['student', 'organizer', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role selected' });
+    }
+
     if (!token) {
       return res.status(400).json({ message: 'No Google token provided' });
     }
@@ -309,8 +365,13 @@ exports.googleRegister = async (req, res) => {
     user = await User.create({
       name,
       email,
-      role: role || 'student',
+      role,
       department,
+      year,
+      phone,
+      alternateContact,
+      bio,
+      interests,
       provider: 'google',
       isEmailVerified: true,
       emailVerifiedAt: new Date(),

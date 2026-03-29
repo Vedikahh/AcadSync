@@ -222,6 +222,7 @@ export default function UserProfile() {
     : "U";
 
   const isLocalUser = (user?.provider || "local") === "local";
+  const publicProfilePath = user?.id ? `/users/${user.id}` : "";
 
   return (
     <div className="up-page">
@@ -231,6 +232,19 @@ export default function UserProfile() {
           <div className="up-panel-header">
             <h2>My Profile</h2>
             <p>Manage personal details, notification channels, and account security.</p>
+            <p className="up-hint">
+              Name, role, department, year, bio, interests, and avatar are visible to all logged-in users.
+              {publicProfilePath ? (
+                <button
+                  type="button"
+                  className="up-btn-link"
+                  style={{ marginLeft: "0.5rem" }}
+                  onClick={() => navigate(publicProfilePath)}
+                >
+                  Preview public profile
+                </button>
+              ) : null}
+            </p>
           </div>
 
           <form onSubmit={handleSaveProfile} className="up-form">

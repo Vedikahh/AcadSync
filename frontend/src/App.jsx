@@ -56,11 +56,17 @@ import ManageEvents     from "./pages/ManageEvents";
 import AcademicSchedule from "./pages/AcademicSchedule";
 import NotificationsPage from "./pages/NotificationsPage";
 import UserProfile      from "./pages/UserProfile";
+import OnboardingPage   from "./pages/OnboardingPage";
 import NotFoundPage     from "./pages/NotFoundPage";
+import PublicProfilePage from "./pages/PublicProfilePage";
 
 import "./App.css";
 
-function ProtectedRoute({ children, roles }) {
+const getHomePath = (role) => (
+  role === "admin" ? "/admin" : role === "organizer" ? "/organizer-dashboard" : "/dashboard"
+);
+
+function ProtectedRoute({ children, roles, allowIncompleteProfile = false }) {
   const { user, loadingContext } = useAuth();
   
   // Wait for JWT validation before booting user out
@@ -75,8 +81,11 @@ function ProtectedRoute({ children, roles }) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
+  if (!allowIncompleteProfile && !user.onboardingCompleted) {
+    return <Navigate to="/onboarding" replace />;
+  }
   if (roles && !roles.includes(user.role)) {
-    const home = user.role === "admin" ? "/admin" : user.role === "organizer" ? "/organizer-dashboard" : "/dashboard";
+    const home = getHomePath(user.role);
     return <Navigate to={home} replace />;
   }
   return children;
@@ -123,11 +132,7 @@ function AppLayout() {
                 path="/" 
                 element={
                   user ? (
-                    <Navigate to={
-                        user.role === "admin" ? "/admin"
-                        : user.role === "organizer" ? "/organizer-dashboard"
-                        : "/dashboard"
-                      } replace />
+                    <Navigate to={user.onboardingCompleted ? getHomePath(user.role) : "/onboarding"} replace />
                   ) : <LandingPage />
                 } 
               />
@@ -141,11 +146,7 @@ function AppLayout() {
                       </div>
                     </div>
                   ) : user ? (
-                    <Navigate to={
-                        user.role === "admin" ? "/admin"
-                        : user.role === "organizer" ? "/organizer-dashboard"
-                        : "/dashboard"
-                      } replace />
+                    <Navigate to={user.onboardingCompleted ? getHomePath(user.role) : "/onboarding"} replace />
                   ) : <LoginPage />
                 }
               />
@@ -159,17 +160,14 @@ function AppLayout() {
                       </div>
                     </div>
                   ) : user ? (
-                    <Navigate to={
-                        user.role === "admin" ? "/admin"
-                        : user.role === "organizer" ? "/organizer-dashboard"
-                        : "/dashboard"
-                      } replace />
+                    <Navigate to={user.onboardingCompleted ? getHomePath(user.role) : "/onboarding"} replace />
                   ) : <RegisterPage />
                 }
               />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/onboarding" element={<ProtectedRoute allowIncompleteProfile><OnboardingPage /></ProtectedRoute>} />
 
               {/* Student */}
               <Route path="/dashboard" element={<ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>} />
@@ -190,6 +188,7 @@ function AppLayout() {
               <Route path="/conflict"      element={<ProtectedRoute roles={["admin", "organizer"]}><ConflictResult /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
               <Route path="/profile"       element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+              <Route path="/users/:userId" element={<ProtectedRoute><PublicProfilePage /></ProtectedRoute>} />
 
               <Route path="*" element={<NotFoundPage />} />
             </Routes>

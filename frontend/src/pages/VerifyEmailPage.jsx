@@ -21,7 +21,11 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState(location.state?.message || "");
 
-  const navigateByRole = (role) => {
+  const navigateByRole = (role, onboardingCompleted = false) => {
+    if (!onboardingCompleted) {
+      navigate("/onboarding");
+      return;
+    }
     const path = role === "admin" ? "/admin" : role === "organizer" ? "/organizer-dashboard" : "/dashboard";
     navigate(path);
   };
@@ -37,18 +41,8 @@ export default function VerifyEmailPage() {
       try {
         const response = await apiVerifyEmail(token);
         if (response?.token) {
-          login(
-            {
-              id: response._id,
-              name: response.name,
-              email: response.email,
-              role: response.role,
-              department: response.department,
-              avatar: response.avatar || "",
-            },
-            response.token
-          );
-          navigateByRole(response.role);
+          login({ ...response, id: response._id }, response.token);
+          navigateByRole(response.role, response.onboardingCompleted);
           return;
         }
         setMessage(response.message || "Email verified successfully.");
@@ -71,18 +65,8 @@ export default function VerifyEmailPage() {
     try {
       const response = await apiVerifyEmailOtp(email, otp);
       if (response?.token) {
-        login(
-          {
-            id: response._id,
-            name: response.name,
-            email: response.email,
-            role: response.role,
-            department: response.department,
-            avatar: response.avatar || "",
-          },
-          response.token
-        );
-        navigateByRole(response.role);
+        login({ ...response, id: response._id }, response.token);
+        navigateByRole(response.role, response.onboardingCompleted);
         return;
       }
 
