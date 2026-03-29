@@ -1,6 +1,7 @@
 const Schedule = require('../models/Schedule');
 const ScheduleImportVersion = require('../models/ScheduleImportVersion');
 const socket = require('../utils/socket');
+const { writeAuditLog, createDiffSummary } = require('../utils/auditLogger');
 
 const ALLOWED_TYPES = new Set(['lecture', 'lab', 'exam']);
 const ALLOWED_DAYS = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
@@ -230,12 +231,49 @@ exports.createSchedule = async (req, res) => {
 // @access  Private (Admin only)
 exports.updateSchedule = async (req, res) => {
   try {
-    const schedule = await Schedule.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const existingSchedule = await Schedule.findById(req.params.id);
+    if (!existingSchedule) return res.status(404).json({ message: 'Schedule not found' });
 
-    if (!schedule) return res.status(404).json({ message: 'Schedule not found' });
+    const beforeSchedule = {
+      subject: existingSchedule.subject,
+      faculty: existingSchedule.faculty,
+      department: existingSchedule.department,
+      day: existingSchedule.day,
+      date: existingSchedule.date,
+      startTime: existingSchedule.startTime,
+      endTime: existingSchedule.endTime,
+      room: existingSchedule.room,
+      type: existingSchedule.type,
+    };
+
+    const schedule = await Schedule.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'schedule', action: 'update', data: schedule });
+
+    await writeAuditLog(req, {
+      action: 'schedule.update',
+      target: {
+        entityType: 'schedule',
+        entityId: schedule._id,
+        label: schedule.subject,
+      },
+      metadata: {
+        department: schedule.department,
+        day: schedule.day,
+      },
+      diffSummary: createDiffSummary(beforeSchedule, {
+        subject: schedule.subject,
+        faculty: schedule.faculty,
+        department: schedule.department,
+        day: schedule.day,
+        date: schedule.date,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        room: schedule.room,
+        type: schedule.type,
+      }, ['subject', 'faculty', 'department', 'day', 'date', 'startTime', 'endTime', 'room', 'type']),
+    });
 
     res.json(schedule);
 
@@ -256,6 +294,22 @@ exports.deleteSchedule = async (req, res) => {
 
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'schedule', action: 'delete', id: req.params.id });
+
+    await writeAuditLog(req, {
+      action: 'schedule.delete',
+      target: {
+        entityType: 'schedule',
+        entityId: schedule._id,
+        label: schedule.subject,
+      },
+      metadata: {
+        department: schedule.department,
+        day: schedule.day,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+      },
+      diffSummary: [],
+    });
 
     res.json({ message: 'Schedule removed' });
 
@@ -315,6 +369,21 @@ exports.importSchedules = async (req, res) => {
       mode,
       count: report.validRows,
       importVersionId: importVersion._id,
+    });
+
+    await writeAuditLog(req, {
+      action: 'schedule.import',
+      target: {
+        entityType: 'scheduleImportVersion',
+        entityId: importVersion._id,
+        label: `mode:${mode}`,
+      },
+      metadata: {
+        mode,
+        insertedCount: report.validRows,
+        totalRows: report.totalRows,
+      },
+      diffSummary: [],
     });
 
     res.status(201).json({
@@ -380,6 +449,20 @@ exports.rollbackImportVersion = async (req, res) => {
       sourceVersionId: targetVersion._id,
       rollbackVersionId: rollbackVersion._id,
       count: rollbackRows.length,
+    });
+
+    await writeAuditLog(req, {
+      action: 'schedule.rollback',
+      target: {
+        entityType: 'scheduleImportVersion',
+        entityId: rollbackVersion._id,
+        label: `source:${targetVersion._id}`,
+      },
+      metadata: {
+        sourceVersionId: String(targetVersion._id),
+        restoredCount: rollbackRows.length,
+      },
+      diffSummary: [],
     });
 
     return res.status(200).json({

@@ -2,6 +2,7 @@ const Event = require('../models/Event');
 const Schedule = require('../models/Schedule');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
 
 function getTodayName() {
   return new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -159,6 +160,86 @@ exports.getDashboardStats = async (req, res) => {
     }
 
     return res.status(403).json({ message: `Unsupported role: ${role}` });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc    Get paginated/filterable audit logs (admin)
+// @route   GET /api/dashboard/audit-logs
+// @access  Private (Admin)
+exports.getAuditLogs = async (req, res) => {
+  try {
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
+    const skip = (page - 1) * limit;
+
+    const { action, entityType, actorId, from, to, search } = req.query;
+    const filter = {};
+
+    if (action) {
+      filter.action = action;
+    }
+
+    if (entityType) {
+      filter['target.entityType'] = entityType;
+    }
+
+    if (actorId) {
+      filter['actor.id'] = actorId;
+    }
+
+    if (from || to) {
+      filter.createdAt = {};
+
+      if (from) {
+        const fromDate = new Date(from);
+        if (!Number.isNaN(fromDate.getTime())) {
+          filter.createdAt.$gte = fromDate;
+        }
+      }
+
+      if (to) {
+        const toDate = new Date(to);
+        if (!Number.isNaN(toDate.getTime())) {
+          filter.createdAt.$lte = toDate;
+        }
+      }
+
+      if (Object.keys(filter.createdAt).length === 0) {
+        delete filter.createdAt;
+      }
+    }
+
+    if (search && String(search).trim()) {
+      const escapedSearch = String(search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escapedSearch, 'i');
+
+      filter.$or = [
+        { action: searchRegex },
+        { 'target.entityType': searchRegex },
+        { 'target.entityId': searchRegex },
+        { 'target.label': searchRegex },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      AuditLog.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('actor.id', 'name email role')
+        .lean(),
+      AuditLog.countDocuments(filter),
+    ]);
+
+    return res.json({
+      items,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

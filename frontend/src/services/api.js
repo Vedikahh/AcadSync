@@ -1,4 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const AI_CONFLICT_ASSIST_ENABLED = String(import.meta.env.VITE_ENABLE_AI_CONFLICT_ASSIST || "").toLowerCase() === "true";
+
+export const isAiConflictAssistEnabled = () => AI_CONFLICT_ASSIST_ENABLED;
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("acadsync_token");
@@ -160,4 +163,20 @@ export const deleteUserAccount = (data) =>
 
 // ---- Dashboard APIs (Currently placeholder map) ----
 export const getDashboardStats = () => request("/api/dashboard/stats");
+
+export const getAuditLogs = (params = {}) => {
+  const query = new URLSearchParams();
+
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.action) query.set("action", String(params.action));
+  if (params.entityType) query.set("entityType", String(params.entityType));
+  if (params.actorId) query.set("actorId", String(params.actorId));
+  if (params.from) query.set("from", String(params.from));
+  if (params.to) query.set("to", String(params.to));
+  if (params.search) query.set("search", String(params.search));
+
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return request(`/api/dashboard/audit-logs${suffix}`, { method: "GET" });
+};
 

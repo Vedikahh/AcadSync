@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getEvents, getDashboardStats, updateEventStatus } from "../services/api";
+import { getAuditLogs, getEvents, getDashboardStats, updateEventStatus } from "../services/api";
 import EventCard from "../components/EventCard";
 import StatsCard from "../components/StatsCard";
 import "./Dashboard.css";
@@ -13,6 +13,9 @@ export default function AdminDashboard() {
   const [eventsError, setEventsError] = useState("");
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState("");
+  const [logsLoading, setLogsLoading] = useState(true);
+  const [logsError, setLogsError] = useState("");
+  const [auditLogs, setAuditLogs] = useState([]);
   const [stats, setStats] = useState({
     totalStudents: 0,
     pendingApprovals: 0,
@@ -23,6 +26,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchEvents();
     fetchStats();
+    fetchAuditLogs();
   }, []);
 
   const fetchEvents = async () => {
@@ -58,8 +62,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchAuditLogs = async () => {
+    try {
+      setLogsLoading(true);
+      setLogsError("");
+      const data = await getAuditLogs({ page: 1, limit: 8 });
+      setAuditLogs(Array.isArray(data?.items) ? data.items : []);
+    } catch (err) {
+      console.error(err);
+      setLogsError(err.message || "Failed to load audit logs.");
+      setAuditLogs([]);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const formatLogAction = (value = "") =>
+    String(value)
+      .split(".")
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(" ");
+
+  const formatLogTime = (value) => {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return "Unknown time";
+    return date.toLocaleString();
+  };
+
   const pending  = events.filter((e) => e.status === "pending");
-  const approved = events.filter((e) => e.status === "approved");
   
   // Calculate dynamic department activity from events
   const deptCounts = events.reduce((acc, event) => {
@@ -81,7 +111,13 @@ export default function AdminDashboard() {
       severity: "High"
     }));
 
-  const SYSTEM_LOGS = []; // Keep empty for now until logs API is ready
+  const SYSTEM_LOGS = auditLogs.map((log) => ({
+    id: log._id,
+    action: formatLogAction(log.action),
+    subject: log.target?.label || `${log.target?.entityType || "entity"} ${log.target?.entityId || ""}`.trim(),
+    user: log.actor?.id?.name || log.actor?.id?.email || "Unknown actor",
+    time: formatLogTime(log.createdAt),
+  }));
 
   const handleApprove = async (id) => {
     try {
@@ -135,6 +171,7 @@ export default function AdminDashboard() {
       {statsLoading && <div className="admin-inline-note">Loading dashboard stats...</div>}
       {statsError && <div className="admin-inline-error">{statsError}</div>}
       {eventsError && <div className="admin-inline-error">{eventsError}</div>}
+      {logsError && <div className="admin-inline-error">{logsError}</div>}
 
         <div className="admin-stats-grid">
           <StatsCard value={stats.totalStudents} label="Total Students"   color="blue"   />
@@ -298,7 +335,11 @@ export default function AdminDashboard() {
               <h2 className="admin-card-title">System Logs</h2>
             </div>
             <div className="admin-card-body">
-              {SYSTEM_LOGS.length === 0 ? (
+              {logsLoading ? (
+                <div className="admin-empty">
+                  <p>Loading system logs...</p>
+                </div>
+              ) : SYSTEM_LOGS.length === 0 ? (
                 <div className="admin-empty">
                   <p>No recent system logs.</p>
                 </div>

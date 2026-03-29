@@ -47,6 +47,22 @@ const getAllowedOrigins = () => {
 const getMissingRequiredVars = () =>
   REQUIRED_ENV_VARS.filter((key) => !isNonEmpty(process.env[key]));
 
+const isAiConflictAssistEnabled = () =>
+  String(process.env.ENABLE_AI_CONFLICT_ASSIST || '').toLowerCase() === 'true';
+
+const getAiConflictConfig = () => {
+  const enabled = isAiConflictAssistEnabled();
+  const hasGeminiKey = isNonEmpty(process.env.GEMINI_API_KEY);
+  const available = enabled && hasGeminiKey;
+
+  return {
+    enabled,
+    available,
+    provider: available ? 'gemini' : 'rules',
+    reason: !enabled ? 'disabled_by_config' : (hasGeminiKey ? null : 'missing_gemini_api_key'),
+  };
+};
+
 const validateEnvironment = () => {
   const missing = getMissingRequiredVars();
 
@@ -62,4 +78,6 @@ module.exports = {
   validateEnvironment,
   getAllowedOrigins,
   isProduction,
+  isAiConflictAssistEnabled,
+  getAiConflictConfig,
 };

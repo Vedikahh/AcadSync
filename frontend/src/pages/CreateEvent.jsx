@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { checkEventConflicts } from "../services/api";
+import { checkEventConflicts, isAiConflictAssistEnabled } from "../services/api";
 import { formatTime12h } from "../utils/formatTime";
 import "./CreateEvent.css";
 
@@ -53,6 +53,7 @@ export default function CreateEvent() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const aiAssistEnabled = isAiConflictAssistEnabled();
   
   // Support returning from conflict page OR editing an existing event
   const getInitialForm = () => {
@@ -123,6 +124,12 @@ export default function CreateEvent() {
       const blockingConflicts = res.blockingConflicts || [];
       const blocked = Boolean(res.blocked);
       const suggestions = res.suggestions || [];
+      const ai = res.ai || {
+        enabled: aiAssistEnabled,
+        available: false,
+        provider: "rules",
+        reason: aiAssistEnabled ? "backend_unavailable" : "disabled_by_config",
+      };
       const hasConflict = conflicts.length > 0;
       
       const formattedConflicts = conflicts.map((c, i) => {
@@ -144,6 +151,7 @@ export default function CreateEvent() {
         state: {
           hasConflict,
           blocked,
+          ai,
           blockingConflicts,
           eventData: form,
           conflicts: formattedConflicts,
@@ -173,7 +181,9 @@ export default function CreateEvent() {
       <div className="ce-header">
         <div>
           <h1 className="ce-title">Create Event Proposal</h1>
-          <p className="ce-sub">Submit your event for admin approval — AcadSync AI checks conflicts automatically</p>
+          <p className="ce-sub">
+            Submit your event for admin approval. Conflict checks run automatically before review.
+          </p>
         </div>
       </div>
 
@@ -409,11 +419,15 @@ export default function CreateEvent() {
 
                 {/* AI Notice */}
                 <div className="ce-ai-notice">
-                  <div className="ce-ai-icon-wrap">AI</div>
+                  <div className="ce-ai-icon-wrap">{aiAssistEnabled ? "AI" : "CHK"}</div>
                   <div>
-                    <p className="ce-ai-title">AI Conflict Detection</p>
+                    <p className="ce-ai-title">
+                      {aiAssistEnabled ? "AI Assist (When Available)" : "Conflict Check"}
+                    </p>
                     <p className="ce-ai-desc">
-                      AcadSync AI will scan your event against all existing lectures, exams, and approved events.
+                      {aiAssistEnabled
+                        ? "Conflict checks run with rules by default and can include AI assistance when backend configuration is available."
+                        : "Conflict checks use the built-in rules engine to compare your event with lectures, exams, and approved events."}
                       You&apos;ll see results immediately after submission.
                     </p>
                   </div>

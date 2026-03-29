@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Event = require('../models/Event');
 const Notification = require('../models/Notification');
+const { writeAuditLog, createDiffSummary } = require('../utils/auditLogger');
 
 const NOTIFICATION_TYPES = ['event', 'approval', 'rejection', 'reminder'];
 const MAX_AVATAR_LENGTH = 3 * 1024 * 1024;
@@ -166,6 +167,16 @@ exports.updateUserProfile = async (req, res) => {
     const user = await User.findById(req.user.id);
 
     if (user) {
+      const beforeProfile = {
+        name: user.name,
+        department: user.department,
+        bio: user.bio,
+        year: user.year,
+        phone: user.phone,
+        alternateContact: user.alternateContact,
+        avatar: user.avatar,
+      };
+
       user.name = req.body.name !== undefined ? normalizeText(req.body.name, 80) : user.name;
       user.department = req.body.department !== undefined ? normalizeText(req.body.department, 80) : user.department;
       user.bio = req.body.bio !== undefined ? normalizeText(req.body.bio, MAX_BIO_LENGTH) : user.bio;
@@ -238,6 +249,30 @@ exports.updateUserProfile = async (req, res) => {
       user.emailPreferences = normalizeEmailPreferences(emailPreferences);
       
       const updatedUser = await user.save();
+
+      if (req.user.role === 'admin') {
+        await writeAuditLog(req, {
+          action: 'profile.update',
+          target: {
+            entityType: 'user',
+            entityId: updatedUser._id,
+            label: updatedUser.email,
+          },
+          metadata: {
+            targetRole: updatedUser.role,
+          },
+          diffSummary: createDiffSummary(beforeProfile, {
+            name: updatedUser.name,
+            department: updatedUser.department,
+            bio: updatedUser.bio,
+            year: updatedUser.year,
+            phone: updatedUser.phone,
+            alternateContact: updatedUser.alternateContact,
+            avatar: updatedUser.avatar,
+          }, ['name', 'department', 'bio', 'year', 'phone', 'alternateContact', 'avatar']),
+        });
+      }
+
       res.json(buildProfileResponse(updatedUser));
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -289,6 +324,21 @@ exports.changePassword = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, salt);
     await user.save();
 
+    if (req.user.role === 'admin') {
+      await writeAuditLog(req, {
+        action: 'profile.passwordChange',
+        target: {
+          entityType: 'user',
+          entityId: user._id,
+          label: user.email,
+        },
+        metadata: {
+          provider: user.provider,
+        },
+        diffSummary: [],
+      });
+    }
+
     res.json({ message: 'Password changed successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -322,6 +372,14 @@ exports.deleteAccount = async (req, res) => {
       }
     }
 
+    const deletedUser = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      provider: user.provider,
+    };
+
     await Promise.all([
       Notification.deleteMany({ userId: user._id }),
       Event.deleteMany({ createdBy: user._id }),
@@ -331,6 +389,23 @@ exports.deleteAccount = async (req, res) => {
       ),
       User.deleteOne({ _id: user._id }),
     ]);
+
+    if (req.user.role === 'admin') {
+      await writeAuditLog(req, {
+        action: 'profile.deleteAccount',
+        target: {
+          entityType: 'user',
+          entityId: deletedUser.id,
+          label: deletedUser.email,
+        },
+        metadata: {
+          targetRole: deletedUser.role,
+          department: deletedUser.department,
+          provider: deletedUser.provider,
+        },
+        diffSummary: [],
+      });
+    }
 
     res.json({ message: 'Account deleted successfully' });
   } catch (err) {

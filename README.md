@@ -16,7 +16,7 @@
 
 ## 🚀 Overview
 
-**AcadSync** is a premium, AI-powered campus management ecosystem designed to eliminate scheduling friction in modern universities. By bridging the gap between Students, Event Organizers, and Administrators, AcadSync offers **intelligent conflict detection**, automated workflow approvals, and a unified master calendar—all packaged within a high-performance, responsive React interface.
+**AcadSync** is a premium campus management ecosystem designed to eliminate scheduling friction in modern universities. By bridging the gap between Students, Event Organizers, and Administrators, AcadSync offers **intelligent conflict detection**, automated workflow approvals, and a unified master calendar—all packaged within a high-performance, responsive React interface.
 
 ---
 
@@ -24,7 +24,8 @@
 
 ### 🧠 Intelligent Conflict Detection
 - **Multi-Source Validation:** Automatically scans new event proposals against existing **approved events** AND the **master academic timetable** (lectures/labs).
-- **AI-Driven Suggestions:** When a clash is detected, the system suggests alternative available slots based on venue availability and campus hours.
+- **Rule-Based Suggestions (Default):** When a clash is detected, the system suggests alternative available slots based on schedule overlap and campus hours.
+- **Optional AI Assist:** AI-enhanced conflict assistance can be enabled via backend configuration when available.
 
 ### 📅 Unified Event Lifecycle
 - **End-to-End Workflow:** A streamlined multi-step wizard for creating, editing, and tracking event proposals.
@@ -103,8 +104,9 @@ GOOGLE_CLIENT_ID=your_google_client_id
 CLIENT_URL=http://localhost:5173
 # Optional for multi-origin setups
 # ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-# Optional for backend AI features only
+# Optional for backend AI assist (off by default)
 # GEMINI_API_KEY=your_gemini_api_key
+# ENABLE_AI_CONFLICT_ASSIST=false
 # Optional for email notifications (see Email Setup below)
 # MAIL_PROVIDER=smtp
 # SMTP_HOST=smtp.gmail.com
@@ -185,6 +187,7 @@ VITE_GOOGLE_CLIENT_ID=your_google_client_id
 Frontend env notes:
 - Only `VITE_` variables should exist in frontend env files.
 - Do not add backend secrets such as `JWT_SECRET`, `MONGO_URI`, or `GEMINI_API_KEY`.
+- Optional AI messaging toggle: `VITE_ENABLE_AI_CONFLICT_ASSIST=false`
 
 Launch the development server:
 ```bash
@@ -208,7 +211,7 @@ npm run dev
 | `/admin` | Portal | Admin | Institutional Analytics & Control |
 | `/events` | Campus Wall | Authenticated | Listing of all campus activities |
 | `/create-event` | Request Wizard | Org/Admin | Unified creation/edit pipeline |
-| `/conflict` | Resolution Center | Org/Admin | AI-assisted clash resolver |
+| `/conflict` | Resolution Center | Org/Admin | Clash resolver with suggestions |
 | `/calendar` | Master Calendar | Authenticated | Unified schedule visualization |
 | `/manage-events` | Admin Queue | Admin | Review & Process Requests |
 | `/schedule` | Master Schedule | Admin/Org | Timetable & Venue management |

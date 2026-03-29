@@ -39,9 +39,9 @@ const FEATURES = [
   {
     icon: Zap,
     color: "#6366F1",
-    label: "AI-Powered",
+    label: "Conflict Intelligence",
     title: "Automatic Conflict Detection",
-    desc: "AcadSync AI scans every proposed event against existing lectures, labs, and exams and flags clashes instantly.",
+    desc: "AcadSync scans every proposed event against existing lectures, labs, and exams and flags clashes instantly.",
   },
   {
     icon: BarChart3,
@@ -69,7 +69,7 @@ const FEATURES = [
     color: "#EF4444",
     label: "Conflict Reports",
     title: "Severity-Based Reporting",
-    desc: "High, medium, and low conflict reports with affected student counts, clash details, and AI-suggested alternatives.",
+    desc: "High, medium, and low conflict reports with affected student counts, clash details, and suggested alternatives.",
   },
 ];
 
@@ -84,7 +84,7 @@ const STEPS = [
     num: "02",
     icon: ClipboardList,
     title: "Submit or manage events",
-    desc: "Faculty/Committee propose events; AI scans for clashes; Admins approve with full conflict reports.",
+    desc: "Faculty/Committee propose events; conflict checks run automatically; Admins approve with full conflict reports.",
   },
   {
     num: "03",
@@ -129,7 +129,7 @@ const ROLES = [
     bg: "#F1F5F9",
     points: [
       "Approve or reject proposals",
-      "View AI conflict reports",
+      "View conflict reports",
       "Manage academic schedule",
       "Monitor all departments",
     ],
@@ -139,11 +139,11 @@ const ROLES = [
 const FAQS = [
   {
     q: "What is AcadSync?",
-    a: "AcadSync is an AI-powered academic scheduling platform that helps campuses manage events, detect scheduling conflicts, and keep students, faculty, and administrators in sync — all in one place.",
+    a: "AcadSync is an academic scheduling platform that helps campuses manage events, detect scheduling conflicts, and keep students, faculty, and administrators in sync — all in one place.",
   },
   {
-    q: "How does the AI conflict detection work?",
-    a: "When an event is proposed, our AI engine automatically cross-references it against existing lectures, labs, exams, and approved events. It flags conflicts by severity (high, medium, low) and suggests alternative time slots or venues.",
+    q: "How does conflict detection work?",
+    a: "When an event is proposed, the conflict engine cross-references it against existing lectures, labs, exams, and approved events. It flags conflicts by severity and suggests alternative time slots. Optional AI assist can be enabled through backend configuration.",
   },
   {
     q: "Who can use AcadSync?",
@@ -181,7 +181,7 @@ const TESTIMONIALS = [
     role: "Admin, Student Affairs",
     avatar: "RV",
     color: "#22C55E",
-    text: "Managing 400+ students' schedules used to be a nightmare. AcadSync's admin panel gives me complete visibility and the AI reports are incredibly detailed.",
+    text: "Managing 400+ students' schedules used to be a nightmare. AcadSync's admin panel gives me complete visibility and the conflict reports are incredibly detailed.",
     stars: 5,
   },
 ];
@@ -332,14 +332,14 @@ export default function LandingPage() {
           <div className="lp-hero-copy">
             <span className="lp-hero-pill">
               <Zap size={12} style={{ display: "inline", marginRight: 6 }} />
-              AI-Powered Academic Scheduler
+              Smart Academic Scheduler
             </span>
             <h1 className="lp-hero-title">
               Smarter scheduling<br />
               for every <span className="lp-hero-accent">campus role</span>
             </h1>
             <p className="lp-hero-sub">
-              AcadSync brings event management, academic timetables, and AI
+              AcadSync brings event management, academic timetables, and
               conflict detection into one clean platform — built for students,
               faculty, and administrators.
             </p>
@@ -551,7 +551,7 @@ export default function LandingPage() {
           <span className="lp-cta-pill">Start for free today</span>
           <h2 className="lp-cta-title">Ready to sync your campus?</h2>
           <p className="lp-cta-sub">
-            Join AcadSync and eliminate scheduling conflicts with AI assistance.
+            Join AcadSync and eliminate scheduling conflicts with intelligent checks.
           </p>
           <div className="lp-cta-actions">
             <Link to="/register" className="lp-btn-cta-primary">
@@ -566,9 +566,9 @@ export default function LandingPage() {
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <div className="lp-footer-brand-col">
-            <span className="lp-footer-logo">AcadSync AI</span>
+            <span className="lp-footer-logo">AcadSync</span>
             <p className="lp-footer-tagline">
-              Academic scheduling, reimagined. AI-powered conflict detection for modern campuses.
+              Academic scheduling, reimagined. Conflict-aware planning for modern campuses.
             </p>
             <div className="lp-footer-socials">
               <a href="#" aria-label="GitHub" className="lp-social-link"><Code2 size={16} /></a>

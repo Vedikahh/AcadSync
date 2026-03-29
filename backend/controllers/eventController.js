@@ -7,6 +7,8 @@ const {
   createNotificationsForUsers,
 } = require('./notificationController');
 const { scheduleEventReminder, cancelEventReminder } = require('../utils/eventReminderJob');
+const { writeAuditLog, createDiffSummary } = require('../utils/auditLogger');
+const { getAiConflictConfig } = require('../config/env');
 
 
 // @desc    Get all events
@@ -59,6 +61,7 @@ exports.createEvent = async (req, res) => {
     } = req.body;
 
     // Run overlap check
+    const ai = getAiConflictConfig();
     const conflictResult = await checkConflicts({ date, startTime, endTime, type });
     const conflictMessages = (conflictResult.conflicts || []).map((c) => c.message || c);
 
@@ -69,6 +72,7 @@ exports.createEvent = async (req, res) => {
         blockingConflicts: conflictResult.blockingConflicts,
         suggestions: conflictResult.suggestions,
         blocked: true,
+        ai,
       });
     }
 
@@ -129,6 +133,14 @@ exports.approveEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
+    const beforeEvent = {
+      status: event.status,
+      adminReviewNote: event.adminReviewNote,
+      rejectionReason: event.rejectionReason,
+      reviewedBy: event.reviewedBy,
+      reviewedAt: event.reviewedAt,
+    };
+
     const providedNote = typeof req.body?.adminReviewNote === 'string'
       ? req.body.adminReviewNote
       : typeof req.body?.note === 'string'
@@ -168,6 +180,26 @@ exports.approveEvent = async (req, res) => {
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'approve', data: populatedEvent });
 
+    await writeAuditLog(req, {
+      action: 'event.approve',
+      target: {
+        entityType: 'event',
+        entityId: event._id,
+        label: event.title,
+      },
+      metadata: {
+        status: event.status,
+        organizerId: String(event.createdBy),
+      },
+      diffSummary: createDiffSummary(beforeEvent, {
+        status: event.status,
+        adminReviewNote: event.adminReviewNote,
+        rejectionReason: event.rejectionReason,
+        reviewedBy: event.reviewedBy,
+        reviewedAt: event.reviewedAt,
+      }, ['status', 'adminReviewNote', 'rejectionReason', 'reviewedBy', 'reviewedAt']),
+    });
+
     res.json(populatedEvent);
 
   } catch (err) {
@@ -182,6 +214,14 @@ exports.rejectEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    const beforeEvent = {
+      status: event.status,
+      adminReviewNote: event.adminReviewNote,
+      rejectionReason: event.rejectionReason,
+      reviewedBy: event.reviewedBy,
+      reviewedAt: event.reviewedAt,
+    };
 
     const providedReason = typeof req.body?.rejectionReason === 'string'
       ? req.body.rejectionReason
@@ -234,6 +274,26 @@ exports.rejectEvent = async (req, res) => {
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'reject', data: populatedEvent });
 
+    await writeAuditLog(req, {
+      action: 'event.reject',
+      target: {
+        entityType: 'event',
+        entityId: event._id,
+        label: event.title,
+      },
+      metadata: {
+        status: event.status,
+        organizerId: String(event.createdBy),
+      },
+      diffSummary: createDiffSummary(beforeEvent, {
+        status: event.status,
+        adminReviewNote: event.adminReviewNote,
+        rejectionReason: event.rejectionReason,
+        reviewedBy: event.reviewedBy,
+        reviewedAt: event.reviewedAt,
+      }, ['status', 'adminReviewNote', 'rejectionReason', 'reviewedBy', 'reviewedAt']),
+    });
+
     res.json(populatedEvent);
 
   } catch (err) {
@@ -248,6 +308,20 @@ exports.updateEvent = async (req, res) => {
   try {
     let event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    const beforeEvent = {
+      title: event.title,
+      description: event.description,
+      venue: event.venue,
+      date: event.date,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      type: event.type,
+      participants: event.participants,
+      organizer: event.organizer,
+      category: event.category,
+      status: event.status,
+    };
 
     // Check ownership or admin
     if (event.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
@@ -307,6 +381,32 @@ exports.updateEvent = async (req, res) => {
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'update', data: populatedEvent });
 
+    await writeAuditLog(req, {
+      action: 'event.update',
+      target: {
+        entityType: 'event',
+        entityId: populatedEvent._id,
+        label: populatedEvent.title,
+      },
+      metadata: {
+        status: populatedEvent.status,
+        updatedByRole: req.user.role,
+      },
+      diffSummary: createDiffSummary(beforeEvent, {
+        title: populatedEvent.title,
+        description: populatedEvent.description,
+        venue: populatedEvent.venue,
+        date: populatedEvent.date,
+        startTime: populatedEvent.startTime,
+        endTime: populatedEvent.endTime,
+        type: populatedEvent.type,
+        participants: populatedEvent.participants,
+        organizer: populatedEvent.organizer,
+        category: populatedEvent.category,
+        status: populatedEvent.status,
+      }, ['title', 'description', 'venue', 'date', 'startTime', 'endTime', 'type', 'participants', 'organizer', 'category', 'status']),
+    });
+
     res.json(populatedEvent);
 
   } catch (err) {
@@ -327,6 +427,17 @@ exports.deleteEvent = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this event' });
     }
 
+    const deletedEvent = {
+      id: event._id,
+      title: event.title,
+      status: event.status,
+      department: event.department,
+      date: event.date,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      createdBy: event.createdBy,
+    };
+
     // Cancel any scheduled reminders for this event
     cancelEventReminder(event._id);
 
@@ -334,6 +445,24 @@ exports.deleteEvent = async (req, res) => {
 
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'delete', id: req.params.id });
+
+    await writeAuditLog(req, {
+      action: 'event.delete',
+      target: {
+        entityType: 'event',
+        entityId: deletedEvent.id,
+        label: deletedEvent.title,
+      },
+      metadata: {
+        status: deletedEvent.status,
+        department: deletedEvent.department,
+        date: deletedEvent.date,
+        startTime: deletedEvent.startTime,
+        endTime: deletedEvent.endTime,
+        organizerId: String(deletedEvent.createdBy),
+      },
+      diffSummary: [],
+    });
 
     res.json({ message: 'Event removed' });
 
@@ -347,9 +476,18 @@ exports.deleteEvent = async (req, res) => {
 // @access  Private (Students/Organizer)
 exports.checkEventConflicts = async (req, res) => {
   try {
+    const ai = getAiConflictConfig();
     const { date, startTime, endTime, type } = req.body;
     const { conflicts, suggestions, blockingConflicts, hasConflict, blocked } = await checkConflicts({ date, startTime, endTime, type });
-    res.json({ conflicts, suggestions, blockingConflicts, hasConflict, blocked });
+    res.json({
+      conflicts,
+      suggestions,
+      blockingConflicts,
+      hasConflict,
+      blocked,
+      ai,
+      suggestionEngine: ai.available ? 'ai-plus-rules' : 'rules-only',
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
