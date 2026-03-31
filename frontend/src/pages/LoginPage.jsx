@@ -14,11 +14,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const navigateByRole = (role, onboardingCompleted = false) => {
-    if (!onboardingCompleted) {
-      navigate("/onboarding");
-      return;
-    }
+  const navigateByRole = (role) => {
     const path = role === "admin" ? "/admin" : role === "organizer" ? "/organizer-dashboard" : "/dashboard";
     navigate(path);
   };
@@ -41,7 +37,7 @@ export default function LoginPage() {
       login({ ...response, id: response._id }, response.token);
 
       // Route based on newly verified database role
-      navigateByRole(response.role, response.onboardingCompleted);
+      navigateByRole(response.role);
     } catch (err) {
       if (err.message && err.message.toLowerCase().includes("verify")) {
         setError("Please verify your email before signing in. You can request a new verification link below.");
@@ -70,7 +66,7 @@ export default function LoginPage() {
       }
 
       login({ ...response, id: response._id }, response.token);
-      navigateByRole(response.role, response.onboardingCompleted);
+      navigateByRole(response.role);
     } catch (err) {
       setError(err.message || "Google login failed");
     } finally {
@@ -93,7 +89,7 @@ export default function LoginPage() {
         department: completeProfile.department
       });
       login({ ...response, id: response._id }, response.token);
-      navigateByRole(response.role, response.onboardingCompleted);
+      navigateByRole(response.role);
     } catch (err) {
       setError(err.message || "Failed to complete profile");
     } finally {

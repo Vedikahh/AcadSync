@@ -35,11 +35,7 @@ export default function RegisterPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const navigateByRole = (role, onboardingCompleted = false) => {
-    if (!onboardingCompleted) {
-      navigate("/onboarding");
-      return;
-    }
+  const navigateByRole = (role) => {
     const path = role === "admin" ? "/admin" : role === "organizer" ? "/organizer-dashboard" : "/dashboard";
     navigate(path);
   };
@@ -137,11 +133,11 @@ export default function RegisterPage() {
         alternateContact: response.alternateContact || "",
         interests: response.interests || [],
         bio: response.bio || "",
-        onboardingCompleted: response.onboardingCompleted,
+        onboardingCompleted: true,
         avatar: response.avatar || ""
       }, response.token);
 
-      navigateByRole(response.role, response.onboardingCompleted);
+      navigateByRole(response.role);
     } catch (err) {
       setError(err.message || "Failed to register");
     } finally {
@@ -155,13 +151,13 @@ export default function RegisterPage() {
         <div className="auth-header">
           <span className="auth-logo">🎓</span>
           <h1>Create account</h1>
-          <p>Level-wise setup to build your full AcadSync profile</p>
+          <p>Complete setup to build your AcadSync profile</p>
         </div>
 
         <div className="auth-steps" role="tablist" aria-label="Signup steps">
           <div className={`auth-step-pill ${step >= 1 ? "active" : ""}`}>1. Basics</div>
           <div className={`auth-step-pill ${step >= 2 ? "active" : ""}`}>2. Academic</div>
-          <div className={`auth-step-pill ${step >= 3 ? "active" : ""}`}>3. Profile</div>
+          <div className={`auth-step-pill ${step >= 3 ? "active" : ""}`}>3. Additional</div>
         </div>
 
         {error && <div className="auth-error">{error}</div>}

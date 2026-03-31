@@ -56,7 +56,6 @@ import ManageEvents     from "./pages/ManageEvents";
 import AcademicSchedule from "./pages/AcademicSchedule";
 import NotificationsPage from "./pages/NotificationsPage";
 import UserProfile      from "./pages/UserProfile";
-import OnboardingPage   from "./pages/OnboardingPage";
 import NotFoundPage     from "./pages/NotFoundPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 
@@ -81,9 +80,6 @@ function ProtectedRoute({ children, roles, allowIncompleteProfile = false }) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (!allowIncompleteProfile && !user.onboardingCompleted) {
-    return <Navigate to="/onboarding" replace />;
-  }
   if (roles && !roles.includes(user.role)) {
     const home = getHomePath(user.role);
     return <Navigate to={home} replace />;
@@ -128,13 +124,13 @@ function AppLayout() {
           <div key={location.pathname} className="route-transition-page">
             <Routes location={location}>
               {/* Public */}
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
                   user ? (
-                    <Navigate to={user.onboardingCompleted ? getHomePath(user.role) : "/onboarding"} replace />
+                    <Navigate to={getHomePath(user.role)} replace />
                   ) : <LandingPage />
-                } 
+                }
               />
               <Route
                 path="/login"
@@ -146,7 +142,7 @@ function AppLayout() {
                       </div>
                     </div>
                   ) : user ? (
-                    <Navigate to={user.onboardingCompleted ? getHomePath(user.role) : "/onboarding"} replace />
+                    <Navigate to={getHomePath(user.role)} replace />
                   ) : <LoginPage />
                 }
               />
@@ -160,14 +156,13 @@ function AppLayout() {
                       </div>
                     </div>
                   ) : user ? (
-                    <Navigate to={user.onboardingCompleted ? getHomePath(user.role) : "/onboarding"} replace />
+                    <Navigate to={getHomePath(user.role)} replace />
                   ) : <RegisterPage />
                 }
               />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
-              <Route path="/onboarding" element={<ProtectedRoute allowIncompleteProfile><OnboardingPage /></ProtectedRoute>} />
 
               {/* Student */}
               <Route path="/dashboard" element={<ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>} />
