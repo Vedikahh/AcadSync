@@ -106,6 +106,7 @@ export default function AdminDashboard() {
     .filter((e) => e.conflicts && e.conflicts.length > 0)
     .map((e, idx) => ({
       id: e._id || e.id || idx,
+      eventId: e._id || e.id,
       event: e.title,
       clashWith: e.conflicts[0], // Show the first clash as summary
       severity: "High"
@@ -262,7 +263,7 @@ export default function AdminDashboard() {
                 <h2 className="admin-card-title">Active Conflict Reports</h2>
                 {conflictsList.length > 0 && <span className="admin-badge admin-badge-red">{conflictsList.length}</span>}
               </div>
-              <Link to="/conflict" className="admin-link">Resolution center →</Link>
+              <Link to="/conflict/resolver" className="admin-link">Resolution center →</Link>
             </div>
             <div className="admin-card-body admin-p-0">
               <div className="admin-table-wrapper">
@@ -272,6 +273,7 @@ export default function AdminDashboard() {
                       <th>Proposed Event</th>
                       <th>Clashing With</th>
                       <th>Severity</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -284,11 +286,14 @@ export default function AdminDashboard() {
                             {c.severity}
                           </span>
                         </td>
+                        <td>
+                          <Link to={c.eventId ? `/conflict/resolver?eventId=${encodeURIComponent(c.eventId)}` : "/conflict/resolver"} className="admin-link">Resolve</Link>
+                        </td>
                       </tr>
                     ))}
                     {conflictsList.length === 0 && (
                       <tr>
-                        <td colSpan="3" className="admin-td-empty">No active conflicts detected.</td>
+                        <td colSpan="4" className="admin-td-empty">No active conflicts detected.</td>
                       </tr>
                     )}
                   </tbody>

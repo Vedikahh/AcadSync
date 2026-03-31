@@ -58,6 +58,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import UserProfile      from "./pages/UserProfile";
 import NotFoundPage     from "./pages/NotFoundPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
+import AdminConflictResolver from "./pages/AdminConflictResolver";
 
 import "./App.css";
 
@@ -85,6 +86,14 @@ function ProtectedRoute({ children, roles, allowIncompleteProfile = false }) {
     return <Navigate to={home} replace />;
   }
   return children;
+}
+
+function ConflictEntryRoute() {
+  const { user } = useAuth();
+  if (user?.role === "admin") {
+    return <Navigate to="/conflict/resolver" replace />;
+  }
+  return <ConflictResult />;
 }
 
 function AppLayout() {
@@ -180,7 +189,8 @@ function AppLayout() {
               <Route path="/events"        element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
               <Route path="/events/:eventId" element={<ProtectedRoute><EventDetailsPage /></ProtectedRoute>} />
               <Route path="/create-event"  element={<ProtectedRoute roles={["organizer"]}><CreateEvent /></ProtectedRoute>} />
-              <Route path="/conflict"      element={<ProtectedRoute roles={["admin", "organizer"]}><ConflictResult /></ProtectedRoute>} />
+              <Route path="/conflict"      element={<ProtectedRoute roles={["admin", "organizer"]}><ConflictEntryRoute /></ProtectedRoute>} />
+              <Route path="/conflict/resolver" element={<ProtectedRoute roles={["admin"]}><AdminConflictResolver /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
               <Route path="/profile"       element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               <Route path="/users/:userId" element={<ProtectedRoute><PublicProfilePage /></ProtectedRoute>} />

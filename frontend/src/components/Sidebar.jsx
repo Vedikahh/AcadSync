@@ -42,7 +42,7 @@ const ADMIN_LINKS = [
   { to: "/calendar",      icon: "Calendar",      label: "Calendar" },
   { to: "/manage-events", icon: "Manage",        label: "Manage Events" },
   { to: "/schedule",      icon: "Schedule",      label: "Academic Schedule" },
-  { to: "/conflict",      icon: "Conflict",      label: "Conflict Reports" },
+  { to: "/conflict/resolver",      icon: "Conflict",      label: "Conflict Reports" },
   { to: "/notifications", icon: "Notifications", label: "Notifications" },
   { to: "/profile",       icon: "Profile",       label: "Profile" },
 ];
