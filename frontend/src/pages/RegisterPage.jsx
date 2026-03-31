@@ -114,7 +114,9 @@ export default function RegisterPage() {
       if (response.verificationRequired) {
         navigate("/verify-email", {
           state: {
-            message: response.message || "Please verify your email before signing in.",
+            message:
+              response.message ||
+              "Please verify your email before signing in. If you do not see the OTP, check Spam or Promotions.",
             email: response.email || form.email,
           },
         });

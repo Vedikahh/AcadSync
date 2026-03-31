@@ -5,6 +5,7 @@ class MailService {
   constructor() {
     this.transporter = null;
     this.configured = false;
+    this.smtpVerified = false;
     this.initializeTransport();
   }
 
@@ -32,6 +33,18 @@ class MailService {
         this.transporter = nodemailer.createTransport(smtpConfig);
         this.configured = true;
         console.log('[MailService] SMTP configured successfully');
+
+        // Verify SMTP connectivity early so deployment issues show up in logs.
+        this.transporter
+          .verify()
+          .then(() => {
+            this.smtpVerified = true;
+            console.log('[MailService] SMTP connection verified');
+          })
+          .catch((error) => {
+            this.smtpVerified = false;
+            console.warn(`[MailService] SMTP verification failed: ${error.message}`);
+          });
       } else if (mailProvider === 'sendgrid') {
         if (!process.env.SENDGRID_API_KEY) {
           console.warn('[MailService] SendGrid API key missing. Email delivery disabled.');
@@ -118,6 +131,9 @@ class MailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
+      if (!this.smtpVerified) {
+        this.smtpVerified = true;
+      }
       return {
         success: true,
         message: 'Email sent via SMTP',

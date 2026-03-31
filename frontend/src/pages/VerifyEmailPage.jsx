@@ -102,6 +102,9 @@ export default function VerifyEmailPage() {
 
         {error && <div className="auth-error">{error}</div>}
         {message && <div className="auth-error" style={{ borderColor: "#93C5FD", color: "#1D4ED8", background: "#EFF6FF" }}>{message}</div>}
+        <div className="auth-error" style={{ borderColor: "#D1D5DB", color: "#374151", background: "#F9FAFB" }}>
+          If the OTP does not arrive in 1-2 minutes, check your Spam or Promotions folder.
+        </div>
 
         {!token && (
           <>

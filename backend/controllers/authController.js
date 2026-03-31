@@ -108,23 +108,31 @@ const sendPasswordResetEmail = async (user, rawToken) => {
   const resetUrl = `${getFrontendBaseUrl()}/reset-password?token=${encodeURIComponent(rawToken)}`;
   const html = emailTemplates.passwordReset(user.name, resetUrl, PASSWORD_RESET_TTL_MINUTES);
 
-  await mailService.sendMail({
+  const result = await mailService.sendMail({
     to: user.email,
     subject: 'AcadSync password reset',
     html,
     text: `Reset your password: ${resetUrl}`,
   });
+
+  if (!result?.success) {
+    throw new Error(result?.error || 'Password reset email delivery failed');
+  }
 };
 
 const sendVerificationOtpEmail = async (user, otpCode) => {
   const html = emailTemplates.emailVerification(user.name, otpCode, EMAIL_VERIFY_OTP_TTL_MINUTES);
 
-  await mailService.sendMail({
+  const result = await mailService.sendMail({
     to: user.email,
     subject: 'Verify your AcadSync account',
     html,
     text: `Your AcadSync verification OTP is ${otpCode}. It expires in ${EMAIL_VERIFY_OTP_TTL_MINUTES} minutes.`,
   });
+
+  if (!result?.success) {
+    throw new Error(result?.error || 'Verification OTP email delivery failed');
+  }
 };
 
 // Generate JWT token
