@@ -7,6 +7,7 @@
     "express": "^4.21.2",
     "google-auth-library": "^10.6.2",
     "helmet": "^8.1.0",
+    "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.3.0",
     "node-schedule": "^2.1.1",
@@ -20,7 +21,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:validation": "node scripts/validate-endpoints.js"
   },
   "keywords": [],
   "author": "",

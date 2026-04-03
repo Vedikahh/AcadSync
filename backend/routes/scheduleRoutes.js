@@ -5,17 +5,25 @@ const {
 } = require('../controllers/scheduleController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
+const { validate } = require('../middleware/validationMiddleware');
+const {
+  createScheduleSchema,
+  updateScheduleSchema,
+  importScheduleSchema,
+  idParamSchema,
+  versionIdParamSchema,
+} = require('../validators/scheduleValidator');
 
 router.route('/')
   .get(protect, getSchedules)
-  .post(protect, authorizeRoles('admin'), createSchedule);
+  .post(protect, authorizeRoles('admin'), validate(createScheduleSchema), createSchedule);
 
 router.route('/:id')
-  .put(protect, authorizeRoles('admin'), updateSchedule)
-  .delete(protect, authorizeRoles('admin'), deleteSchedule);
+  .put(protect, authorizeRoles('admin'), validate(idParamSchema, 'params'), validate(updateScheduleSchema), updateSchedule)
+  .delete(protect, authorizeRoles('admin'), validate(idParamSchema, 'params'), deleteSchedule);
 
-router.post('/import', protect, authorizeRoles('admin'), importSchedules);
+router.post('/import', protect, authorizeRoles('admin'), validate(importScheduleSchema), importSchedules);
 router.get('/import/history', protect, authorizeRoles('admin'), getImportHistory);
-router.post('/import/rollback/:versionId', protect, authorizeRoles('admin'), rollbackImportVersion);
+router.post('/import/rollback/:versionId', protect, authorizeRoles('admin'), validate(versionIdParamSchema, 'params'), rollbackImportVersion);
 
 module.exports = router;

@@ -14,6 +14,18 @@ const {
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const { createAuthRateLimiter } = require('../middleware/authRateLimiter');
+const { validate } = require('../middleware/validationMiddleware');
+const {
+	registerSchema,
+	loginSchema,
+	googleLoginSchema,
+	googleRegisterSchema,
+	forgotPasswordSchema,
+	resetPasswordSchema,
+	verifyEmailRequestSchema,
+	verifyEmailOtpSchema,
+	verifyEmailTokenParamSchema,
+} = require('../validators/authValidator');
 
 const loginLimiter = createAuthRateLimiter({
 	name: 'auth-login',
@@ -51,15 +63,15 @@ const verifyOtpLimiter = createAuthRateLimiter({
 	maxAttempts: 10,
 });
 
-router.post('/register', registerLimiter, registerUser);
-router.post('/login', loginLimiter, loginUser);
-router.post('/google', googleLogin);
-router.post('/google-register', googleRegister);
-router.post('/forgot-password', forgotPasswordLimiter, forgotPassword);
-router.post('/reset-password', resetPasswordLimiter, resetPassword);
-router.get('/verify-email/:token', verifyEmail);
-router.post('/verify-email/request', verifyRequestLimiter, requestEmailVerification);
-router.post('/verify-email/otp', verifyOtpLimiter, verifyEmailOtp);
+router.post('/register', registerLimiter, validate(registerSchema), registerUser);
+router.post('/login', loginLimiter, validate(loginSchema), loginUser);
+router.post('/google', validate(googleLoginSchema), googleLogin);
+router.post('/google-register', validate(googleRegisterSchema), googleRegister);
+router.post('/forgot-password', forgotPasswordLimiter, validate(forgotPasswordSchema), forgotPassword);
+router.post('/reset-password', resetPasswordLimiter, validate(resetPasswordSchema), resetPassword);
+router.get('/verify-email/:token', validate(verifyEmailTokenParamSchema, 'params'), verifyEmail);
+router.post('/verify-email/request', verifyRequestLimiter, validate(verifyEmailRequestSchema), requestEmailVerification);
+router.post('/verify-email/otp', verifyOtpLimiter, validate(verifyEmailOtpSchema), verifyEmailOtp);
 router.get('/me', protect, getMe);
 
 module.exports = router;
