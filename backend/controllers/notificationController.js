@@ -78,12 +78,16 @@ const sendEmailNotification = async (user, notification) => {
         htmlContent = emailTemplates.systemNotification(eventName, message, actionUrl);
     }
 
-    await mailService.sendMail({
+    const result = await mailService.sendMail({
       to: user.email,
       subject: message,
       html: htmlContent,
       text: message,
     });
+
+    if (!result?.success) {
+      throw new Error(result?.error || result?.message || 'Email delivery failed');
+    }
   } catch (error) {
     console.error(`[NotificationController] Error sending email to ${user.email}:`, error.message);
   }

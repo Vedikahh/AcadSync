@@ -6,32 +6,55 @@ class MailService {
   constructor() {
     this.transporter = null;
     this.configured = false;
+    this.provider = 'smtp';
+    this.smtpConfig = null;
     this.smtpVerified = false;
     this.initializeTransport();
   }
 
+  getRequestedProvider() {
+    return String(process.env.MAIL_PROVIDER || '').trim().toLowerCase();
+  }
+
+  hasSmtpConfig() {
+    return Boolean(this.smtpConfig?.host && this.smtpConfig?.auth?.user && this.smtpConfig?.auth?.pass);
+  }
+
+  getSmtpConfig() {
+    return {
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    };
+  }
+
+  shouldUseSendGrid() {
+    const requestedProvider = this.getRequestedProvider();
+    if (requestedProvider === 'sendgrid') return true;
+    if (requestedProvider === 'smtp') return false;
+    return Boolean(process.env.SENDGRID_API_KEY);
+  }
+
   initializeTransport() {
     try {
-      const mailProvider = process.env.MAIL_PROVIDER || 'smtp';
+      const mailProvider = this.getRequestedProvider() || (process.env.SENDGRID_API_KEY ? 'sendgrid' : 'smtp');
+
+      this.provider = mailProvider;
 
       if (mailProvider === 'smtp') {
-        const smtpConfig = {
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT || '587', 10),
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-        };
+        this.smtpConfig = this.getSmtpConfig();
 
         // Validate SMTP config
-        if (!smtpConfig.host || !smtpConfig.auth.user || !smtpConfig.auth.pass) {
+        if (!this.hasSmtpConfig()) {
           logger.warn('[MailService] SMTP config incomplete. Email delivery disabled.');
           return;
         }
 
-        this.transporter = nodemailer.createTransport(smtpConfig);
+        this.transporter = nodemailer.createTransport(this.smtpConfig);
         this.configured = true;
         logger.info('[MailService] SMTP configured successfully');
 
@@ -48,7 +71,16 @@ class MailService {
           });
       } else if (mailProvider === 'sendgrid') {
         if (!process.env.SENDGRID_API_KEY) {
-          logger.warn('[MailService] SendGrid API key missing. Email delivery disabled.');
+          logger.warn('[MailService] SendGrid API key missing. Falling back to SMTP if configured.');
+          this.provider = 'smtp';
+          this.smtpConfig = this.getSmtpConfig();
+          if (!this.hasSmtpConfig()) {
+            logger.warn('[MailService] SMTP fallback also incomplete. Email delivery disabled.');
+            return;
+          }
+          this.transporter = nodemailer.createTransport(this.smtpConfig);
+          this.configured = true;
+          logger.info('[MailService] SMTP configured successfully (fallback)');
           return;
         }
 
@@ -60,7 +92,10 @@ class MailService {
       } else if (mailProvider === 'test') {
         // Test/development mode - logs emails instead of sending
         this.configured = true;
+        this.provider = 'test';
         logger.info('[MailService] Test mode enabled - emails will be logged');
+      } else {
+        logger.warn(`[MailService] Unknown MAIL_PROVIDER "${mailProvider}". Email delivery disabled.`);
       }
     } catch (error) {
       logger.warn(`[MailService] Initialization error: ${error.message}. Email delivery disabled.`);
@@ -91,7 +126,7 @@ class MailService {
         };
       }
 
-      const mailProvider = process.env.MAIL_PROVIDER || 'smtp';
+      const mailProvider = this.getRequestedProvider() || this.provider || 'smtp';
 
       if (mailProvider === 'test') {
         logger.info(`[MailService TEST] To: ${to}`);
@@ -114,15 +149,43 @@ class MailService {
           text: text || undefined,
         };
 
-        await sgMail.send(message);
-        return {
-          success: true,
-          message: 'Email sent via SendGrid',
-          messageId: `sg-${Date.now()}`,
-        };
+        try {
+          await sgMail.send(message);
+          return {
+            success: true,
+            message: 'Email sent via SendGrid',
+            messageId: `sg-${Date.now()}`,
+          };
+        } catch (sendgridError) {
+          logger.warn(`[MailService] SendGrid send failed for ${to}: ${sendgridError.message}`);
+
+          if (this.hasSmtpConfig()) {
+            logger.info('[MailService] Falling back to SMTP after SendGrid failure');
+            const smtpTransport = nodemailer.createTransport(this.smtpConfig || this.getSmtpConfig());
+            const result = await smtpTransport.sendMail({
+              from: process.env.SMTP_FROM || process.env.SMTP_USER,
+              to,
+              subject,
+              html: html || text,
+              text: text || undefined,
+            });
+
+            return {
+              success: true,
+              message: 'Email sent via SMTP fallback after SendGrid failure',
+              messageId: result.messageId,
+            };
+          }
+
+          throw sendgridError;
+        }
       }
 
       // SMTP
+      this.smtpConfig = this.smtpConfig || this.getSmtpConfig();
+      if (!this.transporter) {
+        this.transporter = nodemailer.createTransport(this.smtpConfig);
+      }
       const mailOptions = {
         from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to,
