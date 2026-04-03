@@ -2,17 +2,11 @@ const Schedule = require('../models/Schedule');
 const ScheduleImportVersion = require('../models/ScheduleImportVersion');
 const socket = require('../utils/socket');
 const { writeAuditLog, createDiffSummary } = require('../utils/auditLogger');
+const { parsePaginationParams, buildPaginationMeta } = require('../utils/pagination');
 const {
   ValidationError,
   NotFoundError,
 } = require('../utils/errorHandler');
-
-const parseLimitOffset = (query = {}) => {
-  const hasPagination = query.limit !== undefined || query.offset !== undefined;
-  const limit = Math.min(Math.max(parseInt(query.limit, 10) || 20, 1), 100);
-  const offset = Math.max(parseInt(query.offset, 10) || 0, 0);
-  return { hasPagination, limit, offset };
-};
 
 const ALLOWED_TYPES = new Set(['lecture', 'lab', 'exam']);
 const ALLOWED_DAYS = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
@@ -201,29 +195,30 @@ const commitImportVersion = async ({ mode, normalizedRows, userId, sourceVersion
 // @access  Private
 exports.getSchedules = async (req, res, next) => {
   try {
-    const { hasPagination, limit, offset } = parseLimitOffset(req.query);
-    const query = Schedule.find()
-      .sort({ date: 1, day: 1, startTime: 1 })
-      .skip(offset)
-      .limit(limit);
+    const { limit, offset, sort } = parsePaginationParams(req.query, {
+      defaultSort: { date: 1, day: 1, startTime: 1 },
+      allowedSortFields: ['date', 'day', 'startTime', 'endTime', 'department', 'subject', 'type', 'createdAt'],
+    });
 
-    if (!hasPagination) {
-      const schedules = await query;
-      return res.json(schedules);
-    }
-
-    const [schedules, totalItems] = await Promise.all([
-      query,
+    const [schedules, totalCount] = await Promise.all([
+      Schedule.find()
+        .sort(sort)
+        .skip(offset)
+        .limit(limit)
+        .lean(),
       Schedule.countDocuments(),
     ]);
 
     return res.json({
       items: schedules,
-      pagination: {
-        limit,
-        offset,
-        totalItems,
-        hasMore: offset + schedules.length < totalItems,
+      meta: {
+        ...buildPaginationMeta({
+          totalCount,
+          limit,
+          offset,
+          returnedCount: schedules.length,
+        }),
+        sort,
       },
     });
   } catch (err) {

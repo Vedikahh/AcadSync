@@ -4,6 +4,7 @@ const socket = require('../utils/socket');
 const mailService = require('../utils/mailService');
 const emailTemplates = require('../utils/emailTemplates');
 const { AuthorizationError, NotFoundError } = require('../utils/errorHandler');
+const { parsePaginationParams, buildPaginationMeta } = require('../utils/pagination');
 
 const PREF_KEY_BY_TYPE = {
   event: 'event',
@@ -88,32 +89,6 @@ const sendEmailNotification = async (user, notification) => {
   }
 };
 
-const normalizePagination = (query = {}) => {
-  const limit = Math.min(Math.max(parseInt(query.limit, 10) || 20, 1), 100);
-  const parsedOffset = parseInt(query.offset, 10);
-  const hasOffset = Number.isFinite(parsedOffset);
-  const page = Math.max(parseInt(query.page, 10) || 1, 1);
-  const offset = hasOffset ? Math.max(parsedOffset, 0) : (page - 1) * limit;
-  const derivedPage = Math.floor(offset / limit) + 1;
-  return { page: hasOffset ? derivedPage : page, limit, offset };
-};
-
-const shapeListResponse = ({ items, page, limit, offset, totalItems }) => {
-  const totalPages = Math.max(Math.ceil(totalItems / limit), 1);
-  return {
-    items,
-    pagination: {
-      page,
-      limit,
-      offset,
-      totalItems,
-      totalPages,
-      hasNextPage: offset + items.length < totalItems,
-      hasPrevPage: page > 1,
-    },
-  };
-};
-
 exports.createNotificationForUser = async ({ userId, message, type = 'system', link, payload }) => {
   if (!userId || !message) return null;
 
@@ -182,7 +157,10 @@ exports.createNotificationsForUsers = async ({ userIds = [], message, type = 'sy
 // @access  Private
 exports.getNotifications = async (req, res, next) => {
   try {
-    const { page, limit, offset } = normalizePagination(req.query);
+    const { limit, offset, sort } = parsePaginationParams(req.query, {
+      defaultSort: { createdAt: -1 },
+      allowedSortFields: ['createdAt', 'read', 'type'],
+    });
 
     // Only fetch for specific user OR global system events
     const baseQuery = {
@@ -192,29 +170,30 @@ exports.getNotifications = async (req, res, next) => {
       ]
     };
 
-    const [notifications, totalItems, unreadCount] = await Promise.all([
+    const [notifications, totalCount, unreadCount] = await Promise.all([
       Notification.find(baseQuery)
-        .sort({ createdAt: -1 })
+        .sort(sort)
         .skip(offset)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
       Notification.countDocuments(baseQuery),
       Notification.countDocuments({ ...baseQuery, read: false }),
     ]);
-    
-    const response = shapeListResponse({
-      items: notifications,
-      page,
-      limit,
-      offset,
-      totalItems,
-    });
 
-    response.meta = {
-      unreadCount,
-      fetchedAt: new Date().toISOString(),
-    };
-    
-    res.json(response);
+    return res.json({
+      items: notifications,
+      meta: {
+        ...buildPaginationMeta({
+          totalCount,
+          limit,
+          offset,
+          returnedCount: notifications.length,
+        }),
+        sort,
+        unreadCount,
+        fetchedAt: new Date().toISOString(),
+      },
+    });
   } catch (err) {
     next(err);
   }

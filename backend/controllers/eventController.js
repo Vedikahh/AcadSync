@@ -16,13 +16,7 @@ const {
   ConflictError,
 } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
-
-const parseLimitOffset = (query = {}) => {
-  const hasPagination = query.limit !== undefined || query.offset !== undefined;
-  const limit = Math.min(Math.max(parseInt(query.limit, 10) || 20, 1), 100);
-  const offset = Math.max(parseInt(query.offset, 10) || 0, 0);
-  return { hasPagination, limit, offset };
-};
+const { parsePaginationParams, buildPaginationMeta } = require('../utils/pagination');
 
 
 // @desc    Get all events
@@ -30,31 +24,32 @@ const parseLimitOffset = (query = {}) => {
 // @access  Private (Anyone logged in)
 exports.getEvents = async (req, res, next) => {
   try {
-    const { hasPagination, limit, offset } = parseLimitOffset(req.query);
-    const query = Event.find()
-      .populate('createdBy', 'name email department')
-      .populate('reviewedBy', 'name email')
-      .sort({ date: 1 })
-      .skip(offset)
-      .limit(limit);
+    const { limit, offset, sort } = parsePaginationParams(req.query, {
+      defaultSort: { date: 1, startTime: 1, createdAt: -1 },
+      allowedSortFields: ['date', 'startTime', 'createdAt', 'title', 'status', 'department', 'type'],
+    });
 
-    if (!hasPagination) {
-      const events = await query;
-      return res.json(events);
-    }
-
-    const [events, totalItems] = await Promise.all([
-      query,
+    const [events, totalCount] = await Promise.all([
+      Event.find()
+        .populate('createdBy', 'name email department')
+        .populate('reviewedBy', 'name email')
+        .sort(sort)
+        .skip(offset)
+        .limit(limit)
+        .lean(),
       Event.countDocuments(),
     ]);
 
     return res.json({
       items: events,
-      pagination: {
-        limit,
-        offset,
-        totalItems,
-        hasMore: offset + events.length < totalItems,
+      meta: {
+        ...buildPaginationMeta({
+          totalCount,
+          limit,
+          offset,
+          returnedCount: events.length,
+        }),
+        sort,
       },
     });
   } catch (err) {
@@ -67,11 +62,35 @@ exports.getEvents = async (req, res, next) => {
 // @access  Private
 exports.getMyEvents = async (req, res, next) => {
   try {
-    const events = await Event.find({ createdBy: req.user.id })
-      .populate('createdBy', 'name')
-      .populate('reviewedBy', 'name email')
-      .sort({ date: 1 });
-    res.json(events);
+    const { limit, offset, sort } = parsePaginationParams(req.query, {
+      defaultSort: { date: 1, startTime: 1, createdAt: -1 },
+      allowedSortFields: ['date', 'startTime', 'createdAt', 'title', 'status', 'department', 'type'],
+    });
+
+    const filter = { createdBy: req.user.id };
+    const [events, totalCount] = await Promise.all([
+      Event.find(filter)
+        .populate('createdBy', 'name')
+        .populate('reviewedBy', 'name email')
+        .sort(sort)
+        .skip(offset)
+        .limit(limit)
+        .lean(),
+      Event.countDocuments(filter),
+    ]);
+
+    return res.json({
+      items: events,
+      meta: {
+        ...buildPaginationMeta({
+          totalCount,
+          limit,
+          offset,
+          returnedCount: events.length,
+        }),
+        sort,
+      },
+    });
   } catch (err) {
     next(err);
   }

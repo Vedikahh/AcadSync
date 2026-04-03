@@ -5,6 +5,7 @@ const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const { AuthorizationError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
+const { parsePaginationParams, buildPaginationMeta } = require('../utils/pagination');
 
 function getTodayName() {
   return new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -181,6 +182,45 @@ exports.getDashboardStats = async (req, res, next) => {
     }
 
     throw new AuthorizationError(`Unsupported role: ${role}`);
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// @desc    Get pending event requests (admin)
+// @route   GET /api/dashboard/pending-requests
+// @access  Private (Admin)
+exports.getPendingRequests = async (req, res, next) => {
+  try {
+    const { limit, offset, sort } = parsePaginationParams(req.query, {
+      defaultSort: { createdAt: -1 },
+      allowedSortFields: ['createdAt', 'date', 'startTime', 'title', 'department', 'type'],
+    });
+
+    const filter = { status: 'pending' };
+
+    const [items, totalCount] = await Promise.all([
+      Event.find(filter)
+        .populate('createdBy', 'name email department role')
+        .sort(sort)
+        .skip(offset)
+        .limit(limit)
+        .lean(),
+      Event.countDocuments(filter),
+    ]);
+
+    return res.json({
+      items,
+      meta: {
+        ...buildPaginationMeta({
+          totalCount,
+          limit,
+          offset,
+          returnedCount: items.length,
+        }),
+        sort,
+      },
+    });
   } catch (err) {
     return next(err);
   }

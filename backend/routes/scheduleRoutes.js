@@ -15,6 +15,7 @@ const {
 } = require('../validators/scheduleValidator');
 
 router.route('/')
+  // Supports query params: limit, offset, sort
   .get(protect, getSchedules)
   .post(protect, authorizeRoles('admin'), validate(createScheduleSchema), createSchedule);
 

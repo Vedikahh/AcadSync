@@ -16,9 +16,11 @@ const {
 
 // Public/All authenticated users
 router.route('/')
+  // Supports query params: limit, offset, sort
   .get(protect, getEvents)
   .post(protect, authorizeRoles('organizer', 'admin'), validate(createEventSchema), createEvent);
 
+// Supports query params: limit, offset, sort
 router.get('/my-events', protect, authorizeRoles('organizer', 'admin'), getMyEvents);
 router.post('/check-conflicts', protect, authorizeRoles('organizer', 'admin'), validate(checkConflictsSchema), checkEventConflicts);
 

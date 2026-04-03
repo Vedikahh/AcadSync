@@ -6,6 +6,7 @@ const { validate } = require('../middleware/validationMiddleware');
 const { notificationIdParamSchema } = require('../validators/userValidator');
 
 router.route('/')
+  // Supports query params: limit, offset, sort
   .get(protect, getNotifications);
 
 router.patch('/read-all', protect, markAllRead);
