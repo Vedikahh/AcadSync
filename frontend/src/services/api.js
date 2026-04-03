@@ -39,6 +39,12 @@ async function request(path, options = {}) {
   }
 }
 
+function unwrapListResponse(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  return [];
+}
+
 // ---- Authentication APIs ----
 export const login = (credentials) =>
   request("/api/auth/login", { method: "POST", body: JSON.stringify(credentials) });
@@ -85,8 +91,8 @@ export const requestEmailVerification = (email) =>
   });
 
 // ---- Event APIs ----
-export const getEvents = () => request("/api/events");
-export const getMyEvents = () => request("/api/events/my-events");
+export const getEvents = async () => unwrapListResponse(await request("/api/events"));
+export const getMyEvents = async () => unwrapListResponse(await request("/api/events/my-events"));
 
 export const checkEventConflicts = (event) =>
   request("/api/events/check-conflicts", { method: "POST", body: JSON.stringify(event) });
@@ -111,7 +117,7 @@ export const deleteEvent = (id) =>
   request(`/api/events/${id}`, { method: "DELETE" });
 
 // ---- Schedule APIs ----
-export const getSchedules = () => request("/api/schedule");
+export const getSchedules = async () => unwrapListResponse(await request("/api/schedule"));
 
 export const createSchedule = (schedule) =>
   request("/api/schedule", { method: "POST", body: JSON.stringify(schedule) });
