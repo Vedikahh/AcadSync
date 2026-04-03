@@ -6,6 +6,13 @@ const dns = require('dns').promises;
 const { OAuth2Client } = require('google-auth-library');
 const mailService = require('../utils/mailService');
 const emailTemplates = require('../utils/emailTemplates');
+const {
+  ValidationError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  ConflictError,
+} = require('../utils/errorHandler');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const PASSWORD_RESET_TTL_MINUTES = Number(process.env.PASSWORD_RESET_TTL_MINUTES || 15);
@@ -145,7 +152,7 @@ const generateToken = (id, role) => {
 // @desc    Register new user
 // @route   POST /api/auth/register
 // @access  Public
-exports.registerUser = async (req, res) => {
+exports.registerUser = async (req, res, next) => {
   try {
     const { password } = req.body;
     const name = sanitizeText(req.body.name);
@@ -159,33 +166,33 @@ exports.registerUser = async (req, res) => {
     const interests = parseInterests(req.body.interests);
 
     if (!['student', 'organizer', 'admin'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role selected' });
+      throw new ValidationError('Invalid role selected');
     }
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Please add all required fields' });
+      throw new ValidationError('Please add all required fields');
     }
 
     if (!department || !year) {
-      return res.status(400).json({ message: 'Department and academic year are required' });
+      throw new ValidationError('Department and academic year are required');
     }
 
     if (!isEmailFormatValid(email)) {
-      return res.status(400).json({ message: 'Please enter a valid email id' });
+      throw new ValidationError('Please enter a valid email id');
     }
 
     if (!(await hasValidMailDomain(email))) {
-      return res.status(400).json({ message: 'Please enter a valid email id' });
+      throw new ValidationError('Please enter a valid email id');
     }
 
     if (!isPasswordValid(password)) {
-      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+      throw new ValidationError('Password must be at least 8 characters long');
     }
 
     // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      throw new ConflictError('User already exists');
     }
 
     // Hash password
@@ -209,8 +216,7 @@ exports.registerUser = async (req, res) => {
     });
 
     if (!user) {
-      res.status(400).json({ message: 'Invalid user data received' });
-      return;
+      throw new ValidationError('Invalid user data received');
     }
 
     if (isEmailVerificationEnabled()) {
@@ -231,24 +237,24 @@ exports.registerUser = async (req, res) => {
 
     res.status(201).json(buildAuthPayload(user));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
 // @access  Public
-exports.loginUser = async (req, res) => {
+exports.loginUser = async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
     const { password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password' });
+      throw new ValidationError('Please provide email and password');
     }
 
     if (!isEmailFormatValid(email) || !(await hasValidMailDomain(email))) {
-      return res.status(400).json({ message: 'Please enter a valid email id' });
+      throw new ValidationError('Please enter a valid email id');
     }
 
     // Check for user email
@@ -256,31 +262,27 @@ exports.loginUser = async (req, res) => {
 
     // Compare raw password with hashed
     if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
-      res.status(401).json({ message: 'Invalid email or password' });
-      return;
+      throw new AuthenticationError('Invalid email or password');
     }
 
     if (user.provider === 'local' && isEmailVerificationEnabled() && !user.isEmailVerified) {
-      return res.status(403).json({
-        message: 'Please verify your email before signing in.',
-        verificationRequired: true,
-      });
+      throw new AuthorizationError('Please verify your email before signing in.');
     }
 
     res.json(buildAuthPayload(user));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // @desc    Get user data (resolve from JWT)
 // @route   GET /api/auth/me
 // @access  Private
-exports.getMe = async (req, res) => {
+exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
 
     const payload = {
@@ -289,18 +291,18 @@ exports.getMe = async (req, res) => {
     };
     res.status(200).json(payload);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // @desc    Authenticate user with Google
 // @route   POST /api/auth/google
 // @access  Public
-exports.googleLogin = async (req, res) => {
+exports.googleLogin = async (req, res, next) => {
   try {
     const { token } = req.body;
     if (!token) {
-      return res.status(400).json({ message: 'No Google token provided' });
+      throw new ValidationError('No Google token provided');
     }
 
     const ticket = await client.verifyIdToken({
@@ -330,14 +332,14 @@ exports.googleLogin = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: 'Google Auth Error: ' + error.message });
+    next(error);
   }
 };
 
 // @desc    Register user with Google token, role and department
 // @route   POST /api/auth/google-register
 // @access  Public
-exports.googleRegister = async (req, res) => {
+exports.googleRegister = async (req, res, next) => {
   try {
     const { token } = req.body;
     const role = sanitizeText(req.body.role) || 'student';
@@ -349,11 +351,11 @@ exports.googleRegister = async (req, res) => {
     const interests = parseInterests(req.body.interests);
 
     if (!['student', 'organizer', 'admin'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role selected' });
+      throw new ValidationError('Invalid role selected');
     }
 
     if (!token) {
-      return res.status(400).json({ message: 'No Google token provided' });
+      throw new ValidationError('No Google token provided');
     }
 
     const ticket = await client.verifyIdToken({
@@ -366,7 +368,7 @@ exports.googleRegister = async (req, res) => {
 
     let user = await User.findOne({ email });
     if (user) {
-      return res.status(400).json({ message: 'User already exists' });
+      throw new ConflictError('User already exists');
     }
 
     // Create user with explicit role and department
@@ -390,14 +392,14 @@ exports.googleRegister = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: 'Google Register Error: ' + error.message });
+    next(error);
   }
 };
 
 // @desc    Send forgot password email with reset token
 // @route   POST /api/auth/forgot-password
 // @access  Public
-exports.forgotPassword = async (req, res) => {
+exports.forgotPassword = async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
     const safeMessage = {
@@ -427,19 +429,19 @@ exports.forgotPassword = async (req, res) => {
 
     return res.status(200).json(safeMessage);
   } catch (error) {
-    return res.status(500).json({ message: 'Unable to process request right now. Please try again.' });
+    next(error);
   }
 };
 
 // @desc    Reset password using token
 // @route   POST /api/auth/reset-password
 // @access  Public
-exports.resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res, next) => {
   try {
     const { token, password } = req.body;
 
     if (!token || !isPasswordValid(password)) {
-      return res.status(400).json({ message: 'Invalid reset request' });
+      throw new ValidationError('Invalid reset request');
     }
 
     const hashedToken = crypto.createHash('sha256').update(String(token)).digest('hex');
@@ -452,7 +454,7 @@ exports.resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Reset token is invalid or expired' });
+      throw new ValidationError('Reset token is invalid or expired');
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -464,18 +466,18 @@ exports.resetPassword = async (req, res) => {
 
     return res.status(200).json({ message: 'Password reset successful. You can now sign in.' });
   } catch (error) {
-    return res.status(500).json({ message: 'Unable to reset password right now. Please try again.' });
+    next(error);
   }
 };
 
 // @desc    Verify email using token
 // @route   GET /api/auth/verify-email/:token
 // @access  Public
-exports.verifyEmail = async (req, res) => {
+exports.verifyEmail = async (req, res, next) => {
   try {
     const token = req.params.token;
     if (!token) {
-      return res.status(400).json({ message: 'Invalid verification link' });
+      throw new ValidationError('Invalid verification link');
     }
 
     const hashedToken = crypto.createHash('sha256').update(String(token)).digest('hex');
@@ -486,7 +488,7 @@ exports.verifyEmail = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Verification link is invalid or expired' });
+      throw new ValidationError('Verification link is invalid or expired');
     }
 
     user.isEmailVerified = true;
@@ -500,14 +502,14 @@ exports.verifyEmail = async (req, res) => {
       ...buildAuthPayload(user),
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Unable to verify email right now. Please try again.' });
+    next(error);
   }
 };
 
 // @desc    Request a new email verification link
 // @route   POST /api/auth/verify-email/request
 // @access  Public
-exports.requestEmailVerification = async (req, res) => {
+exports.requestEmailVerification = async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
     const safeMessage = {
@@ -536,20 +538,20 @@ exports.requestEmailVerification = async (req, res) => {
 
     return res.status(200).json(safeMessage);
   } catch (error) {
-    return res.status(500).json({ message: 'Unable to process request right now. Please try again.' });
+    next(error);
   }
 };
 
 // @desc    Verify email using OTP
 // @route   POST /api/auth/verify-email/otp
 // @access  Public
-exports.verifyEmailOtp = async (req, res) => {
+exports.verifyEmailOtp = async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
     const otp = String(req.body.otp || '').trim();
 
     if (!email || !isEmailFormatValid(email) || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
-      return res.status(400).json({ message: 'Invalid OTP verification request' });
+      throw new ValidationError('Invalid OTP verification request');
     }
 
     const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
@@ -562,7 +564,7 @@ exports.verifyEmailOtp = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'OTP is invalid or expired' });
+      throw new ValidationError('OTP is invalid or expired');
     }
 
     user.isEmailVerified = true;
@@ -576,6 +578,6 @@ exports.verifyEmailOtp = async (req, res) => {
       ...buildAuthPayload(user),
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Unable to verify email right now. Please try again.' });
+    next(error);
   }
 };

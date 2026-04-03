@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { AuthenticationError } = require('../utils/errorHandler');
 
 exports.protect = async (req, res, next) => {
   let token;
@@ -14,14 +15,13 @@ exports.protect = async (req, res, next) => {
       // We attach the full decoded payload (which will include { id, role } from login)
       req.user = decoded;
       
-      next();
+      return next();
     } catch (error) {
-      console.error('Not authorized, token failed:', error.message);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      return next(new AuthenticationError('Not authorized, token failed'));
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    return next(new AuthenticationError('Not authorized, no token'));
   }
 };

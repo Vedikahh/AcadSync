@@ -2,6 +2,10 @@ const Schedule = require('../models/Schedule');
 const ScheduleImportVersion = require('../models/ScheduleImportVersion');
 const socket = require('../utils/socket');
 const { writeAuditLog, createDiffSummary } = require('../utils/auditLogger');
+const {
+  ValidationError,
+  NotFoundError,
+} = require('../utils/errorHandler');
 
 const ALLOWED_TYPES = new Set(['lecture', 'lab', 'exam']);
 const ALLOWED_DAYS = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
@@ -188,19 +192,19 @@ const commitImportVersion = async ({ mode, normalizedRows, userId, sourceVersion
 // @desc    Get all schedules
 // @route   GET /api/schedule
 // @access  Private
-exports.getSchedules = async (req, res) => {
+exports.getSchedules = async (req, res, next) => {
   try {
     const schedules = await Schedule.find();
     res.json(schedules);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Create a schedule entry
 // @route   POST /api/schedule
 // @access  Private (Admin only)
-exports.createSchedule = async (req, res) => {
+exports.createSchedule = async (req, res, next) => {
   try {
     const payload = { ...req.body };
     if (!payload.subject && payload.title) {
@@ -222,17 +226,17 @@ exports.createSchedule = async (req, res) => {
     res.status(201).json(schedule);
 
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Update a schedule entry
 // @route   PUT /api/schedule/:id
 // @access  Private (Admin only)
-exports.updateSchedule = async (req, res) => {
+exports.updateSchedule = async (req, res, next) => {
   try {
     const existingSchedule = await Schedule.findById(req.params.id);
-    if (!existingSchedule) return res.status(404).json({ message: 'Schedule not found' });
+    if (!existingSchedule) throw new NotFoundError('Schedule not found');
 
     const beforeSchedule = {
       subject: existingSchedule.subject,
@@ -278,18 +282,18 @@ exports.updateSchedule = async (req, res) => {
     res.json(schedule);
 
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Delete a schedule entry
 // @route   DELETE /api/schedule/:id
 // @access  Private (Admin only)
-exports.deleteSchedule = async (req, res) => {
+exports.deleteSchedule = async (req, res, next) => {
   try {
     const schedule = await Schedule.findById(req.params.id);
 
-    if (!schedule) return res.status(404).json({ message: 'Schedule not found' });
+    if (!schedule) throw new NotFoundError('Schedule not found');
     await schedule.deleteOne();
 
     // Real-time Update
@@ -314,23 +318,23 @@ exports.deleteSchedule = async (req, res) => {
     res.json({ message: 'Schedule removed' });
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Import schedules in bulk (CSV parsed rows)
 // @route   POST /api/schedule/import
 // @access  Private (Admin only)
-exports.importSchedules = async (req, res) => {
+exports.importSchedules = async (req, res, next) => {
   try {
     const { rows, mode = 'replace', dryRun = false } = req.body;
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      return res.status(400).json({ message: 'No schedule rows provided for import' });
+      throw new ValidationError('No schedule rows provided for import');
     }
 
     if (!['replace', 'append'].includes(mode)) {
-      return res.status(400).json({ message: 'Invalid mode. Allowed values: replace, append' });
+      throw new ValidationError('Invalid mode. Allowed values: replace, append');
     }
 
     const { normalizedRows, rowErrors, report } = validateRows(rows);
@@ -347,13 +351,7 @@ exports.importSchedules = async (req, res) => {
     }
 
     if (rowErrors.length > 0) {
-      return res.status(400).json({
-        message: 'Validation failed. Fix row-level errors and try again.',
-        dryRun: false,
-        mode,
-        report,
-        rowErrors,
-      });
+      throw new ValidationError('Validation failed. Fix row-level errors and try again.');
     }
 
     const importVersion = await commitImportVersion({
@@ -397,14 +395,14 @@ exports.importSchedules = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Get import history
 // @route   GET /api/schedule/import/history
 // @access  Private (Admin only)
-exports.getImportHistory = async (req, res) => {
+exports.getImportHistory = async (req, res, next) => {
   try {
     const history = await ScheduleImportVersion.find()
       .sort({ createdAt: -1 })
@@ -416,20 +414,20 @@ exports.getImportHistory = async (req, res) => {
 
     res.json(history);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Roll back to pre-import schedule set of a selected version
 // @route   POST /api/schedule/import/rollback/:versionId
 // @access  Private (Admin only)
-exports.rollbackImportVersion = async (req, res) => {
+exports.rollbackImportVersion = async (req, res, next) => {
   try {
     const { versionId } = req.params;
 
     const targetVersion = await ScheduleImportVersion.findById(versionId).lean();
     if (!targetVersion) {
-      return res.status(404).json({ message: 'Import version not found' });
+      throw new NotFoundError('Import version not found');
     }
 
     const rollbackRows = Array.isArray(targetVersion.beforeSnapshot)
@@ -474,6 +472,6 @@ exports.rollbackImportVersion = async (req, res) => {
       },
     });
   } catch (err) {
-    return res.status(400).json({ message: err.message });
+    return next(err);
   }
 };

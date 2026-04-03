@@ -3,6 +3,11 @@ const User = require('../models/User');
 const Event = require('../models/Event');
 const Notification = require('../models/Notification');
 const { writeAuditLog, createDiffSummary } = require('../utils/auditLogger');
+const {
+  ValidationError,
+  AuthenticationError,
+  NotFoundError,
+} = require('../utils/errorHandler');
 
 const NOTIFICATION_TYPES = ['event', 'approval', 'rejection', 'reminder'];
 const MAX_AVATAR_LENGTH = 3 * 1024 * 1024;
@@ -135,44 +140,44 @@ const buildPublicProfileResponse = (user) => ({
 // @desc    Get user profile
 // @route   GET /api/users/profile
 // @access  Private
-exports.getUserProfile = async (req, res) => {
+exports.getUserProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (user) {
       res.json(buildProfileResponse(user));
     } else {
-      res.status(404).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Get a user's public profile
 // @route   GET /api/users/public/:userId
 // @access  Private
-exports.getPublicUserProfile = async (req, res) => {
+exports.getPublicUserProfile = async (req, res, next) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId).select('-password -email -passwordResetToken -passwordResetExpires -passwordResetUsedAt -emailVerificationToken -emailVerificationExpires');
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
 
     return res.json(buildPublicProfileResponse(user));
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
 
 // @desc    Update user profile
 // @route   PUT /api/users/update
 // @access  Private
-exports.updateUserProfile = async (req, res) => {
+exports.updateUserProfile = async (req, res, next) => {
   try {
     if (typeof req.body.avatar === 'string' && req.body.avatar.length > MAX_AVATAR_LENGTH) {
-      return res.status(400).json({ message: 'Profile photo is too large' });
+      throw new ValidationError('Profile photo is too large');
     }
 
     if (
@@ -180,23 +185,23 @@ exports.updateUserProfile = async (req, res) => {
       req.body.avatar.trim() !== '' &&
       !isSupportedImageDataUrl(req.body.avatar)
     ) {
-      return res.status(400).json({ message: 'Unsupported profile photo format' });
+      throw new ValidationError('Unsupported profile photo format');
     }
 
     if (req.body.name !== undefined && !normalizeText(req.body.name, 80)) {
-      return res.status(400).json({ message: 'Name cannot be empty' });
+      throw new ValidationError('Name cannot be empty');
     }
 
     if (req.body.bio !== undefined && String(req.body.bio).length > MAX_BIO_LENGTH) {
-      return res.status(400).json({ message: `Bio must be under ${MAX_BIO_LENGTH} characters` });
+      throw new ValidationError(`Bio must be under ${MAX_BIO_LENGTH} characters`);
     }
 
     if (req.body.year !== undefined && !ALLOWED_YEARS.has(normalizeText(req.body.year, 30))) {
-      return res.status(400).json({ message: 'Please select a valid academic year' });
+      throw new ValidationError('Please select a valid academic year');
     }
 
     if (!isPhoneValid(normalizeText(req.body.phone, 20))) {
-      return res.status(400).json({ message: 'Please enter a valid phone number' });
+      throw new ValidationError('Please enter a valid phone number');
     }
 
     const user = await User.findById(req.user.id);
@@ -310,49 +315,49 @@ exports.updateUserProfile = async (req, res) => {
 
       res.json(buildProfileResponse(updatedUser));
     } else {
-      res.status(404).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Change password for local users
 // @route   POST /api/users/change-password
 // @access  Private
-exports.changePassword = async (req, res) => {
+exports.changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: 'Current and new password are required' });
+      throw new ValidationError('Current and new password are required');
     }
 
     if (typeof newPassword !== 'string' || newPassword.length < 8) {
-      return res.status(400).json({ message: 'New password must be at least 8 characters long' });
+      throw new ValidationError('New password must be at least 8 characters long');
     }
 
     if (confirmNewPassword !== undefined && newPassword !== confirmNewPassword) {
-      return res.status(400).json({ message: 'New password and confirmation do not match' });
+      throw new ValidationError('New password and confirmation do not match');
     }
 
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
 
     if (user.provider !== 'local' || !user.password) {
-      return res.status(400).json({ message: 'Password change is not available for this account' });
+      throw new ValidationError('Password change is not available for this account');
     }
 
     const isCurrentMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentMatch) {
-      return res.status(401).json({ message: 'Current password is incorrect' });
+      throw new AuthenticationError('Current password is incorrect');
     }
 
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
     if (isSamePassword) {
-      return res.status(400).json({ message: 'New password must be different from current password' });
+      throw new ValidationError('New password must be different from current password');
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -376,34 +381,34 @@ exports.changePassword = async (req, res) => {
 
     res.json({ message: 'Password changed successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Delete current user account
 // @route   DELETE /api/users/delete-account
 // @access  Private
-exports.deleteAccount = async (req, res) => {
+exports.deleteAccount = async (req, res, next) => {
   try {
     const { currentPassword, confirmText } = req.body || {};
 
     if (confirmText !== 'DELETE') {
-      return res.status(400).json({ message: 'Please type DELETE to confirm account deletion' });
+      throw new ValidationError('Please type DELETE to confirm account deletion');
     }
 
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
 
     if (user.provider === 'local') {
       if (!currentPassword) {
-        return res.status(400).json({ message: 'Current password is required to delete your account' });
+        throw new ValidationError('Current password is required to delete your account');
       }
 
       const isCurrentMatch = await bcrypt.compare(currentPassword, user.password || '');
       if (!isCurrentMatch) {
-        return res.status(401).json({ message: 'Current password is incorrect' });
+        throw new AuthenticationError('Current password is incorrect');
       }
     }
 
@@ -444,7 +449,7 @@ exports.deleteAccount = async (req, res) => {
 
     res.json({ message: 'Account deleted successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 

@@ -3,6 +3,7 @@ const User = require('../models/User');
 const socket = require('../utils/socket');
 const mailService = require('../utils/mailService');
 const emailTemplates = require('../utils/emailTemplates');
+const { AuthorizationError, NotFoundError } = require('../utils/errorHandler');
 
 const PREF_KEY_BY_TYPE = {
   event: 'event',
@@ -174,7 +175,7 @@ exports.createNotificationsForUsers = async ({ userIds = [], message, type = 'sy
 // @desc    Get user's notifications
 // @route   GET /api/notifications
 // @access  Private
-exports.getNotifications = async (req, res) => {
+exports.getNotifications = async (req, res, next) => {
   try {
     const { page, limit } = normalizePagination(req.query);
 
@@ -209,22 +210,22 @@ exports.getNotifications = async (req, res) => {
     
     res.json(response);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Mark as read
 // @route   PATCH /api/notifications/:id/read
 // @access  Private
-exports.markAsRead = async (req, res) => {
+exports.markAsRead = async (req, res, next) => {
   try {
     const notif = await Notification.findById(req.params.id);
-    if (!notif) return res.status(404).json({ message: 'Not found' });
+    if (!notif) throw new NotFoundError('Not found');
 
     const isOwner = notif.userId && String(notif.userId) === String(req.user.id);
     const isGlobal = !notif.userId;
     if (!isOwner && !isGlobal) {
-      return res.status(403).json({ message: 'Not authorized to update this notification' });
+      throw new AuthorizationError('Not authorized to update this notification');
     }
     
     notif.read = true;
@@ -232,10 +233,10 @@ exports.markAsRead = async (req, res) => {
     
     res.json({ message: 'Marked as read', item: notif });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
-exports.markAllRead = async (req, res) => {
+exports.markAllRead = async (req, res, next) => {
   try {
     const result = await Notification.updateMany(
       { 
@@ -255,6 +256,6 @@ exports.markAllRead = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };

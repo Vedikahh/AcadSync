@@ -50,6 +50,8 @@ const createAuthRateLimiter = ({ name, windowMs, maxAttempts }) => {
     if (existing.count > maxAttempts) {
       return res.status(429).json({
         message: 'Too many requests. Please try again later.',
+        code: 'RATE_LIMIT_EXCEEDED',
+        timestamp: new Date().toISOString(),
       });
     }
 

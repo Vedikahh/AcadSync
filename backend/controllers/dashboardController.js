@@ -3,6 +3,7 @@ const Schedule = require('../models/Schedule');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
+const { AuthorizationError } = require('../utils/errorHandler');
 
 function getTodayName() {
   return new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -36,7 +37,7 @@ function roleResponse(role, stats) {
 // @desc    Get role-aware dashboard stats
 // @route   GET /api/dashboard/stats
 // @access  Private
-exports.getDashboardStats = async (req, res) => {
+exports.getDashboardStats = async (req, res, next) => {
   try {
     const { role, id, department } = req.user;
     const todayName = getTodayName();
@@ -159,16 +160,16 @@ exports.getDashboardStats = async (req, res) => {
       );
     }
 
-    return res.status(403).json({ message: `Unsupported role: ${role}` });
+    throw new AuthorizationError(`Unsupported role: ${role}`);
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
 
 // @desc    Get paginated/filterable audit logs (admin)
 // @route   GET /api/dashboard/audit-logs
 // @access  Private (Admin)
-exports.getAuditLogs = async (req, res) => {
+exports.getAuditLogs = async (req, res, next) => {
   try {
     const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
@@ -241,6 +242,6 @@ exports.getAuditLogs = async (req, res) => {
       totalPages: Math.ceil(total / limit) || 1,
     });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    return next(err);
   }
 };

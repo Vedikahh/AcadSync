@@ -12,7 +12,8 @@
     "mongoose": "^9.3.0",
     "node-schedule": "^2.1.1",
     "nodemailer": "^8.0.4",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "winston": "^3.11.0"
   },
   "name": "backend",
   "version": "1.0.0",

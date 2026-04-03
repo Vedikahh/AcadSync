@@ -65,6 +65,7 @@ const eventRoutes = require('./routes/eventRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const { notFoundMiddleware, errorMiddleware } = require('./middleware/errorMiddleware');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -82,6 +83,9 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5000;
 

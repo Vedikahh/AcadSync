@@ -9,12 +9,18 @@ const {
 const { scheduleEventReminder, cancelEventReminder } = require('../utils/eventReminderJob');
 const { writeAuditLog, createDiffSummary } = require('../utils/auditLogger');
 const { getAiConflictConfig } = require('../config/env');
+const {
+  ValidationError,
+  AuthorizationError,
+  NotFoundError,
+  ConflictError,
+} = require('../utils/errorHandler');
 
 
 // @desc    Get all events
 // @route   GET /api/events
 // @access  Private (Anyone logged in)
-exports.getEvents = async (req, res) => {
+exports.getEvents = async (req, res, next) => {
   try {
     const events = await Event.find()
       .populate('createdBy', 'name email department')
@@ -22,14 +28,14 @@ exports.getEvents = async (req, res) => {
       .sort({ date: 1 });
     res.json(events);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Get logged in user's events
 // @route   GET /api/events/my-events
 // @access  Private
-exports.getMyEvents = async (req, res) => {
+exports.getMyEvents = async (req, res, next) => {
   try {
     const events = await Event.find({ createdBy: req.user.id })
       .populate('createdBy', 'name')
@@ -37,14 +43,14 @@ exports.getMyEvents = async (req, res) => {
       .sort({ date: 1 });
     res.json(events);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Create a new event proposal
 // @route   POST /api/events
 // @access  Private (Students/Faculty)
-exports.createEvent = async (req, res) => {
+exports.createEvent = async (req, res, next) => {
   try {
     const {
       title,
@@ -66,14 +72,7 @@ exports.createEvent = async (req, res) => {
     const conflictMessages = (conflictResult.conflicts || []).map((c) => c.message || c);
 
     if (conflictResult.blocked) {
-      return res.status(409).json({
-        message: 'Schedule conflict with a higher-priority item. Please choose another time slot.',
-        conflicts: conflictResult.conflicts,
-        blockingConflicts: conflictResult.blockingConflicts,
-        suggestions: conflictResult.suggestions,
-        blocked: true,
-        ai,
-      });
+      throw new ConflictError('Schedule conflict with a higher-priority item. Please choose another time slot.');
     }
 
     const event = await Event.create({
@@ -121,17 +120,17 @@ exports.createEvent = async (req, res) => {
     res.status(201).json(event);
 
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Approve an event
 // @route   PATCH /api/events/:id/approve
 // @access  Private (Admin)
-exports.approveEvent = async (req, res) => {
+exports.approveEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (!event) throw new NotFoundError('Event not found');
 
     const beforeEvent = {
       status: event.status,
@@ -203,17 +202,17 @@ exports.approveEvent = async (req, res) => {
     res.json(populatedEvent);
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Reject an event
 // @route   PATCH /api/events/:id/reject
 // @access  Private (Admin)
-exports.rejectEvent = async (req, res) => {
+exports.rejectEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (!event) throw new NotFoundError('Event not found');
 
     const beforeEvent = {
       status: event.status,
@@ -233,7 +232,7 @@ exports.rejectEvent = async (req, res) => {
       : null;
 
     if (!rejectionReason) {
-      return res.status(400).json({ message: 'Rejection reason is required.' });
+      throw new ValidationError('Rejection reason is required.');
     }
 
     const providedNote = typeof req.body?.adminReviewNote === 'string'
@@ -297,17 +296,17 @@ exports.rejectEvent = async (req, res) => {
     res.json(populatedEvent);
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Update event
 // @route   PATCH /api/events/:id
 // @access  Private (Owner/Admin)
-exports.updateEvent = async (req, res) => {
+exports.updateEvent = async (req, res, next) => {
   try {
     let event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (!event) throw new NotFoundError('Event not found');
 
     const beforeEvent = {
       title: event.title,
@@ -325,7 +324,7 @@ exports.updateEvent = async (req, res) => {
 
     // Check ownership or admin
     if (event.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized to update this event' });
+      throw new AuthorizationError('Not authorized to update this event');
     }
 
     const { title, description, venue, date, startTime, endTime, participants, organizer, category, type } = req.body;
@@ -340,13 +339,7 @@ exports.updateEvent = async (req, res) => {
       });
 
       if (conflictResult.blocked) {
-        return res.status(409).json({
-          message: 'Schedule conflict with a higher-priority item. Please choose another time slot.',
-          conflicts: conflictResult.conflicts,
-          blockingConflicts: conflictResult.blockingConflicts,
-          suggestions: conflictResult.suggestions,
-          blocked: true,
-        });
+        throw new ConflictError('Schedule conflict with a higher-priority item. Please choose another time slot.');
       }
 
       event.conflicts = (conflictResult.conflicts || []).map((c) => c.message || c);
@@ -410,21 +403,21 @@ exports.updateEvent = async (req, res) => {
     res.json(populatedEvent);
 
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Delete event
 // @route   DELETE /api/events/:id
 // @access  Private (Owner/Admin)
-exports.deleteEvent = async (req, res) => {
+exports.deleteEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (!event) throw new NotFoundError('Event not found');
     
     // Check ownership or admin
     if (event.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized to delete this event' });
+      throw new AuthorizationError('Not authorized to delete this event');
     }
 
     const deletedEvent = {
@@ -467,14 +460,14 @@ exports.deleteEvent = async (req, res) => {
     res.json({ message: 'Event removed' });
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
 // @desc    Check conflicts for an event without creating it
 // @route   POST /api/events/check-conflicts
 // @access  Private (Students/Organizer)
-exports.checkEventConflicts = async (req, res) => {
+exports.checkEventConflicts = async (req, res, next) => {
   try {
     const ai = getAiConflictConfig();
     const { date, startTime, endTime, type } = req.body;
@@ -489,6 +482,6 @@ exports.checkEventConflicts = async (req, res) => {
       suggestionEngine: ai.available ? 'ai-plus-rules' : 'rules-only',
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
