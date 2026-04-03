@@ -7,6 +7,13 @@ const {
   NotFoundError,
 } = require('../utils/errorHandler');
 
+const parseLimitOffset = (query = {}) => {
+  const hasPagination = query.limit !== undefined || query.offset !== undefined;
+  const limit = Math.min(Math.max(parseInt(query.limit, 10) || 20, 1), 100);
+  const offset = Math.max(parseInt(query.offset, 10) || 0, 0);
+  return { hasPagination, limit, offset };
+};
+
 const ALLOWED_TYPES = new Set(['lecture', 'lab', 'exam']);
 const ALLOWED_DAYS = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -194,8 +201,31 @@ const commitImportVersion = async ({ mode, normalizedRows, userId, sourceVersion
 // @access  Private
 exports.getSchedules = async (req, res, next) => {
   try {
-    const schedules = await Schedule.find();
-    res.json(schedules);
+    const { hasPagination, limit, offset } = parseLimitOffset(req.query);
+    const query = Schedule.find()
+      .sort({ date: 1, day: 1, startTime: 1 })
+      .skip(offset)
+      .limit(limit);
+
+    if (!hasPagination) {
+      const schedules = await query;
+      return res.json(schedules);
+    }
+
+    const [schedules, totalItems] = await Promise.all([
+      query,
+      Schedule.countDocuments(),
+    ]);
+
+    return res.json({
+      items: schedules,
+      pagination: {
+        limit,
+        offset,
+        totalItems,
+        hasMore: offset + schedules.length < totalItems,
+      },
+    });
   } catch (err) {
     next(err);
   }

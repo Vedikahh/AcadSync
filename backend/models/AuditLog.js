@@ -64,5 +64,6 @@ auditLogSchema.index({ createdAt: -1 });
 auditLogSchema.index({ action: 1, createdAt: -1 });
 auditLogSchema.index({ 'target.entityType': 1, createdAt: -1 });
 auditLogSchema.index({ 'actor.id': 1, createdAt: -1 });
+auditLogSchema.index({ 'actor.id': 1, action: 1, createdAt: -1 });
 
 module.exports = mongoose.model('AuditLog', auditLogSchema);

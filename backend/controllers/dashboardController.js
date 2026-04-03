@@ -90,16 +90,35 @@ exports.getDashboardStats = async (req, res, next) => {
 
       const [
         classesToday,
-        myConflictedEvents,
+        conflictSummary,
         examsThisMonth,
         approvedEvents,
         unreadNotifications,
       ] = await Promise.all([
         Schedule.countDocuments(scheduleFilter),
-        Event.find({
-          createdBy: id,
-          'conflicts.0': { $exists: true },
-        }).select('conflicts'),
+        Event.aggregate([
+          {
+            $match: {
+              createdBy: req.user._id,
+              'conflicts.0': { $exists: true },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              conflictAlerts: { $sum: 1 },
+              highPriorityConflicts: {
+                $sum: {
+                  $cond: [
+                    { $gt: [{ $size: '$conflicts' }, 1] },
+                    1,
+                    0,
+                  ],
+                },
+              },
+            },
+          },
+        ]),
         Schedule.countDocuments({
           type: 'exam',
           date: { $gte: start, $lt: end },
@@ -112,10 +131,9 @@ exports.getDashboardStats = async (req, res, next) => {
         getUnreadNotificationsCount(id),
       ]);
 
-      const conflictAlerts = myConflictedEvents.length;
-      const highPriorityConflicts = myConflictedEvents.filter(
-        (event) => Array.isArray(event.conflicts) && event.conflicts.length > 1
-      ).length;
+      const summary = conflictSummary[0] || { conflictAlerts: 0, highPriorityConflicts: 0 };
+      const conflictAlerts = summary.conflictAlerts || 0;
+      const highPriorityConflicts = summary.highPriorityConflicts || 0;
 
       return res.json(
         roleResponse(role, {

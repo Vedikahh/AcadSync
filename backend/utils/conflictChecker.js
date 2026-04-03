@@ -71,14 +71,14 @@ const checkConflicts = async (eventDetails) => {
     Event.find({
       date: { $gte: dayStartUtc, $lte: dayEndUtc },
       status: 'approved'
-    }),
+    }).lean(),
     Schedule.find({
       $or: [
         { date: { $gte: dayStartUtc, $lte: dayEndUtc } },
         { date: { $exists: false }, day: eventDayStr },
         { date: null, day: eventDayStr }
       ]
-    })
+    }).lean()
   ]);
 
   const conflicts = [];

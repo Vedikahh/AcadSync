@@ -17,17 +17,46 @@ const {
 } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 
+const parseLimitOffset = (query = {}) => {
+  const hasPagination = query.limit !== undefined || query.offset !== undefined;
+  const limit = Math.min(Math.max(parseInt(query.limit, 10) || 20, 1), 100);
+  const offset = Math.max(parseInt(query.offset, 10) || 0, 0);
+  return { hasPagination, limit, offset };
+};
+
 
 // @desc    Get all events
 // @route   GET /api/events
 // @access  Private (Anyone logged in)
 exports.getEvents = async (req, res, next) => {
   try {
-    const events = await Event.find()
+    const { hasPagination, limit, offset } = parseLimitOffset(req.query);
+    const query = Event.find()
       .populate('createdBy', 'name email department')
       .populate('reviewedBy', 'name email')
-      .sort({ date: 1 });
-    res.json(events);
+      .sort({ date: 1 })
+      .skip(offset)
+      .limit(limit);
+
+    if (!hasPagination) {
+      const events = await query;
+      return res.json(events);
+    }
+
+    const [events, totalItems] = await Promise.all([
+      query,
+      Event.countDocuments(),
+    ]);
+
+    return res.json({
+      items: events,
+      pagination: {
+        limit,
+        offset,
+        totalItems,
+        hasMore: offset + events.length < totalItems,
+      },
+    });
   } catch (err) {
     next(err);
   }

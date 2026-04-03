@@ -48,4 +48,7 @@ const scheduleSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+scheduleSchema.index({ date: 1 });
+scheduleSchema.index({ day: 1 });
+
 module.exports = mongoose.model('Schedule', scheduleSchema);
