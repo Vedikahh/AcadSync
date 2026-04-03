@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, Calendar, User as UserIcon } from "lucide-react";
+import { Calendar, User as UserIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getEvents, getNotifications, getDashboardStats, markNotificationRead } from "../services/api";
 import EventCard from "../components/EventCard";
 import NotificationItem from "../components/NotificationItem";
-import ConflictCard from "../components/ConflictCard";
 import StatsCard from "../components/StatsCard";
 import "./StudentDashboard.css";
 
@@ -36,10 +35,14 @@ export default function StudentDashboard() {
       ]);
 
       if (eventsResult.status === "fulfilled") {
-        const approvedEventsList = Array.isArray(eventsResult.value)
-          ? eventsResult.value.filter((event) => event.status === "approved")
+        const approvedAndNonConflictingEventsList = Array.isArray(eventsResult.value)
+          ? eventsResult.value.filter((event) => {
+              // Show only approved events with no conflicts
+              const hasNoConflicts = !Array.isArray(event.conflicts) || event.conflicts.length === 0;
+              return event.status === "approved" && hasNoConflicts;
+            })
           : [];
-        setEvents(approvedEventsList);
+        setEvents(approvedAndNonConflictingEventsList);
       } else {
         setEvents([]);
         setPageError(eventsResult.reason?.message || "Failed to load events.");
@@ -79,18 +82,26 @@ export default function StudentDashboard() {
     fetchStats();
   }, [user]);
 
+  // Get today's date in YYYY-MM-DD format for comparison
+  const todayDate = new Date().toISOString().split('T')[0];
+  
+  // Filter today's events and lectures
+  const todayEvents = events.filter(event => {
+    const eventDate = event.date ? new Date(event.date).toISOString().split('T')[0] : null;
+    return eventDate === todayDate;
+  });
+
+  const todayLectures = todayEvents.filter(event => event.type === 'lecture');
+  const todayOtherEvents = todayEvents.filter(event => event.type !== 'lecture');
+  
+  // Upcoming events (excluding today)
+  const upcomingEvents = events.filter(event => {
+    const eventDate = event.date ? new Date(event.date).toISOString().split('T')[0] : null;
+    return eventDate && eventDate > todayDate;
+  });
+
   const unreadCount = notifications.filter((n) => !n.read).length;
   const totalApproved = events.length;
-  const conflicts = events
-    .filter((event) => Array.isArray(event.conflicts) && event.conflicts.length > 0)
-    .map((event, idx) => ({
-      id: event._id || event.id || idx,
-      eventName: event.title,
-      clashWith: event.conflicts[0],
-      timeOverlap: `${event.startTime || "N/A"} - ${event.endTime || "N/A"}`,
-      date: event.date ? new Date(event.date).toLocaleDateString() : "TBD",
-      severity: event.conflicts.length > 1 ? "high" : "medium",
-    }));
 
   const markRead = async (id) => {
     try {
@@ -137,37 +148,56 @@ export default function StudentDashboard() {
         {/* Main Content Column */}
         <div className="std-main-col">
           
-          {/* Conflict Alerts */}
-          {conflicts.length > 0 && (
-            <section className="std-card std-conflict-section">
-              <div className="std-card-header std-conflict-header">
+          {/* Today's Schedule Section */}
+          {(todayLectures.length > 0 || todayOtherEvents.length > 0) && (
+            <section className="std-card std-today-section">
+              <div className="std-card-header">
                 <div className="std-card-title-wrap">
-                  <div className="std-alert-icon">
-                    <AlertTriangle size={24} />
-                  </div>
-                  <h2 className="std-card-title">Action Required: Schedule Conflict</h2>
+                  <Calendar size={24} style={{ color: '#7c3aed' }} />
+                  <h2 className="std-card-title">Today's Schedule</h2>
+                  <div className="std-badge std-badge-purple">{todayEvents.length} Items</div>
                 </div>
-                <Link to="/conflict" className="std-link">Resolve →</Link>
               </div>
-              <div className="std-card-body">
-                <p className="std-conflict-desc">
-                  One or more of your events conflicts with the official academic calendar. Please review.
-                </p>
-                <div className="std-conflict-list">
-                  {conflicts.map((c) => (
-                    <ConflictCard key={c.id} conflict={c} />
-                  ))}
-                </div>
+              <div className="std-card-body std-bg-gray">
+                {/* Today's Lectures */}
+                {todayLectures.length > 0 && (
+                  <div className="std-schedule-group">
+                    <h3 className="std-schedule-group-title">📚 Lectures</h3>
+                    <div className="std-events-list">
+                      {todayLectures.map((event, index) => {
+                        const id = event._id || event.id;
+                        return (
+                          <EventCard key={id} event={{...event, id}} isAdmin={false} animationIndex={index} />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Today's Other Events */}
+                {todayOtherEvents.length > 0 && (
+                  <div className="std-schedule-group">
+                    <h3 className="std-schedule-group-title">🎯 Events</h3>
+                    <div className="std-events-list">
+                      {todayOtherEvents.map((event, index) => {
+                        const id = event._id || event.id;
+                        return (
+                          <EventCard key={id} event={{...event, id}} isAdmin={false} animationIndex={index} />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           )}
 
-          {/* My Events */}
+          {/* Upcoming Events Section */}
           <section className="std-card">
             <div className="std-card-header">
               <div className="std-card-title-wrap">
-                <h2 className="std-card-title">Approved Campus Events</h2>
-                <div className="std-badge std-badge-purple">{events.length} Upcoming</div>
+                <h2 className="std-card-title">Upcoming Events</h2>
+                <div className="std-badge std-badge-purple">{upcomingEvents.length} Upcoming</div>
               </div>
               <Link to="/events" className="std-link">View all →</Link>
             </div>
@@ -178,16 +208,16 @@ export default function StudentDashboard() {
                   <div className="app-skeleton std-skeleton-card" />
                   <div className="app-skeleton std-skeleton-card" />
                 </div>
-              ) : events.length === 0 ? (
+              ) : upcomingEvents.length === 0 ? (
                 <div className="std-empty">
                   <div className="std-empty-icon">
                     <Calendar size={24} />
                   </div>
-                  <p>No upcoming events at the moment.</p>
+                  <p>No upcoming events scheduled.</p>
                 </div>
               ) : (
                 <div className="std-events-list">
-                  {events.map((event, index) => {
+                  {upcomingEvents.map((event, index) => {
                     const id = event._id || event.id;
                     return (
                       <EventCard key={id} event={{...event, id}} isAdmin={false} animationIndex={index} />

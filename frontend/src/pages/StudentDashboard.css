@@ -407,6 +407,40 @@
   color: var(--text-muted, #94A3B8);
 }
 
+/* ── Today's Schedule Section ── */
+.std-today-section {
+  border-color: #E9D5FF;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.02) 0%, rgba(168, 85, 247, 0.02) 100%);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.08);
+}
+
+.std-today-section .std-card-header {
+  border-bottom-color: #F3E8FF;
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.04) 0%, transparent 100%);
+}
+
+.std-schedule-group {
+  margin-bottom: 24px;
+}
+
+.std-schedule-group:last-child {
+  margin-bottom: 0;
+}
+
+.std-schedule-group-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #0F172A);
+  margin: 0 0 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--bg-page);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 @media (max-width: 768px) {
   .std-db-page { padding: 20px 16px; }
 }
