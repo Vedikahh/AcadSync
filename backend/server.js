@@ -4,11 +4,12 @@ const cors = require('cors');
 const helmet = require('helmet');
 const connectDB = require('./config/db');
 const { validateEnvironment, getAllowedOrigins, isProduction } = require('./config/env');
+const logger = require('./utils/logger');
 
 try {
   validateEnvironment();
 } catch (error) {
-  console.error(`[Startup Error] ${error.message}`);
+  logger.error(`[Startup Error] ${error.message}`);
   process.exit(1);
 }
 
@@ -20,7 +21,7 @@ const app = express();
 const allowedOrigins = getAllowedOrigins();
 
 if (isProduction() && allowedOrigins.length === 0) {
-  console.warn(
+  logger.warn(
     '[Startup Warning] CORS allowlist is empty in production. Temporarily allowing all origins. Set CLIENT_URL, FRONTEND_URL, CORS_ORIGIN, or ALLOWED_ORIGINS to lock this down.'
   );
 }
@@ -90,7 +91,23 @@ app.use(errorMiddleware);
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
+});
+
+process.on('SIGINT', () => {
+  logger.warn('SIGINT received. Shutting down server.');
+  server.close(() => {
+    logger.info('HTTP server closed.');
+    process.exit(0);
+  });
+});
+
+process.on('SIGTERM', () => {
+  logger.warn('SIGTERM received. Shutting down server.');
+  server.close(() => {
+    logger.info('HTTP server closed.');
+    process.exit(0);
+  });
 });
 
 // Init socket.io
@@ -100,6 +117,6 @@ socketIO.init(server, corsOptions);
 // Initialize event reminder job system
 const { initializeReminders } = require('./utils/eventReminderJob');
 initializeReminders().catch((error) => {
-  console.error('[Startup] Failed to initialize event reminders:', error.message);
+  logger.error(`[Startup] Failed to initialize event reminders: ${error.message}`);
 });
 

@@ -13,6 +13,7 @@ const {
   NotFoundError,
   ConflictError,
 } = require('../utils/errorHandler');
+const logger = require('../utils/logger');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const PASSWORD_RESET_TTL_MINUTES = Number(process.env.PASSWORD_RESET_TTL_MINUTES || 15);
@@ -226,6 +227,7 @@ exports.registerUser = async (req, res, next) => {
       await user.save({ validateBeforeSave: false });
 
       await sendVerificationOtpEmail(user, otp);
+      logger.info(`Verification OTP sent for new registration: ${user.email}`);
 
       res.status(201).json({
         message: 'Registration successful. Please verify your email using the OTP sent to your inbox.',
@@ -236,6 +238,7 @@ exports.registerUser = async (req, res, next) => {
     }
 
     res.status(201).json(buildAuthPayload(user));
+    logger.info(`User registered: ${user.email}`);
   } catch (error) {
     next(error);
   }
@@ -270,6 +273,7 @@ exports.loginUser = async (req, res, next) => {
     }
 
     res.json(buildAuthPayload(user));
+    logger.info(`User login successful: ${user.email}`);
   } catch (error) {
     next(error);
   }

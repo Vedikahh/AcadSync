@@ -1,7 +1,9 @@
 const { NotFoundError, normalizeError } = require('../utils/errorHandler');
 const { logError } = require('../utils/errorLogger');
+const logger = require('../utils/logger');
 
 const notFoundMiddleware = (req, res, next) => {
+  logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);
   next(new NotFoundError('Route not found'));
 };
 

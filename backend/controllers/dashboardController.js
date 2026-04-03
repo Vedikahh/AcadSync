@@ -4,6 +4,7 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const { AuthorizationError } = require('../utils/errorHandler');
+const logger = require('../utils/logger');
 
 function getTodayName() {
   return new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -41,6 +42,7 @@ exports.getDashboardStats = async (req, res, next) => {
   try {
     const { role, id, department } = req.user;
     const todayName = getTodayName();
+    logger.debug(`Dashboard stats requested by user ${id} with role ${role}`);
 
     if (role === 'admin') {
       const [

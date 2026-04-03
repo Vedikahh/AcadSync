@@ -15,6 +15,7 @@ const {
   NotFoundError,
   ConflictError,
 } = require('../utils/errorHandler');
+const logger = require('../utils/logger');
 
 
 // @desc    Get all events
@@ -118,6 +119,7 @@ exports.createEvent = async (req, res, next) => {
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'create', data: event });
 
     res.status(201).json(event);
+    logger.info(`Event created: ${event._id} by ${req.user.id}`);
 
   } catch (err) {
     next(err);
@@ -200,6 +202,7 @@ exports.approveEvent = async (req, res, next) => {
     });
 
     res.json(populatedEvent);
+    logger.info(`Event approved: ${event._id} by ${req.user.id}`);
 
   } catch (err) {
     next(err);
@@ -294,6 +297,7 @@ exports.rejectEvent = async (req, res, next) => {
     });
 
     res.json(populatedEvent);
+    logger.info(`Event rejected: ${event._id} by ${req.user.id}`);
 
   } catch (err) {
     next(err);
@@ -401,6 +405,7 @@ exports.updateEvent = async (req, res, next) => {
     });
 
     res.json(populatedEvent);
+    logger.info(`Event updated: ${populatedEvent._id} by ${req.user.id}`);
 
   } catch (err) {
     next(err);
@@ -458,6 +463,7 @@ exports.deleteEvent = async (req, res, next) => {
     });
 
     res.json({ message: 'Event removed' });
+    logger.info(`Event deleted: ${deletedEvent.id} by ${req.user.id}`);
 
   } catch (err) {
     next(err);

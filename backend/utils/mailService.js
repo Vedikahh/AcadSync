@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('./logger');
 
 // Mail service with safe fallback behavior
 class MailService {
@@ -26,28 +27,28 @@ class MailService {
 
         // Validate SMTP config
         if (!smtpConfig.host || !smtpConfig.auth.user || !smtpConfig.auth.pass) {
-          console.warn('[MailService] SMTP config incomplete. Email delivery disabled.');
+          logger.warn('[MailService] SMTP config incomplete. Email delivery disabled.');
           return;
         }
 
         this.transporter = nodemailer.createTransport(smtpConfig);
         this.configured = true;
-        console.log('[MailService] SMTP configured successfully');
+        logger.info('[MailService] SMTP configured successfully');
 
         // Verify SMTP connectivity early so deployment issues show up in logs.
         this.transporter
           .verify()
           .then(() => {
             this.smtpVerified = true;
-            console.log('[MailService] SMTP connection verified');
+            logger.info('[MailService] SMTP connection verified');
           })
           .catch((error) => {
             this.smtpVerified = false;
-            console.warn(`[MailService] SMTP verification failed: ${error.message}`);
+            logger.warn(`[MailService] SMTP verification failed: ${error.message}`);
           });
       } else if (mailProvider === 'sendgrid') {
         if (!process.env.SENDGRID_API_KEY) {
-          console.warn('[MailService] SendGrid API key missing. Email delivery disabled.');
+          logger.warn('[MailService] SendGrid API key missing. Email delivery disabled.');
           return;
         }
 
@@ -55,14 +56,14 @@ class MailService {
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
         this.transporter = sgMail;
         this.configured = true;
-        console.log('[MailService] SendGrid configured successfully');
+        logger.info('[MailService] SendGrid configured successfully');
       } else if (mailProvider === 'test') {
         // Test/development mode - logs emails instead of sending
         this.configured = true;
-        console.log('[MailService] Test mode enabled - emails will be logged');
+        logger.info('[MailService] Test mode enabled - emails will be logged');
       }
     } catch (error) {
-      console.warn(`[MailService] Initialization error: ${error.message}. Email delivery disabled.`);
+      logger.warn(`[MailService] Initialization error: ${error.message}. Email delivery disabled.`);
     }
   }
 
@@ -74,7 +75,7 @@ class MailService {
   async sendMail({ to, subject, html, text }) {
     try {
       if (!this.configured) {
-        console.warn(`[MailService] Email not configured. Skipping: ${subject} to ${to}`);
+        logger.warn(`[MailService] Email not configured. Skipping: ${subject} to ${to}`);
         return {
           success: false,
           message: 'Email service not configured',
@@ -93,9 +94,9 @@ class MailService {
       const mailProvider = process.env.MAIL_PROVIDER || 'smtp';
 
       if (mailProvider === 'test') {
-        console.log(`[MailService TEST] To: ${to}`);
-        console.log(`[MailService TEST] Subject: ${subject}`);
-        console.log(`[MailService TEST] Body:\n${html || text}`);
+        logger.info(`[MailService TEST] To: ${to}`);
+        logger.info(`[MailService TEST] Subject: ${subject}`);
+        logger.debug(`[MailService TEST] Body: ${html || text}`);
         return {
           success: true,
           message: 'Email logged (test mode)',
@@ -140,7 +141,7 @@ class MailService {
         messageId: result.messageId,
       };
     } catch (error) {
-      console.error(`[MailService] Error sending email to ${to}:`, error.message);
+      logger.error(`[MailService] Error sending email to ${to}: ${error.message}`);
       return {
         success: false,
         message: 'Failed to send email',
