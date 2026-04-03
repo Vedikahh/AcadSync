@@ -223,6 +223,22 @@ exports.approveEvent = async (req, res, next) => {
       },
     });
 
+    // Notify all users about the approved event
+    const allUsers = await User.find({}).select('_id');
+    const allUserIds = allUsers
+      .map((user) => String(user._id))
+      .filter((id) => id !== String(event.createdBy));
+    
+    if (allUserIds.length > 0) {
+      await createNotificationsForUsers({
+        userIds: allUserIds,
+        message: `New approved event: "${event.title}" is now available on campus.`,
+        type: 'approval',
+        link: '/events',
+        payloadBuilder: (userId) => ({ eventId: event._id, recipientId: userId }),
+      });
+    }
+
     // Schedule 24h reminder for the event
     scheduleEventReminder(event);
 
@@ -307,6 +323,7 @@ exports.rejectEvent = async (req, res, next) => {
 
     const noteLine = adminReviewNote ? ` Additional note: ${adminReviewNote}` : '';
 
+    // Notify event creator about rejection
     await createNotificationForUser({
       userId: event.createdBy,
       message: `Your event proposal "${event.title}" was declined. Reason: ${rejectionReason}.${noteLine} You can edit and resubmit for review.`,
@@ -317,6 +334,22 @@ exports.rejectEvent = async (req, res, next) => {
         reviewedBy: req.user.id,
       },
     });
+
+    // Notify all admins about the rejection
+    const admins = await User.find({ role: 'admin' }).select('_id');
+    const adminIds = admins
+      .map((admin) => String(admin._id))
+      .filter((id) => id !== String(event.createdBy));
+    
+    if (adminIds.length > 0) {
+      await createNotificationsForUsers({
+        userIds: adminIds,
+        message: `Event "${event.title}" has been rejected. Reason: ${rejectionReason}`,
+        type: 'rejection',
+        link: '/manage-events',
+        payloadBuilder: (userId) => ({ eventId: event._id, recipientId: userId, rejectionReason }),
+      });
+    }
 
     // Cancel any scheduled reminders for this event
     cancelEventReminder(event._id);
