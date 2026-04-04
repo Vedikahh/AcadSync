@@ -1,6 +1,51 @@
 const nodemailer = require('nodemailer');
 const logger = require('./logger');
 
+const formatProviderError = (error) => {
+  if (!error) return 'Unknown provider error';
+
+  const parts = [];
+
+  if (error.message) {
+    parts.push(error.message);
+  }
+
+  if (error.code) {
+    parts.push(`code=${error.code}`);
+  }
+
+  if (error.response?.statusCode) {
+    parts.push(`status=${error.response.statusCode}`);
+  }
+
+  const sgErrors = Array.isArray(error.response?.body?.errors)
+    ? error.response.body.errors
+    : [];
+
+  if (sgErrors.length > 0) {
+    const details = sgErrors
+      .map((item) => {
+        if (!item || typeof item !== 'object') return String(item);
+        const msg = item.message || 'Unknown SendGrid error';
+        const field = item.field ? ` field=${item.field}` : '';
+        const help = item.help ? ` help=${item.help}` : '';
+        return `${msg}${field}${help}`.trim();
+      })
+      .join(' | ');
+    parts.push(`details=${details}`);
+  }
+
+  if (parts.length === 0) {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+
+  return parts.join(' ; ');
+};
+
 // Mail service with safe fallback behavior
 class MailService {
   constructor() {
@@ -157,7 +202,8 @@ class MailService {
             messageId: `sg-${Date.now()}`,
           };
         } catch (sendgridError) {
-          logger.warn(`[MailService] SendGrid send failed for ${to}: ${sendgridError.message}`);
+          const providerError = formatProviderError(sendgridError);
+          logger.warn(`[MailService] SendGrid send failed for ${to}: ${providerError}`);
 
           if (this.hasSmtpConfig()) {
             logger.info('[MailService] Falling back to SMTP after SendGrid failure');
@@ -204,11 +250,12 @@ class MailService {
         messageId: result.messageId,
       };
     } catch (error) {
-      logger.error(`[MailService] Error sending email to ${to}: ${error.message}`);
+      const providerError = formatProviderError(error);
+      logger.error(`[MailService] Error sending email to ${to}: ${providerError}`);
       return {
         success: false,
         message: 'Failed to send email',
-        error: error.message,
+        error: providerError,
       };
     }
   }

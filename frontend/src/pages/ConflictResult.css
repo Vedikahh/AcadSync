@@ -238,6 +238,68 @@
   line-height: 1.5;
 }
 
+.cr-assistant-panel {
+  background: #ffffff;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.cr-assistant-panel h3 {
+  margin: 0 0 8px;
+  color: #3730a3;
+  font-size: 0.95rem;
+}
+
+.cr-assistant-why {
+  margin: 0 0 8px 18px;
+  padding: 0;
+  color: #312e81;
+  display: grid;
+  gap: 4px;
+}
+
+.cr-assistant-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cr-assistant-footer span {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3730a3;
+}
+
+.cr-risk.critical {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.cr-risk.high {
+  background: #ffedd5;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.cr-risk.medium {
+  background: #fef9c3;
+  border-color: #fde68a;
+  color: #854d0e;
+}
+
+.cr-risk.low {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
 .cr-slot-list {
   display: flex;
   flex-direction: column;
@@ -295,6 +357,15 @@
   background: #EEF2FF;
   padding: 4px 10px;
   border-radius: 20px;
+}
+
+.cr-slot-score {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1e40af;
+  background: #dbeafe;
+  padding: 4px 8px;
+  border-radius: 16px;
 }
 
 .cr-slot-action {

@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { 
   getEvents, getMyEvents, createEvent, updateEvent,
-  approveEvent, rejectEvent, deleteEvent, checkEventConflicts
+  approveEvent, rejectEvent, deleteEvent, checkEventConflicts,
+  getConflictAssistance, getAdminAssistance,
 } = require('../controllers/eventController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
@@ -11,6 +12,8 @@ const {
   createEventSchema,
   updateEventSchema,
   checkConflictsSchema,
+  aiConflictAssistanceSchema,
+  aiAdminAssistanceSchema,
   eventIdParamSchema,
 } = require('../validators/eventValidator');
 
@@ -23,6 +26,8 @@ router.route('/')
 // Supports query params: limit, offset, sort
 router.get('/my-events', protect, authorizeRoles('organizer', 'admin'), getMyEvents);
 router.post('/check-conflicts', protect, authorizeRoles('organizer', 'admin'), validate(checkConflictsSchema), checkEventConflicts);
+router.post('/ai-conflict-assistance', protect, authorizeRoles('organizer', 'admin'), validate(aiConflictAssistanceSchema), getConflictAssistance);
+router.post('/ai-admin-assistance', protect, authorizeRoles('admin'), validate(aiAdminAssistanceSchema), getAdminAssistance);
 
 // Admin Only (Status updates)
 router.patch('/:id/approve', protect, authorizeRoles('admin'), validate(eventIdParamSchema, 'params'), approveEvent);

@@ -9,6 +9,8 @@ const {
 const { scheduleEventReminder, cancelEventReminder } = require('../utils/eventReminderJob');
 const { writeAuditLog, createDiffSummary } = require('../utils/auditLogger');
 const { getAiConflictConfig } = require('../config/env');
+const { generateConflictAssistance } = require('../services/aiConflictAssistant');
+const { generateAdminAssistance } = require('../services/aiAdminAssistant');
 const {
   ValidationError,
   AuthorizationError,
@@ -567,6 +569,64 @@ exports.checkEventConflicts = async (req, res, next) => {
       blocked,
       ai,
       suggestionEngine: ai.available ? 'ai-plus-rules' : 'rules-only',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get AI-assisted conflict explanation and ranked suggestions
+// @route   POST /api/events/ai-conflict-assistance
+// @access  Private (Organizer/Admin)
+exports.getConflictAssistance = async (req, res, next) => {
+  try {
+    const ai = getAiConflictConfig();
+    const payload = req.body || {};
+    const event = payload.event || {};
+
+    const result = await generateConflictAssistance({
+      event,
+      providedState: {
+        conflicts: payload.conflicts,
+        blockingConflicts: payload.blockingConflicts,
+        suggestions: payload.suggestions,
+        hasConflict: payload.hasConflict,
+        blocked: payload.blocked,
+      },
+      aiConfig: ai,
+      timeoutMs: 5000,
+    });
+
+    return res.json({
+      ...result,
+      ai,
+      suggestionEngine: result.source === 'ai' ? 'ai-plus-rules' : 'rules-only',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get AI-assisted admin decision recommendation for conflicting proposal
+// @route   POST /api/events/ai-admin-assistance
+// @access  Private (Admin)
+exports.getAdminAssistance = async (req, res, next) => {
+  try {
+    const ai = getAiConflictConfig();
+    const payload = req.body || {};
+
+    const result = await generateAdminAssistance({
+      eventMeta: payload.event || {},
+      conflictDetail: payload.conflictDetail || {},
+      policyFlags: payload.policyFlags || {},
+      aiConfig: ai,
+      timeoutMs: 5000,
+    });
+
+    return res.json({
+      ...result,
+      ai,
+      suggestionEngine: result.source === 'ai' ? 'ai-plus-rules' : 'rules-only',
     });
   } catch (err) {
     next(err);

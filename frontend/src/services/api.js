@@ -97,6 +97,12 @@ export const getMyEvents = async () => unwrapListResponse(await request("/api/ev
 export const checkEventConflicts = (event) =>
   request("/api/events/check-conflicts", { method: "POST", body: JSON.stringify(event) });
 
+export const getConflictAssistance = (payload) =>
+  request("/api/events/ai-conflict-assistance", { method: "POST", body: JSON.stringify(payload) });
+
+export const getAdminDecisionAssistance = (payload) =>
+  request("/api/events/ai-admin-assistance", { method: "POST", body: JSON.stringify(payload) });
+
 export const createEvent = (event) =>
   request("/api/events", { method: "POST", body: JSON.stringify(event) });
 

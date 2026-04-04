@@ -135,9 +135,90 @@ const eventIdParamSchema = Joi.object({
 		}),
 });
 
+const conflictItemSchema = Joi.object({
+	source: Joi.string().valid('event', 'schedule').optional(),
+	type: Joi.string().valid('event', 'lecture', 'exam', 'lab').optional(),
+	title: Joi.string().max(200).optional().allow(''),
+	date: Joi.string().max(64).optional().allow(''),
+	startTime: Joi.string().pattern(timePattern).optional(),
+	endTime: Joi.string().pattern(timePattern).optional(),
+	priority: Joi.number().integer().min(1).max(3).optional(),
+	message: Joi.string().max(500).optional().allow(''),
+	isBlocking: Joi.boolean().optional(),
+});
+
+const suggestionItemSchema = Joi.object({
+	date: Joi.string().max(64).required().messages({
+		'any.required': 'Suggestion date is required',
+	}),
+	startTime: Joi.string().pattern(timePattern).required().messages({
+		'string.pattern.base': 'Suggestion startTime must be in HH:MM format',
+		'any.required': 'Suggestion startTime is required',
+	}),
+	endTime: Joi.string().pattern(timePattern).required().messages({
+		'string.pattern.base': 'Suggestion endTime must be in HH:MM format',
+		'any.required': 'Suggestion endTime is required',
+	}),
+	label: Joi.string().max(120).optional().allow(''),
+	score: Joi.number().min(0).max(1).optional(),
+});
+
+const eventCoreSchema = Joi.object({
+	title: Joi.string().max(200).optional().allow(''),
+	description: Joi.string().max(2000).optional().allow(''),
+	department: Joi.string().max(100).optional().allow(''),
+	type: Joi.string().valid('event', 'lecture', 'exam').default('event'),
+	venue: Joi.string().max(300).optional().allow(''),
+	date: Joi.date().iso().required().messages({
+		'date.base': 'Date must be a valid date',
+		'date.iso': 'Date must be in ISO format',
+		'any.required': 'Date is required',
+	}),
+	startTime: Joi.string().pattern(timePattern).required().messages({
+		'string.pattern.base': 'Start time must be in HH:MM 24-hour format',
+		'any.required': 'Start time is required',
+	}),
+	endTime: Joi.string().pattern(timePattern).required().messages({
+		'string.pattern.base': 'End time must be in HH:MM 24-hour format',
+		'any.required': 'End time is required',
+	}),
+}).custom(ensureEndAfterStart, 'time ordering validation');
+
+const aiConflictAssistanceSchema = Joi.object({
+	event: eventCoreSchema.required(),
+	conflicts: Joi.array().items(conflictItemSchema).optional().default([]),
+	blockingConflicts: Joi.array().items(conflictItemSchema).optional().default([]),
+	suggestions: Joi.array().items(suggestionItemSchema).optional().default([]),
+	hasConflict: Joi.boolean().optional(),
+	blocked: Joi.boolean().optional(),
+	ai: Joi.object({
+		enabled: Joi.boolean().optional(),
+		available: Joi.boolean().optional(),
+		provider: Joi.string().max(50).optional(),
+		reason: Joi.string().max(120).optional().allow(null, ''),
+	}).optional(),
+});
+
+const aiAdminAssistanceSchema = Joi.object({
+	event: eventCoreSchema.required(),
+	conflictDetail: Joi.object({
+		conflicts: Joi.array().items(conflictItemSchema).optional().default([]),
+		blockingConflicts: Joi.array().items(conflictItemSchema).optional().default([]),
+		suggestions: Joi.array().items(suggestionItemSchema).optional().default([]),
+		blocked: Joi.boolean().optional(),
+		hasConflict: Joi.boolean().optional(),
+	}).optional().default({}),
+	policyFlags: Joi.object({
+		allowBlockedOverride: Joi.boolean().optional().default(false),
+		requireOverrideForBlocking: Joi.boolean().optional().default(true),
+	}).optional().default({}),
+});
+
 module.exports = {
 	createEventSchema,
 	updateEventSchema,
 	checkConflictsSchema,
 	eventIdParamSchema,
+	aiConflictAssistanceSchema,
+	aiAdminAssistanceSchema,
 };

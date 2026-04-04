@@ -100,7 +100,7 @@ exports.getDashboardStats = async (req, res, next) => {
         Event.aggregate([
           {
             $match: {
-              createdBy: req.user._id,
+              createdBy: req.user.id,
               'conflicts.0': { $exists: true },
             },
           },

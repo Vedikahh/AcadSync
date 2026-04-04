@@ -186,6 +186,46 @@
   border-left: 4px solid #2563eb;
 }
 
+.acr-ai-panel {
+  border-left: 4px solid #4f46e5;
+  background: color-mix(in srgb, #eef2ff 78%, var(--bg-card) 22%);
+}
+
+.acr-ai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.acr-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.acr-ai-rationale {
+  margin: 0.7rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.28rem;
+  color: var(--text-primary);
+}
+
+.acr-ai-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+}
+
+.acr-ai-slot {
+  margin: 0.75rem 0 0;
+  color: var(--text-secondary);
+}
+
 .acr-panel-title-row {
   display: flex;
   justify-content: space-between;

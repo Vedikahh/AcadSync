@@ -80,7 +80,7 @@ export default function AcademicSchedule() {
     }
   };
 
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 2500); };
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 4000); };
 
   const sortByDayAndTime = (a, b) => {
     const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -266,7 +266,11 @@ export default function AcademicSchedule() {
 
   return (
     <div className="as-page">
-      {toast && <div className="as-toast">{toast}</div>}
+      {toast && (
+        <div className={`as-toast ${toast.includes("❌") ? "as-toast-err" : toast.includes("✅") ? "as-toast-ok" : ""}`}>
+          {toast}
+        </div>
+      )}
 
       {/* Header */}
       <div className="as-header">

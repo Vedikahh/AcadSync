@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { checkEventConflicts, isAiConflictAssistEnabled } from "../services/api";
+import {
+  checkEventConflicts,
+  getConflictAssistance,
+  isAiConflictAssistEnabled,
+} from "../services/api";
 import { formatTime12h } from "../utils/formatTime";
 import "./CreateEvent.css";
 
@@ -131,6 +135,30 @@ export default function CreateEvent() {
         reason: aiAssistEnabled ? "backend_unavailable" : "disabled_by_config",
       };
       const hasConflict = conflicts.length > 0;
+
+      let aiAssistance = null;
+      try {
+        aiAssistance = await getConflictAssistance({
+          event: {
+            title: form.title,
+            description: form.description,
+            department: form.department,
+            type: form.type,
+            venue: form.venue,
+            date: form.date,
+            startTime: form.startTime,
+            endTime: form.endTime,
+          },
+          conflicts,
+          blockingConflicts,
+          suggestions,
+          blocked,
+          hasConflict,
+          ai,
+        });
+      } catch {
+        aiAssistance = null;
+      }
       
       const formattedConflicts = conflicts.map((c, i) => {
         const message = typeof c === "string" ? c : c.message;
@@ -152,6 +180,7 @@ export default function CreateEvent() {
           hasConflict,
           blocked,
           ai,
+          aiAssistance,
           blockingConflicts,
           eventData: form,
           conflicts: formattedConflicts,

@@ -382,7 +382,7 @@ exports.importSchedules = async (req, res, next) => {
     const importVersion = await commitImportVersion({
       mode,
       normalizedRows,
-      userId: req.user._id,
+      userId: req.user.id,
     });
 
     // Real-time update
@@ -462,7 +462,7 @@ exports.rollbackImportVersion = async (req, res, next) => {
     const rollbackVersion = await commitImportVersion({
       mode: 'rollback',
       normalizedRows: rollbackRows,
-      userId: req.user._id,
+      userId: req.user.id,
       sourceVersion: targetVersion._id,
     });
 

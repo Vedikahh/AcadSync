@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import {
   checkEventConflicts,
+  getAdminDecisionAssistance,
   getEvents,
   updateEvent,
   updateEventStatus,
@@ -90,6 +91,8 @@ export default function AdminConflictResolver() {
   const [rejectReason, setRejectReason] = useState("");
   const [busyAction, setBusyAction] = useState("");
   const [toast, setToast] = useState("");
+  const [adminAssistById, setAdminAssistById] = useState({});
+  const [loadingAdminAssist, setLoadingAdminAssist] = useState(false);
 
   const showToast = (message) => {
     setToast(message);
@@ -173,6 +176,7 @@ export default function AdminConflictResolver() {
 
   const selectedEvent = sortedFilteredEvents.find((event) => (event._id || event.id) === selectedId);
   const selectedDetail = selectedEvent ? detailsById[selectedEvent._id || selectedEvent.id] : null;
+  const selectedAssistant = selectedEvent ? adminAssistById[selectedEvent._id || selectedEvent.id] : null;
 
   const loadDetail = async (event, force = false) => {
     if (!event) return;
@@ -195,11 +199,61 @@ export default function AdminConflictResolver() {
     }
   };
 
+  const loadAdminAssistance = async (event, detail, force = false) => {
+    if (!event || !detail) return;
+    const eventId = event._id || event.id;
+    if (!force && adminAssistById[eventId]) return;
+
+    try {
+      setLoadingAdminAssist(true);
+      const assistance = await getAdminDecisionAssistance({
+        event: {
+          title: event.title,
+          type: event.type || "event",
+          department: event.department,
+          date: event.date,
+          startTime: event.startTime,
+          endTime: event.endTime,
+        },
+        conflictDetail: {
+          blocked: Boolean(detail?.blocked),
+          hasConflict: Boolean(detail?.hasConflict),
+          conflicts: Array.isArray(detail?.conflicts) ? detail.conflicts : [],
+          blockingConflicts: Array.isArray(detail?.blockingConflicts) ? detail.blockingConflicts : [],
+          suggestions: Array.isArray(detail?.suggestions) ? detail.suggestions : [],
+        },
+        policyFlags: {
+          allowBlockedOverride: true,
+          requireOverrideForBlocking: true,
+        },
+      });
+
+      setAdminAssistById((prev) => ({ ...prev, [eventId]: assistance }));
+
+      if ((selectedId === eventId) && !overrideNote.trim() && assistance?.adminReviewNoteDraft) {
+        setOverrideNote(assistance.adminReviewNoteDraft);
+      }
+      if ((selectedId === eventId) && !rejectReason.trim() && assistance?.rejectionReasonDraft) {
+        setRejectReason(assistance.rejectionReasonDraft);
+      }
+    } catch {
+      // Keep current manual resolution flow untouched if assistant call fails.
+    } finally {
+      setLoadingAdminAssist(false);
+    }
+  };
+
   useEffect(() => {
     if (selectedEvent) {
       loadDetail(selectedEvent);
     }
   }, [selectedEvent]);
+
+  useEffect(() => {
+    if (selectedEvent && selectedDetail) {
+      loadAdminAssistance(selectedEvent, selectedDetail);
+    }
+  }, [selectedEvent, selectedDetail]);
 
   const recommendation = recommendationFromDetail(selectedDetail);
 
@@ -371,6 +425,40 @@ export default function AdminConflictResolver() {
                   <p>{recommendation.text}</p>
                 </div>
 
+                {selectedAssistant && (
+                  <div className="acr-panel acr-ai-panel">
+                    <div className="acr-ai-header">
+                      <h3>Assistant Recommendation</h3>
+                      <span className={`acr-badge ${selectedAssistant.source === "ai" ? "p1" : "danger"}`}>
+                        {selectedAssistant.source === "ai" ? "AI + Rules" : "Rules fallback"}
+                      </span>
+                    </div>
+                    <div className="acr-ai-grid">
+                      <span><strong>Decision:</strong> {String(selectedAssistant.decision || "manual_review").replaceAll("_", " ")}</span>
+                      <span><strong>Severity:</strong> {String(selectedAssistant.severity || "medium").toUpperCase()}</span>
+                    </div>
+                    {Array.isArray(selectedAssistant.rationale) && selectedAssistant.rationale.length > 0 && (
+                      <ul className="acr-ai-rationale">
+                        {selectedAssistant.rationale.map((item, idx) => (
+                          <li key={`${idx}-${item}`}>{item}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {Array.isArray(selectedAssistant.flags) && selectedAssistant.flags.length > 0 && (
+                      <div className="acr-ai-flags">
+                        {selectedAssistant.flags.map((flag) => (
+                          <span key={flag} className="acr-badge">{flag}</span>
+                        ))}
+                      </div>
+                    )}
+                    {selectedAssistant.recommendedSlot && (
+                      <p className="acr-ai-slot">
+                        <strong>Recommended slot:</strong> {selectedAssistant.recommendedSlot.date} • {formatTime12h(selectedAssistant.recommendedSlot.startTime)} - {formatTime12h(selectedAssistant.recommendedSlot.endTime)}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="acr-panel">
                   <div className="acr-panel-title-row">
                     <h3>Pairwise Conflicts</h3>
@@ -426,6 +514,7 @@ export default function AdminConflictResolver() {
 
                 <div className="acr-panel">
                   <h3>Resolution Actions</h3>
+                  {loadingAdminAssist && <p>Loading assistant recommendation...</p>}
                   <textarea
                     value={overrideNote}
                     onChange={(e) => setOverrideNote(e.target.value)}
