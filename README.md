@@ -24,36 +24,45 @@
 
 ### 🧠 Intelligent Conflict Detection
 - **Multi-Source Validation:** Automatically scans new event proposals against existing **approved events** AND the **master academic timetable** (lectures/labs).
-- **Rule-Based Suggestions (Default):** When a clash is detected, the system suggests alternative available slots based on schedule overlap and campus hours.
-- **Optional AI Assist:** AI-enhanced conflict assistance can be enabled via backend configuration when available.
+- **Rule-Based Suggestions:** When a clash is detected, the system suggests alternative available slots based on schedule overlap and campus hours.
+- **Optional AI Assist:** AI-enhanced conflict assistance powered by Google Gemini can be enabled via backend configuration.
 
 ### 📅 Unified Event Lifecycle
 - **End-to-End Workflow:** A streamlined multi-step wizard for creating, editing, and tracking event proposals.
 - **Conflict Resolution Center:** A dedicated dashboard for Administrators to resolve complex overlaps and manage institutional resources effectively.
+- **Event Modals:** Instant access to event details via interactive modal views across all dashboards.
 
-### 🔐 Multi-Role Ecosystem
-- **Student Portal:** Real-time visibility into campus events, academic schedules, and personalized system notifications.
-- **Organizer Portal:** Specialized tools for creating event requests, managing clashes, and monitoring approval pipelines.
-- **Admin Command Center:** High-level institutional analytics, department-wise activity tracking, and master control over the academic calendar.
+### 🌓 Seamless Dark Mode
+- **Adaptive UI:** Fully integrated dark mode support that syncs with system preferences or user choice.
+- **Dynamic Theming:** Powered by Tailwind CSS v4 for a premium, consistent visual experience across all modes.
 
-### 🔔 Real-Time Synchronization
-- **Actionable Notifications:** Clickable alerts that route users directly to the relevant approval queue or event details.
-- **Master Unified Calendar:** A color-coded, interactive visualization of the entire campus schedule.
+### 🔄 Real-Time Synchronization
+- **WebSocket Integration:** Powered by Socket.IO for instant calendar updates, notifications, and event status changes across all connected clients.
+- **Instant Alerts:** Clickable real-time notifications that route users directly to relevant approval queues or event details.
+
+### 📊 Administrative Tools
+- **Bulk Schedule Import:** Seamlessly upload campus-wide timetables via CSV with comprehensive validation.
+- **Import Versioning & Rollback:** Track import history and revert to previous schedule states with a single click, ensuring data integrity.
+- **Audit Logging:** Detailed tracking of administrative actions for transparency and security.
 
 ---
 
 ## 🛠 Tech Stack
 
 ### Frontend (Client)
-- **Framework:** React 19 + Vite
+- **Framework:** React 19 + Vite 7
 - **Routing:** React Router v7
+- **Styling:** Tailwind CSS v4 Engine + PostCSS (High-performance, dynamic design system)
+- **Icons:** Lucide React (Universal icon set)
+- **Real-time:** Socket.IO-Client
 - **Authentication:** Google OAuth 2.0 (GSI) & Managed JWT Sessions
-- **Styling:** Premium Custom CSS with CSS Variables for state-of-the-art aesthetics.
 
 ### Backend (API)
 - **Runtime:** Node.js (v18+)
 - **Framework:** Express.js
-- **Database:** MongoDB Atlas (Mongoose ODM)
+- **Real-time:** Socket.IO (WebSockets)
+- **Database:** MongoDB Atlas (Mongoose 9+)
+- **AI Integration:** Google Generative AI (Gemini Flash)
 - **Security:** Argon2/Bcrypt Password Hashing & JWT-based RBAC.
 
 ---
@@ -62,22 +71,23 @@
 
 ```text
 AcadSync/
-├── backend/                  # RESTful API Service
+├── backend/                  # RESTful API Service & WebSocket Server
 │   ├── config/               # Database (MongoDB) & JWT configurations
 │   ├── controllers/          # Business logic (Auth, Events, Schedules, Notifications)
 │   ├── middleware/           # RBAC guards & Token verification
-│   ├── models/               # Data Schemas (User, Event, Schedule, Notification)
+│   ├── models/               # Data Schemas (User, Event, Schedule, Notification, Audit)
 │   ├── routes/               # Modular API endpoint definitions
-│   └── utils/                # Core engines (Conflict Detection, Time Parsers)
+│   ├── utils/                # Core engines (Conflict Detection, Socket handler, Audit)
+│   └── validators/           # Payload validation (Joi/Zod)
 │
 └── frontend/                 # Interactive SPA
     ├── src/
     │   ├── components/       # Atomic UI (Sidebar, EventCard, StatsCard, ConflictCard)
-    │   ├── context/          # State engines (AuthContext, Theme)
+    │   ├── context/          # State engines (AuthContext, ThemeContext)
     │   ├── pages/            # View Layers (Dashboards, Calendar, Resolution Center)
-    │   ├── services/         # API Interceptors & Fetching logic
+    │   ├── services/         # API Interceptors & Socket.IO initialization
     │   ├── App.jsx           # Routing & Global Layout
-    │   └── index.css         # Design Tokens & UI Global Resets
+    │   └── index.css         # Tailwind v4 Design Tokens & Global Styles
 ```
 
 ---
@@ -102,76 +112,19 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_signing_key
 GOOGLE_CLIENT_ID=your_google_client_id
 CLIENT_URL=http://localhost:5173
-# Optional for multi-origin setups
-# ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-# Optional for backend AI assist (off by default)
-# GEMINI_API_KEY=your_gemini_api_key
-# ENABLE_AI_CONFLICT_ASSIST=false
-# Optional for email notifications (see Email Setup below)
-# MAIL_PROVIDER=smtp
-# SMTP_HOST=smtp.gmail.com
-# SMTP_PORT=587
-# SMTP_SECURE=false
-# SMTP_USER=your_email@gmail.com
-# SMTP_PASS=your_app_password
-# SMTP_FROM=noreply@acadync.com
-# Auth verification settings
-# EMAIL_VERIFY_OTP_TTL_MINUTES=10
-# PASSWORD_RESET_TTL_MINUTES=15
-```
-Notes:
-- `MONGO_URI`, `JWT_SECRET`, and `GOOGLE_CLIENT_ID` are required at backend startup.
-- In production, you should configure at least one allowed origin using `CLIENT_URL`, `FRONTEND_URL`, `CORS_ORIGIN`, or `ALLOWED_ORIGINS`. If omitted, the API now boots with a startup warning and temporarily allows all origins until configured.
-- Keep all secrets in `backend/.env` only. Never put server secrets in frontend env files.
-- Email configuration is *optional*. If not configured, the system will gracefully skip email delivery with clear logs.
-- Password recovery is available by default (`/forgot-password` and `/reset-password`).
-- Email verification is mandatory for all local signups.
-- Users must verify email via OTP before sign-in.
-
-#### Email Configuration Guide
-Email delivery is **optional** and integrates seamlessly with the notification system. Users can toggle email preferences in their profile.
-
-**Option 1: SMTP (Gmail, Outlook, etc.)**
-```env
+# Optional for backend AI assist
+GEMINI_API_KEY=your_gemini_api_key
+# Optional for email notifications
 MAIL_PROVIDER=smtp
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-16-char-app-password
-SMTP_FROM=noreply@acadync.com
-```
-**For Gmail:** Generate an [App Password](https://support.google.com/accounts/answer/185833) (16 characters) instead of your account password.
-
-**Option 2: SendGrid**
-```env
-MAIL_PROVIDER=sendgrid
-SENDGRID_API_KEY=your_sendgrid_api_key
-SENDGRID_FROM_EMAIL=noreply@acadync.com
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
 ```
 
-**Option 3: Test/Development Mode** (logs emails to console)
-```env
-MAIL_PROVIDER=test
-```
-
-**Email Features:**
-- ✅ Automatic reminders 24 hours before approved events
-- ✅ Notifications for event approvals, rejections, and requests
-- ✅ User controls in Profile → Email Notifications section
-- ✅ Safe fallback behavior (no crash if email config is missing)
-- ✅ Clear logs for debugging email delivery
-
-**Auth Recovery & Verification:**
-- ✅ Secure password reset tokens are hashed in DB, short-lived, and single-use.
-- ✅ Signup verification uses a 6-digit OTP sent by email (short-lived, one-time use).
-- ✅ Safe forgot-password and verification responses prevent account enumeration.
-- ✅ Endpoint-level rate limiting guards auth-sensitive routes.
-- ✅ Google-auth users remain compatible and are treated as verified.
-
-Start the server:
+Start the development server (with watch mode):
 ```bash
-npm start
+npm run dev
 ```
 
 ### 3. Frontend Installation
@@ -184,10 +137,6 @@ Create a `.env` file in the `frontend/` directory:
 VITE_API_URL=http://localhost:5000
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 ```
-Frontend env notes:
-- Only `VITE_` variables should exist in frontend env files.
-- Do not add backend secrets such as `JWT_SECRET`, `MONGO_URI`, or `GEMINI_API_KEY`.
-- Optional AI messaging toggle: `VITE_ENABLE_AI_CONFLICT_ASSIST=false`
 
 Launch the development server:
 ```bash
@@ -200,33 +149,28 @@ npm run dev
 
 | Route | View | Access Level | Description |
 |-----------|-----------|-----------|-----------|
-| `/` | Landing Page | Public | Platform Introduction |
+| `/` | Landing Page | Public | Modern Intro with Particle Animations |
 | `/login` | Authentication | Public | JWT & Google Login Portal |
 | `/register` | Signup | Public | New User Registration |
-| `/forgot-password` | Forgot Password | Public | Request password reset link |
-| `/reset-password` | Reset Password | Public | Set a new password using reset token |
-| `/verify-email` | Verify Email | Public | Enter OTP sent to email / request resend OTP |
-| `/dashboard` | Portal | Student | Personal Event & Alert Hub |
-| `/organizer-dashboard`| Portal | Organizer | Event Lifecycle Management |
-| `/admin` | Portal | Admin | Institutional Analytics & Control |
+| `/dashboard` | Student Portal | Student | Personal Event & Alert Hub |
+| `/organizer-dashboard`| Planner Portal | Organizer | Event Lifecycle Management |
+| `/admin` | Admin Command | Admin | Institutional Analytics & Control |
 | `/events` | Campus Wall | Authenticated | Listing of all campus activities |
 | `/create-event` | Request Wizard | Org/Admin | Unified creation/edit pipeline |
 | `/conflict` | Resolution Center | Org/Admin | Clash resolver with suggestions |
-| `/calendar` | Master Calendar | Authenticated | Unified schedule visualization |
+| `/calendar` | Master Calendar | Authenticated | Real-time schedule visualization |
 | `/manage-events` | Admin Queue | Admin | Review & Process Requests |
-| `/schedule` | Master Schedule | Admin/Org | Timetable & Venue management |
-| `/notifications` | Inbox | Authenticated | Real-time system-wide alerts |
-| `/profile` | User Settings | Authenticated | Account & Identity Management |
+| `/schedule` | Master Schedule | Admin/Org | Bulk Import (CSV) & Venue management |
+| `/profile` | User Settings | Authenticated | Account & Dark Mode preferences |
 
 ---
 
 ## 🔒 Security Setup Checklist
 
 1. Copy `backend/.env.example` to `backend/.env` and provide real backend values.
-2. Copy `frontend/.env.example` to `frontend/.env` and provide public `VITE_` values only.
-3. Ensure `backend/.env` is not tracked by git (it is ignored by default in this repository).
-4. Rotate any key that has ever been committed to git history.
-5. Keep CORS allowlists explicit in production with `CLIENT_URL`/`FRONTEND_URL`/`CORS_ORIGIN` and/or `ALLOWED_ORIGINS`.
+2. Ensure `backend/.env` is not tracked by git.
+3. Keep CORS allowlists explicit in production with `CLIENT_URL`.
+4. Rotate `JWT_SECRET` periodically for enhanced security.
 
 ---
 
