@@ -5,6 +5,7 @@ import logo from "../assets/logoo.png";
 import "./Navbar.css";
 import { Menu, Moon, Sun } from "lucide-react";
 import { useTheme } from "../App";
+import { NavGuideButton } from "./UserGuide";
 
 export default function Navbar({ onMenuToggle }) {
   const { user, logout } = useAuth();
@@ -79,6 +80,8 @@ export default function Navbar({ onMenuToggle }) {
             </div>
           </>
         )}
+
+        {user && <NavGuideButton role={user.role} />}
 
         <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle theme">
           {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}

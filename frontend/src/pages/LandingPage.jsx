@@ -574,7 +574,7 @@ export default function LandingPage() {
               <a href="#" aria-label="GitHub" className="lp-social-link"><Code2 size={16} /></a>
               <a href="#" aria-label="Twitter" className="lp-social-link"><MessageCircle size={16} /></a>
               <a href="#" aria-label="LinkedIn" className="lp-social-link"><Briefcase size={16} /></a>
-              <a href="#" aria-label="Email" className="lp-social-link"><Mail size={16} /></a>
+              <a href="mailto:acadsyncai@gmail.com" aria-label="Email" className="lp-social-link"><Mail size={16} /></a>
             </div>
           </div>
 
@@ -592,8 +592,8 @@ export default function LandingPage() {
             </div>
             <div className="lp-footer-link-group">
               <span className="lp-footer-link-heading">Legal</span>
-              <span className="lp-footer-link">Privacy Policy</span>
-              <span className="lp-footer-link">Terms of Use</span>
+              <Link to="/privacy" className="lp-footer-link">Privacy Policy</Link>
+              <Link to="/terms" className="lp-footer-link">Terms of Use</Link>
             </div>
           </div>
         </div>

@@ -59,6 +59,8 @@ import UserProfile      from "./pages/UserProfile";
 import NotFoundPage     from "./pages/NotFoundPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import AdminConflictResolver from "./pages/AdminConflictResolver";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
 
 import "./App.css";
 
@@ -172,6 +174,8 @@ function AppLayout() {
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
 
               {/* Student */}
               <Route path="/dashboard" element={<ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>} />
