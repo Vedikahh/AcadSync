@@ -89,6 +89,10 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true,
     },
+    announcement: {
+      type: Boolean,
+      default: true,
+    },
   },
   notificationChannels: {
     event: {
@@ -131,6 +135,16 @@ const userSchema = new mongoose.Schema({
         default: true,
       },
     },
+    announcement: {
+      inApp: {
+        type: Boolean,
+        default: true,
+      },
+      email: {
+        type: Boolean,
+        default: true,
+      },
+    },
   },
   emailPreferences: {
     enabled: {
@@ -150,6 +164,10 @@ const userSchema = new mongoose.Schema({
       default: true,
     },
     reminder: {
+      type: Boolean,
+      default: true,
+    },
+    announcement: {
       type: Boolean,
       default: true,
     },

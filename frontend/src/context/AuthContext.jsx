@@ -8,6 +8,7 @@ const DEFAULT_NOTIFICATION_CHANNELS = {
   approval: { inApp: true, email: true },
   rejection: { inApp: true, email: true },
   reminder: { inApp: true, email: true },
+  announcement: { inApp: true, email: true },
 };
 
 const hasText = (value) => typeof value === "string" && value.trim().length > 0;
@@ -40,6 +41,10 @@ function normalizeUserPayload(payload) {
     reminder: {
       inApp: typeof channels.reminder?.inApp === "boolean" ? channels.reminder.inApp : legacyNotification.reminder !== false,
       email: typeof channels.reminder?.email === "boolean" ? channels.reminder.email : (emailEnabled && legacyEmail.reminder !== false),
+    },
+    announcement: {
+      inApp: typeof channels.announcement?.inApp === "boolean" ? channels.announcement.inApp : legacyNotification.announcement !== false,
+      email: typeof channels.announcement?.email === "boolean" ? channels.announcement.email : (emailEnabled && legacyEmail.announcement !== false),
     },
   };
 

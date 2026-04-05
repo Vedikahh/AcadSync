@@ -163,6 +163,18 @@ export const markNotificationRead = (id) =>
 export const markAllNotificationsRead = () =>
   request("/api/notifications/read-all", { method: "PATCH" });
 
+export const createAnnouncement = (payload) =>
+  request("/api/notifications/announcements", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const previewAnnouncementAudience = (payload) =>
+  request("/api/notifications/announcements/preview", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
 // ---- User APIs ----
 export const updateUserProfile = (data) =>
   request("/api/users/update", { method: "PUT", body: JSON.stringify(data) });

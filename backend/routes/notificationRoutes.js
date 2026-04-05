@@ -1,9 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const { getNotifications, markAsRead, markAllRead } = require('../controllers/notificationController');
+const {
+  getNotifications,
+  markAsRead,
+  markAllRead,
+  createAnnouncement,
+  previewAnnouncementAudience,
+} = require('../controllers/notificationController');
 const { protect } = require('../middleware/authMiddleware');
+const { authorizeRoles } = require('../middleware/roleMiddleware');
 const { validate } = require('../middleware/validationMiddleware');
-const { notificationIdParamSchema } = require('../validators/userValidator');
+const {
+  notificationIdParamSchema,
+  createAnnouncementSchema,
+  announcementAudiencePreviewSchema,
+} = require('../validators/userValidator');
 
 router.route('/')
   // Supports query params: limit, offset, sort
@@ -11,5 +22,7 @@ router.route('/')
 
 router.patch('/read-all', protect, markAllRead);
 router.patch('/:id/read', protect, validate(notificationIdParamSchema, 'params'), markAsRead);
+router.post('/announcements/preview', protect, authorizeRoles('admin', 'organizer'), validate(announcementAudiencePreviewSchema), previewAnnouncementAudience);
+router.post('/announcements', protect, authorizeRoles('admin', 'organizer'), validate(createAnnouncementSchema), createAnnouncement);
 
 module.exports = router;

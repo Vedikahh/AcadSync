@@ -114,6 +114,37 @@
   margin-left: auto;
 }
 
+.notif-priority {
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.notif-priority-normal {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.notif-priority-important {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.notif-priority-urgent {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.notif-title {
+  margin: 0 0 2px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
 .notif-message {
   font-size: 0.875rem;
   color: var(--text-primary, #0F172A);

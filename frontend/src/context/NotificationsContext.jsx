@@ -1,5 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { getNotifications, markNotificationRead, markAllNotificationsRead } from "../services/api";
+import {
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  createAnnouncement as createAnnouncementRequest,
+  previewAnnouncementAudience as previewAnnouncementAudienceRequest,
+} from "../services/api";
 import { useAuth } from "./AuthContext";
 import socket from "../services/socket";
 
@@ -162,6 +168,16 @@ export function NotificationsProvider({ children }) {
     await fetchNotifications({ page: pagination.page + 1, limit: pagination.limit, append: true });
   };
 
+  const createAnnouncement = async (payload) => {
+    const response = await createAnnouncementRequest(payload);
+    await fetchNotifications({ page: 1, silent: true });
+    return response;
+  };
+
+  const previewAnnouncementAudience = async (payload) => {
+    return previewAnnouncementAudienceRequest(payload);
+  };
+
   return (
     <NotificationsContext.Provider value={{ 
       notifications, 
@@ -172,6 +188,8 @@ export function NotificationsProvider({ children }) {
       fetchNextPage,
       pagination,
       isLoading,
+      createAnnouncement,
+      previewAnnouncementAudience,
     }}>
       {children}
     </NotificationsContext.Provider>

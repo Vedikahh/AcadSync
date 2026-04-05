@@ -23,6 +23,7 @@ const NOTIFICATION_TYPES = [
   ["approval", "Event approvals"],
   ["rejection", "Event rejections"],
   ["reminder", "Event reminders"],
+  ["announcement", "Announcements"],
 ];
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
@@ -36,6 +37,7 @@ const DEFAULT_NOTIFICATION_CHANNELS = {
   approval: { inApp: true, email: true },
   rejection: { inApp: true, email: true },
   reminder: { inApp: true, email: true },
+  announcement: { inApp: true, email: true },
 };
 
 const normalizeNotificationChannels = (user = {}) => {

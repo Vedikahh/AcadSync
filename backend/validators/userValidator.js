@@ -87,10 +87,74 @@ const notificationIdParamSchema = Joi.object({
 		}),
 });
 
+const createAnnouncementSchema = Joi.object({
+	title: Joi.string().trim().min(3).max(160).required().messages({
+		'string.empty': 'Title is required',
+		'string.min': 'Title must be at least 3 characters',
+		'string.max': 'Title must not exceed 160 characters',
+	}),
+	content: Joi.string().trim().min(5).max(2000).required().messages({
+		'string.empty': 'Content is required',
+		'string.min': 'Content must be at least 5 characters',
+		'string.max': 'Content must not exceed 2000 characters',
+	}),
+	audienceType: Joi.string().valid('all', 'role', 'department').required().messages({
+		'any.only': 'Audience type must be one of: all, role, department',
+		'string.empty': 'Audience type is required',
+	}),
+	role: Joi.string().valid('student', 'organizer', 'admin').when('audienceType', {
+		is: 'role',
+		then: Joi.required(),
+		otherwise: Joi.forbidden(),
+	}).messages({
+		'any.only': 'Role must be one of: student, organizer, admin',
+		'any.required': 'Role is required when audience type is role',
+	}),
+	department: Joi.string().trim().max(100).when('audienceType', {
+		is: 'department',
+		then: Joi.required(),
+		otherwise: Joi.forbidden(),
+	}).messages({
+		'any.required': 'Department is required when audience type is department',
+		'string.empty': 'Department is required when audience type is department',
+		'string.max': 'Department must not exceed 100 characters',
+	}),
+	priority: Joi.string().valid('normal', 'important', 'urgent').default('normal').messages({
+		'any.only': 'Priority must be one of: normal, important, urgent',
+	}),
+	link: Joi.string().trim().max(255).optional().allow(''),
+});
+
+const announcementAudiencePreviewSchema = Joi.object({
+	audienceType: Joi.string().valid('all', 'role', 'department').required().messages({
+		'any.only': 'Audience type must be one of: all, role, department',
+		'string.empty': 'Audience type is required',
+	}),
+	role: Joi.string().valid('student', 'organizer', 'admin').when('audienceType', {
+		is: 'role',
+		then: Joi.required(),
+		otherwise: Joi.forbidden(),
+	}).messages({
+		'any.only': 'Role must be one of: student, organizer, admin',
+		'any.required': 'Role is required when audience type is role',
+	}),
+	department: Joi.string().trim().max(100).when('audienceType', {
+		is: 'department',
+		then: Joi.required(),
+		otherwise: Joi.forbidden(),
+	}).messages({
+		'any.required': 'Department is required when audience type is department',
+		'string.empty': 'Department is required when audience type is department',
+		'string.max': 'Department must not exceed 100 characters',
+	}),
+});
+
 module.exports = {
 	updateUserProfileSchema,
 	changePasswordSchema,
 	deleteAccountSchema,
 	userIdParamSchema,
 	notificationIdParamSchema,
+	createAnnouncementSchema,
+	announcementAudiencePreviewSchema,
 };

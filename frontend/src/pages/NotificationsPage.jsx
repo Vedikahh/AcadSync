@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../context/NotificationsContext";
+import { useAuth } from "../context/AuthContext";
 import NotificationItem from "../components/NotificationItem";
 import "./NotificationsPage.css";
 
+const ANNOUNCEMENT_DEPARTMENTS = ["COMPS", "AIML", "AIDS", "IOT", "Mechanical"];
+
 export default function NotificationsPage() {
+  const { user } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -14,9 +18,29 @@ export default function NotificationsPage() {
     fetchNextPage,
     pagination,
     isLoading,
+    createAnnouncement,
+    previewAnnouncementAudience,
   } = useNotifications();
   const [filter, setFilter] = useState("all");
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState("");
+  const [publishSuccess, setPublishSuccess] = useState("");
+  const [audiencePreviewLoading, setAudiencePreviewLoading] = useState(false);
+  const [audiencePreviewError, setAudiencePreviewError] = useState("");
+  const [audiencePreview, setAudiencePreview] = useState({
+    targetCount: 0,
+    sampleRecipients: [],
+  });
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: "",
+    content: "",
+    audienceType: "all",
+    role: "student",
+    department: ANNOUNCEMENT_DEPARTMENTS[0],
+    priority: "normal",
+  });
   const navigate = useNavigate();
+  const canPublishAnnouncement = user?.role === "admin" || user?.role === "organizer";
 
   useEffect(() => {
     // Initial fetch handled by context, but we can call it again if we want fresh data on mount
@@ -34,6 +58,99 @@ export default function NotificationsPage() {
     if (filter === "read")   return n.read;
     return true;
   });
+
+  const handleAnnouncementChange = (event) => {
+    const { name, value } = event.target;
+    setPublishError("");
+    setPublishSuccess("");
+    setAnnouncementForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  useEffect(() => {
+    if (!canPublishAnnouncement) return;
+
+    const payload = { audienceType: announcementForm.audienceType };
+    if (announcementForm.audienceType === "role") payload.role = announcementForm.role;
+    if (announcementForm.audienceType === "department") payload.department = announcementForm.department;
+
+    let active = true;
+    const timer = setTimeout(async () => {
+      try {
+        setAudiencePreviewLoading(true);
+        setAudiencePreviewError("");
+        const data = await previewAnnouncementAudience(payload);
+        if (!active) return;
+        setAudiencePreview({
+          targetCount: data?.targetCount || 0,
+          sampleRecipients: Array.isArray(data?.sampleRecipients) ? data.sampleRecipients : [],
+        });
+      } catch (error) {
+        if (!active) return;
+        setAudiencePreviewError(error.message || "Could not preview recipients.");
+        setAudiencePreview({ targetCount: 0, sampleRecipients: [] });
+      } finally {
+        if (active) setAudiencePreviewLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [
+    canPublishAnnouncement,
+    announcementForm.audienceType,
+    announcementForm.role,
+    announcementForm.department,
+    previewAnnouncementAudience,
+  ]);
+
+  const handleAnnouncementSubmit = async (event) => {
+    event.preventDefault();
+    setPublishError("");
+    setPublishSuccess("");
+
+    const title = announcementForm.title.trim();
+    const content = announcementForm.content.trim();
+
+    if (title.length < 3) {
+      setPublishError("Title must be at least 3 characters.");
+      return;
+    }
+    if (content.length < 5) {
+      setPublishError("Message must be at least 5 characters.");
+      return;
+    }
+
+    const payload = {
+      title,
+      content,
+      audienceType: announcementForm.audienceType,
+      priority: announcementForm.priority,
+    };
+
+    if (announcementForm.audienceType === "role") {
+      payload.role = announcementForm.role;
+    }
+    if (announcementForm.audienceType === "department") {
+      payload.department = announcementForm.department;
+    }
+
+    try {
+      setIsPublishing(true);
+      const result = await createAnnouncement(payload);
+      setAnnouncementForm((prev) => ({
+        ...prev,
+        title: "",
+        content: "",
+      }));
+      setPublishSuccess(`Announcement published to ${result?.createdCount ?? 0} recipient(s).`);
+    } catch (error) {
+      setPublishError(error.message || "Failed to publish announcement.");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <div className="notif-page-bg">
@@ -75,6 +192,122 @@ export default function NotificationsPage() {
             )}
           </div>
         </div>
+
+        {canPublishAnnouncement && (
+          <form className="np-announcement-panel" onSubmit={handleAnnouncementSubmit}>
+            <div className="np-announcement-head">
+              <h2>Publish Announcement</h2>
+              <span>Visible from this notifications inbox</span>
+            </div>
+
+            <div className="np-announcement-grid">
+              <label className="np-announcement-field">
+                <span>Title</span>
+                <input
+                  type="text"
+                  name="title"
+                  value={announcementForm.title}
+                  onChange={handleAnnouncementChange}
+                  placeholder="Semester orientation update"
+                  maxLength={160}
+                  required
+                />
+              </label>
+
+              <label className="np-announcement-field">
+                <span>Audience</span>
+                <select
+                  name="audienceType"
+                  value={announcementForm.audienceType}
+                  onChange={handleAnnouncementChange}
+                >
+                  <option value="all">All users</option>
+                  <option value="role">By role</option>
+                  <option value="department">By department</option>
+                </select>
+              </label>
+
+              <label className="np-announcement-field">
+                <span>Priority</span>
+                <select
+                  name="priority"
+                  value={announcementForm.priority}
+                  onChange={handleAnnouncementChange}
+                >
+                  <option value="normal">Normal</option>
+                  <option value="important">Important</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </label>
+
+              {announcementForm.audienceType === "role" && (
+                <label className="np-announcement-field">
+                  <span>Role</span>
+                  <select name="role" value={announcementForm.role} onChange={handleAnnouncementChange}>
+                    <option value="student">Student</option>
+                    <option value="organizer">Organizer</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+              )}
+
+              {announcementForm.audienceType === "department" && (
+                <label className="np-announcement-field">
+                  <span>Department</span>
+                  <select
+                    name="department"
+                    value={announcementForm.department}
+                    onChange={handleAnnouncementChange}
+                  >
+                    {ANNOUNCEMENT_DEPARTMENTS.map((department) => (
+                      <option key={department} value={department}>{department}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+
+            <label className="np-announcement-field np-announcement-message">
+              <span>Message</span>
+              <textarea
+                name="content"
+                value={announcementForm.content}
+                onChange={handleAnnouncementChange}
+                rows={4}
+                maxLength={2000}
+                placeholder="Share exam updates, venue changes, or deadlines."
+                required
+              />
+            </label>
+
+            <div className="np-preview-box" role="status" aria-live="polite">
+              <p className="np-preview-title">Audience preview</p>
+              {audiencePreviewLoading ? (
+                <p className="np-preview-meta">Calculating recipients...</p>
+              ) : audiencePreviewError ? (
+                <p className="np-preview-meta np-feedback-error">{audiencePreviewError}</p>
+              ) : (
+                <>
+                  <p className="np-preview-meta">Estimated recipients: {audiencePreview.targetCount}</p>
+                  {audiencePreview.sampleRecipients.length > 0 && (
+                    <p className="np-preview-sample">
+                      Sample: {audiencePreview.sampleRecipients.map((item) => item.name).join(", ")}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+
+            {publishError && <p className="np-feedback np-feedback-error">{publishError}</p>}
+            {publishSuccess && <p className="np-feedback np-feedback-success">{publishSuccess}</p>}
+
+            <div className="np-announcement-actions">
+              <button type="submit" className="np-btn-primary" disabled={isPublishing}>
+                {isPublishing ? "Publishing..." : "Publish announcement"}
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* Notifications Grid */}
         <div className="np-content-area">

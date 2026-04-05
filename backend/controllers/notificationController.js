@@ -3,7 +3,7 @@ const User = require('../models/User');
 const socket = require('../utils/socket');
 const mailService = require('../utils/mailService');
 const emailTemplates = require('../utils/emailTemplates');
-const { AuthorizationError, NotFoundError } = require('../utils/errorHandler');
+const { AuthorizationError, NotFoundError, ValidationError } = require('../utils/errorHandler');
 const { parsePaginationParams, buildPaginationMeta } = require('../utils/pagination');
 
 const PREF_KEY_BY_TYPE = {
@@ -11,6 +11,7 @@ const PREF_KEY_BY_TYPE = {
   approval: 'approval',
   rejection: 'rejection',
   reminder: 'reminder',
+  announcement: 'announcement',
 };
 
 const shouldDeliverNotification = (notificationType, notificationPreferences = {}, notificationChannels = {}) => {
@@ -40,6 +41,13 @@ const shouldSendEmail = (notificationType, emailPreferences = {}, notificationCh
   return enabled !== false;
 };
 
+const buildAnnouncementAudienceQuery = ({ audienceType, role, department }) => {
+  const query = {};
+  if (audienceType === 'role') query.role = role;
+  if (audienceType === 'department') query.department = department;
+  return query;
+};
+
 const sendEmailNotification = async (user, notification) => {
   try {
     if (!shouldSendEmail(notification.type, user.emailPreferences || {}, user.notificationChannels || {})) {
@@ -57,6 +65,9 @@ const sendEmailNotification = async (user, notification) => {
     const reason = payload?.reason || '';
     const eventTime = payload?.eventTime || '';
     const conflictDetails = payload?.conflictDetails || '';
+    const announcementTitle = payload?.title || 'Announcement';
+    const announcementContent = payload?.content || message;
+    const announcementPriority = payload?.priority || 'normal';
 
     switch (type) {
       case 'event':
@@ -73,6 +84,9 @@ const sendEmailNotification = async (user, notification) => {
         break;
       case 'conflict':
         htmlContent = emailTemplates.conflictNotification(eventName, conflictDetails, actionUrl);
+        break;
+      case 'announcement':
+        htmlContent = emailTemplates.announcementNotification(announcementTitle, announcementContent, actionUrl, announcementPriority);
         break;
       default:
         htmlContent = emailTemplates.systemNotification(eventName, message, actionUrl);
@@ -154,6 +168,94 @@ exports.createNotificationsForUsers = async ({ userIds = [], message, type = 'sy
   });
 
   return inserted;
+};
+
+// @desc    Preview announcement audience size before publishing
+// @route   POST /api/notifications/announcements/preview
+// @access  Private (Admin, Organizer)
+exports.previewAnnouncementAudience = async (req, res, next) => {
+  try {
+    const { audienceType, role, department } = req.body;
+    const userQuery = buildAnnouncementAudienceQuery({ audienceType, role, department });
+    const [targetCount, sampleUsers] = await Promise.all([
+      User.countDocuments(userQuery),
+      User.find(userQuery).select('name email role department').limit(3).lean(),
+    ]);
+
+    return res.json({
+      audience: {
+        type: audienceType,
+        role: role || null,
+        department: department || null,
+      },
+      targetCount,
+      sampleRecipients: sampleUsers.map((user) => ({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department || null,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Create announcement notifications for selected audience
+// @route   POST /api/notifications/announcements
+// @access  Private (Admin, Organizer)
+exports.createAnnouncement = async (req, res, next) => {
+  try {
+    const {
+      title,
+      content,
+      audienceType,
+      role,
+      department,
+      priority = 'normal',
+      link,
+    } = req.body;
+
+    const userQuery = buildAnnouncementAudienceQuery({ audienceType, role, department });
+
+    const users = await User.find(userQuery).select('_id');
+    if (!users.length) {
+      throw new ValidationError('No users found for the selected audience');
+    }
+
+    const message = content.trim();
+    const userIds = users.map((user) => String(user._id));
+    const normalizedLink = typeof link === 'string' && link.trim() ? link.trim() : '/notifications';
+    const created = await exports.createNotificationsForUsers({
+      userIds,
+      message,
+      type: 'announcement',
+      link: normalizedLink,
+      payloadBuilder: () => ({
+        title: title.trim(),
+        content: content.trim(),
+        priority,
+        audienceType,
+        role: role || null,
+        department: department || null,
+        createdBy: req.user.id,
+      }),
+    });
+
+    return res.status(201).json({
+      message: 'Announcement published successfully',
+      createdCount: created.length,
+      targetCount: userIds.length,
+      audience: {
+        type: audienceType,
+        role: role || null,
+        department: department || null,
+      },
+      priority,
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // @desc    Get user's notifications

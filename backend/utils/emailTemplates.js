@@ -114,6 +114,22 @@ const templates = {
     return getBaseTemplate(body, `Scheduling Conflict: ${eventName}`);
   },
 
+  announcementNotification: (title, content, actionUrl, priority = 'normal') => {
+    const priorityLabel = String(priority || 'normal').toUpperCase();
+    const priorityLine = priority === 'normal' ? '' : `<p><span class="badge">${priorityLabel}</span></p>`;
+    const body = `
+<h2>📣 New Announcement</h2>
+${priorityLine}
+<div class="highlight">
+    <strong>${title}</strong><br/>
+    ${content}
+</div>
+${actionUrl ? `<p><a href="${actionUrl}" class="btn">Open AcadSync</a></p>` : ''}
+<p>Please review this update in your notifications.</p>
+    `;
+    return getBaseTemplate(body, `Announcement: ${title}`);
+  },
+
   systemNotification: (title, message, actionUrl) => {
     const body = `
 <h2>${'ℹ️'} ${title}</h2>

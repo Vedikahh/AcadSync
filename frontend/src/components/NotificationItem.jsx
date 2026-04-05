@@ -26,6 +26,8 @@ export default function NotificationItem({ notification, onMarkRead, onClick, an
   const typeLabel = TYPE_LABELS[notification.type] || "Notice";
   const routeHint = TYPE_ROUTE_HINT[notification.type] || "Go to page";
   const timeAgo   = getTimeAgo(notification.created_at);
+  const announcementPriority = notification.type === "announcement" ? notification?.payload?.priority : null;
+  const announcementTitle = notification.type === "announcement" ? notification?.payload?.title : null;
 
   const handleClick = () => {
     if (onClick) {
@@ -55,8 +57,14 @@ export default function NotificationItem({ notification, onMarkRead, onClick, an
       <div className="notif-content">
         <div className="notif-meta">
           <span className={`notif-type-label notif-label-${notification.type}`}>{typeLabel}</span>
+          {announcementPriority && (
+            <span className={`notif-priority notif-priority-${announcementPriority}`}>
+              {announcementPriority}
+            </span>
+          )}
           <span className="notif-time">{timeAgo}</span>
         </div>
+        {announcementTitle && <p className="notif-title">{announcementTitle}</p>}
         <p className="notif-message">{notification.message}</p>
         {onClick && notification.link && (
           <span className="notif-route-hint">{routeHint} →</span>
