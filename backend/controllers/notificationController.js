@@ -350,3 +350,45 @@ exports.markAllRead = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Delete one notification from current user's inbox
+// @route   DELETE /api/notifications/:id
+// @access  Private
+exports.deleteNotification = async (req, res, next) => {
+  try {
+    const notif = await Notification.findById(req.params.id);
+    if (!notif) throw new NotFoundError('Not found');
+
+    const isOwner = notif.userId && String(notif.userId) === String(req.user.id);
+    if (!isOwner) {
+      throw new AuthorizationError('Not authorized to delete this notification');
+    }
+
+    await notif.deleteOne();
+    return res.json({
+      message: 'Notification deleted',
+      id: req.params.id,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Clear all read notifications for current user
+// @route   DELETE /api/notifications/clear-read
+// @access  Private
+exports.clearReadNotifications = async (req, res, next) => {
+  try {
+    const result = await Notification.deleteMany({
+      userId: req.user.id,
+      read: true,
+    });
+
+    return res.json({
+      message: 'Read notifications cleared',
+      deletedCount: result.deletedCount || 0,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

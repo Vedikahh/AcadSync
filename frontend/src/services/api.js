@@ -163,6 +163,12 @@ export const markNotificationRead = (id) =>
 export const markAllNotificationsRead = () =>
   request("/api/notifications/read-all", { method: "PATCH" });
 
+export const deleteNotification = (id) =>
+  request(`/api/notifications/${id}`, { method: "DELETE" });
+
+export const clearReadNotifications = () =>
+  request("/api/notifications/clear-read", { method: "DELETE" });
+
 export const createAnnouncement = (payload) =>
   request("/api/notifications/announcements", {
     method: "POST",

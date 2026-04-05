@@ -18,6 +18,8 @@ export default function NotificationsPage() {
     fetchNextPage,
     pagination,
     isLoading,
+    deleteNotification,
+    clearReadNotifications,
     createAnnouncement,
     previewAnnouncementAudience,
   } = useNotifications();
@@ -25,6 +27,7 @@ export default function NotificationsPage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState("");
   const [publishSuccess, setPublishSuccess] = useState("");
+  const [inboxActionError, setInboxActionError] = useState("");
   const [audiencePreviewLoading, setAudiencePreviewLoading] = useState(false);
   const [audiencePreviewError, setAudiencePreviewError] = useState("");
   const [audiencePreview, setAudiencePreview] = useState({
@@ -58,6 +61,25 @@ export default function NotificationsPage() {
     if (filter === "read")   return n.read;
     return true;
   });
+  const readCount = notifications.length - unreadCount;
+
+  const handleDeleteNotification = async (id) => {
+    try {
+      setInboxActionError("");
+      await deleteNotification(id);
+    } catch (error) {
+      setInboxActionError(error.message || "Failed to delete notification.");
+    }
+  };
+
+  const handleClearRead = async () => {
+    try {
+      setInboxActionError("");
+      await clearReadNotifications();
+    } catch (error) {
+      setInboxActionError(error.message || "Failed to clear read notifications.");
+    }
+  };
 
   const handleAnnouncementChange = (event) => {
     const { name, value } = event.target;
@@ -190,8 +212,15 @@ export default function NotificationsPage() {
                 Mark all as read
               </button>
             )}
+            {readCount > 0 && (
+              <button className="np-btn-ghost np-text-danger" onClick={handleClearRead}>
+                Clear read
+              </button>
+            )}
           </div>
         </div>
+
+        {inboxActionError && <p className="np-feedback np-feedback-error">{inboxActionError}</p>}
 
         {canPublishAnnouncement && (
           <form className="np-announcement-panel" onSubmit={handleAnnouncementSubmit}>
@@ -338,6 +367,7 @@ export default function NotificationsPage() {
                     notification={normalizedNotif}
                     animationIndex={index}
                     onMarkRead={() => markAsRead(normalizedNotif.id)}
+                    onDelete={() => handleDeleteNotification(normalizedNotif.id)}
                     onClick={() => handleClick(normalizedNotif)}
                   />
                 )

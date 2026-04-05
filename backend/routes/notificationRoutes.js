@@ -4,6 +4,8 @@ const {
   getNotifications,
   markAsRead,
   markAllRead,
+  deleteNotification,
+  clearReadNotifications,
   createAnnouncement,
   previewAnnouncementAudience,
 } = require('../controllers/notificationController');
@@ -21,7 +23,9 @@ router.route('/')
   .get(protect, getNotifications);
 
 router.patch('/read-all', protect, markAllRead);
+router.delete('/clear-read', protect, clearReadNotifications);
 router.patch('/:id/read', protect, validate(notificationIdParamSchema, 'params'), markAsRead);
+router.delete('/:id', protect, validate(notificationIdParamSchema, 'params'), deleteNotification);
 router.post('/announcements/preview', protect, authorizeRoles('admin', 'organizer'), validate(announcementAudiencePreviewSchema), previewAnnouncementAudience);
 router.post('/announcements', protect, authorizeRoles('admin', 'organizer'), validate(createAnnouncementSchema), createAnnouncement);
 

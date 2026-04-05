@@ -1,5 +1,5 @@
 import "./NotificationItem.css";
-import { CheckCircle, Bell } from "lucide-react";
+import { CheckCircle, Bell, Trash2 } from "lucide-react";
 
 
 const TYPE_LABELS = {
@@ -22,7 +22,7 @@ const TYPE_ROUTE_HINT = {
   system:       "View profile",
 };
 
-export default function NotificationItem({ notification, onMarkRead, onClick, animationIndex = 0 }) {
+export default function NotificationItem({ notification, onMarkRead, onDelete, onClick, animationIndex = 0 }) {
   const typeLabel = TYPE_LABELS[notification.type] || "Notice";
   const routeHint = TYPE_ROUTE_HINT[notification.type] || "Go to page";
   const timeAgo   = getTimeAgo(notification.created_at);
@@ -71,22 +71,33 @@ export default function NotificationItem({ notification, onMarkRead, onClick, an
         )}
       </div>
 
-      {/* Unread dot / Mark as read button */}
-      {!notification.read && (
-        <div className="notif-actions">
-          <button
-            className="notif-btn-read"
-            title="Mark as Read"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMarkRead();
-            }}
-          >
-            <CheckCircle size={20} />
-          </button>
-          <span className="unread-dot" />
-        </div>
-      )}
+      <div className="notif-actions">
+        {!notification.read && (
+          <>
+            <button
+              className="notif-btn-read"
+              title="Mark as Read"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkRead();
+              }}
+            >
+              <CheckCircle size={20} />
+            </button>
+            <span className="unread-dot" />
+          </>
+        )}
+        <button
+          className="notif-btn-delete"
+          title="Delete notification"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.();
+          }}
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   );
 }

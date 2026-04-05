@@ -3,6 +3,8 @@ import {
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  deleteNotification as deleteNotificationRequest,
+  clearReadNotifications as clearReadNotificationsRequest,
   createAnnouncement as createAnnouncementRequest,
   previewAnnouncementAudience as previewAnnouncementAudienceRequest,
 } from "../services/api";
@@ -174,6 +176,25 @@ export function NotificationsProvider({ children }) {
     return response;
   };
 
+  const deleteNotification = async (id) => {
+    await deleteNotificationRequest(id);
+    setNotifications((prev) => {
+      const next = prev.filter((n) => !(n._id === id || n.id === id));
+      setUnreadCount(next.filter((n) => !n.read).length);
+      return next;
+    });
+  };
+
+  const clearReadNotifications = async () => {
+    const response = await clearReadNotificationsRequest();
+    setNotifications((prev) => {
+      const next = prev.filter((n) => !n.read);
+      setUnreadCount(next.filter((n) => !n.read).length);
+      return next;
+    });
+    return response;
+  };
+
   const previewAnnouncementAudience = async (payload) => {
     return previewAnnouncementAudienceRequest(payload);
   };
@@ -190,6 +211,8 @@ export function NotificationsProvider({ children }) {
       isLoading,
       createAnnouncement,
       previewAnnouncementAudience,
+      deleteNotification,
+      clearReadNotifications,
     }}>
       {children}
     </NotificationsContext.Provider>
