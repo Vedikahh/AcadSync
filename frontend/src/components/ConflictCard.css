@@ -74,7 +74,7 @@
 .severity-medium .conflict-badge { 
   color: #C2410C; 
   border-color: #FED7AA; 
-  background: var(--bg-card)7ED;
+  background: var(--orange-50, #FFF7ED);
 }
 .severity-medium .conflict-badge-dot { background: #EA580C; box-shadow: 0 0 0 2px #FDBA74; }
 
@@ -134,6 +134,21 @@
   font-weight: 600;
 }
 
+.conflict-pill {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.conflict-pill.blocking {
+  color: #991B1B;
+  border: 1px solid #FECACA;
+  background: #FEE2E2;
+}
+
 .conflict-highlight {
   color: #7F1D1D;
   background: var(--red-100, #FEE2E2);
@@ -141,4 +156,87 @@
   border-radius: 6px;
   width: fit-content;
   border: 1px solid #FECACA;
+}
+
+.conflict-reason {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed #E5E7EB;
+  color: #7F1D1D;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+/* ========================
+   ConflictCard - Dark
+   ======================== */
+
+.dark .conflict-card {
+  background: color-mix(in srgb, var(--bg-card) 84%, #0b1220 16%);
+  border-color: var(--border);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+}
+
+.dark .conflict-card::before {
+  background: linear-gradient(120deg, rgba(255,255,255,0) 40%, rgba(148,163,184,0.08) 50%, rgba(255,255,255,0) 60%);
+}
+
+.dark .severity-high {
+  border-left-color: #ef4444;
+  background: linear-gradient(to right, #3f0a0a, #0f172a 55%);
+}
+
+.dark .severity-medium {
+  border-left-color: #f97316;
+  background: linear-gradient(to right, #3b1d08, #0f172a 55%);
+}
+
+.dark .severity-low {
+  border-left-color: #22c55e;
+  background: linear-gradient(to right, #052e1b, #0f172a 55%);
+}
+
+.dark .severity-high .conflict-badge {
+  color: #fecaca;
+  border-color: #b91c1c;
+  background: #7f1d1d;
+}
+
+.dark .severity-medium .conflict-badge {
+  color: #fed7aa;
+  border-color: #c2410c;
+  background: #7c2d12;
+}
+
+.dark .severity-low .conflict-badge {
+  color: #bbf7d0;
+  border-color: #15803d;
+  background: #166534;
+}
+
+.dark .conflict-event-name,
+.dark .conflict-value {
+  color: #e5e7eb;
+}
+
+.dark .conflict-label,
+.dark .conflict-time {
+  color: #94a3b8;
+}
+
+.dark .conflict-pill.blocking {
+  color: #fecaca;
+  border-color: #b91c1c;
+  background: #7f1d1d;
+}
+
+.dark .conflict-highlight {
+  color: #fee2e2;
+  background: #7f1d1d;
+  border-color: #b91c1c;
+}
+
+.dark .conflict-reason {
+  border-top-color: #334155;
+  color: #fca5a5;
 }

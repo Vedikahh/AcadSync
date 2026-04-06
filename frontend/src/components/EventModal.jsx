@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { formatTime12h } from "../utils/formatTime";
+import { formatEventDateLong, DATE_FALLBACK_TEXT } from "../utils/formatDate";
 import "./EventModal.css";
 
 export default function EventModal({ event, onClose }) {
@@ -25,27 +26,11 @@ export default function EventModal({ event, onClose }) {
 
   if (!event) return null;
 
-  const formatDate = (rawDate) => {
-    if (!rawDate) return "TBA";
-
-    const dateValue = new Date(rawDate);
-    if (Number.isNaN(dateValue.getTime())) {
-      return "TBA";
-    }
-
-    return dateValue.toLocaleDateString("en-IN", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   const statusCls = event.status === "approved" ? "em-badge-appr"
                   : event.status === "rejected" ? "em-badge-rej"
                   : "em-badge-pend";
                   
-  const formattedDate = formatDate(event.date);
+  const formattedDate = formatEventDateLong(event.date, DATE_FALLBACK_TEXT);
   const participants = event.participants ?? event.expectedParticipants;
   const reviewedAt = event.reviewedAt ? new Date(event.reviewedAt) : null;
   const hasReviewDate = reviewedAt && !Number.isNaN(reviewedAt.getTime());

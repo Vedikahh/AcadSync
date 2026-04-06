@@ -161,6 +161,27 @@
 }
 
 .me-event-name { font-weight: 700; color: var(--text-primary); margin: 0 0 2px; }
+.me-event-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0 0 2px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.me-event-link:hover {
+  color: var(--primary);
+}
+
+.me-event-link:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 .me-event-organizer { font-size: 0.75rem; color: var(--text-muted); }
 .me-dept, .me-venue { white-space: nowrap; }
 .me-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -182,6 +203,17 @@
 
 /* Action buttons */
 .me-actions { display: flex; gap: 6px; align-items: center; }
+
+.me-final-state {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
 .me-btn-approve, .me-btn-reject, .me-btn-delete {
   width: 30px;

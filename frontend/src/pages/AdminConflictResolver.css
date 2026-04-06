@@ -3,6 +3,8 @@
   display: grid;
   gap: 1rem;
   color: var(--text-primary);
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .acr-toast {
@@ -45,7 +47,7 @@
 .acr-filters {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.9rem;
   flex-wrap: wrap;
 }
 
@@ -68,19 +70,37 @@
 
 .acr-layout {
   display: grid;
-  grid-template-columns: 330px 1fr;
-  gap: 1rem;
+  grid-template-columns: 400px minmax(0, 1fr);
+  gap: 1.1rem;
   min-height: 65vh;
+  align-items: start;
 }
 
 .acr-list {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--bg-card);
-  padding: 0.8rem;
+  padding: 1rem;
   display: grid;
-  gap: 0.7rem;
+  gap: 0.8rem;
   overflow: auto;
+  max-height: calc(100vh - 220px);
+}
+
+.acr-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.55rem;
+  margin-bottom: 0.15rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.acr-list-header strong {
+  color: var(--text-primary);
+  font-size: 0.95rem;
 }
 
 .acr-item {
@@ -88,7 +108,7 @@
   text-align: left;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0.7rem;
+  padding: 0.85rem;
   background: var(--bg-card-2);
   color: var(--text-primary);
   cursor: pointer;
@@ -101,18 +121,19 @@
 
 .acr-item-title {
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .acr-item-meta {
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
   color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
 .acr-badges {
-  margin-top: 0.45rem;
+  margin-top: 0.55rem;
   display: flex;
-  gap: 0.4rem;
+  gap: 0.45rem;
   flex-wrap: wrap;
 }
 
@@ -151,7 +172,8 @@
 
 .acr-detail {
   display: grid;
-  gap: 0.9rem;
+  gap: 1rem;
+  align-content: start;
 }
 
 .acr-panel {
@@ -159,6 +181,20 @@
   border-radius: 12px;
   background: var(--bg-card);
   padding: 1rem;
+}
+
+.acr-guide {
+  border-left: 4px solid var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg-card));
+}
+
+.acr-guide h3 {
+  margin-bottom: 0.35rem;
+}
+
+.acr-guide p {
+  margin: 0;
+  color: var(--text-secondary);
 }
 
 .acr-panel h2,
@@ -176,14 +212,17 @@
 
 .acr-reco.warn {
   border-left: 4px solid #d97706;
+  background: color-mix(in srgb, #fff7ed 70%, var(--bg-card) 30%);
 }
 
 .acr-reco.danger {
   border-left: 4px solid #dc2626;
+  background: color-mix(in srgb, #fef2f2 70%, var(--bg-card) 30%);
 }
 
 .acr-reco.neutral {
   border-left: 4px solid #2563eb;
+  background: color-mix(in srgb, #eff6ff 70%, var(--bg-card) 30%);
 }
 
 .acr-ai-panel {
@@ -226,6 +265,17 @@
   color: var(--text-secondary);
 }
 
+.acr-toggle-details {
+  margin-top: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 0.38rem 0.6rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
 .acr-panel-title-row {
   display: flex;
   justify-content: space-between;
@@ -240,9 +290,9 @@
 .acr-conflict-row {
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.7rem;
+  padding: 0.85rem;
   display: flex;
-  gap: 0.8rem;
+  gap: 1rem;
   justify-content: space-between;
   background: var(--bg-card-2);
 }
@@ -272,19 +322,134 @@
 
 .acr-panel textarea {
   width: 100%;
+  min-height: 100px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.55rem;
+  padding: 0.65rem;
   margin-bottom: 0.6rem;
   resize: vertical;
   color: var(--text-primary);
   background: var(--bg-card-2);
 }
 
+.acr-action-panel {
+  position: sticky;
+  top: 1rem;
+  border-width: 2px;
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border) 60%);
+  box-shadow: 0 8px 20px color-mix(in srgb, #000 8%, transparent);
+}
+
+.acr-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.acr-mode-btn {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card-2);
+  color: var(--text-primary);
+  font-weight: 700;
+  padding: 0.55rem 0.5rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.acr-mode-btn.active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 14%, var(--bg-card));
+}
+
+.acr-mode-panel {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.acr-mode-help {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.acr-blocking-reasons {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 0.7rem;
+}
+
+.acr-blocking-reasons h4 {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #991b1b;
+}
+
+.acr-blocking-reasons ul {
+  margin: 0.55rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.acr-blocking-reasons li {
+  color: #7f1d1d;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.acr-blocking-reasons li span {
+  font-size: 0.84rem;
+  color: #991b1b;
+}
+
+.acr-checklist {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.88rem;
+}
+
+.acr-checklist li {
+  color: var(--text-secondary);
+}
+
+.acr-checklist li.done {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.acr-checklist li.pending {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.acr-inline-warning {
+  margin: 0;
+  color: #b45309;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.acr-disabled-reason {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
 .acr-actions {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.acr-actions-foot {
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
 }
 
 .acr-btn {
@@ -334,13 +499,17 @@
 
 .acr-item:hover,
 .acr-btn:hover,
-.acr-manage-link:hover {
+.acr-manage-link:hover,
+.acr-mode-btn:hover,
+.acr-toggle-details:hover {
   filter: brightness(0.98);
 }
 
 .acr-item:focus-visible,
 .acr-btn:focus-visible,
 .acr-manage-link:focus-visible,
+.acr-mode-btn:focus-visible,
+.acr-toggle-details:focus-visible,
 .acr-filters input:focus-visible,
 .acr-filters select:focus-visible,
 .acr-panel textarea:focus-visible {
@@ -357,6 +526,71 @@
 .dark .acr-btn.fallback,
 .dark .acr-manage-link {
   background: color-mix(in srgb, var(--bg-card) 85%, #0b1220 15%);
+}
+
+.dark .acr-item.active {
+  border-color: #60a5fa;
+  background: color-mix(in srgb, #1e3a8a 45%, var(--bg-card) 55%);
+}
+
+.dark .acr-reco.warn {
+  background: #3b1d08;
+  border-left-color: #f59e0b;
+}
+
+.dark .acr-reco.warn h3,
+.dark .acr-reco.warn p {
+  color: #fde68a;
+}
+
+.dark .acr-reco.danger {
+  background: #450a0a;
+  border-left-color: #ef4444;
+}
+
+.dark .acr-reco.danger h3,
+.dark .acr-reco.danger p {
+  color: #fecaca;
+}
+
+.dark .acr-reco.neutral {
+  background: #082f49;
+  border-left-color: #38bdf8;
+}
+
+.dark .acr-reco.neutral h3,
+.dark .acr-reco.neutral p {
+  color: #bae6fd;
+}
+
+.dark .acr-ai-panel {
+  border-left-color: #818cf8;
+  background: #1e1b4b;
+}
+
+.dark .acr-conflict-row {
+  background: color-mix(in srgb, var(--bg-card) 82%, #0b1220 18%);
+}
+
+.dark .acr-action-panel {
+  border-color: color-mix(in srgb, #60a5fa 45%, var(--border) 55%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.dark .acr-mode-btn {
+  background: #111827;
+  border-color: #334155;
+}
+
+.dark .acr-mode-btn.active {
+  background: #1e3a8a;
+  border-color: #3b82f6;
+  color: #dbeafe;
+}
+
+.dark .acr-panel textarea {
+  background: #111827;
+  border-color: #334155;
 }
 
 .dark .acr-badge.p3 {
@@ -377,13 +611,40 @@
   color: #e0f2fe;
 }
 
-@media (max-width: 1080px) {
+.dark .acr-inline-warning {
+  color: #fbbf24;
+}
+
+.dark .acr-checklist li.done {
+  color: #4ade80;
+}
+
+.dark .acr-checklist li.pending {
+  color: #fbbf24;
+}
+
+.dark .acr-blocking-reasons {
+  border-color: #991b1b;
+  background: #450a0a;
+}
+
+.dark .acr-blocking-reasons h4,
+.dark .acr-blocking-reasons li,
+.dark .acr-blocking-reasons li span {
+  color: #fecaca;
+}
+
+@media (max-width: 1200px) {
   .acr-layout {
     grid-template-columns: 1fr;
   }
 
   .acr-list {
-    max-height: 300px;
+    max-height: 340px;
+  }
+
+  .acr-action-panel {
+    position: static;
   }
 }
 
@@ -403,5 +664,19 @@
 
   .acr-conflict-row {
     flex-direction: column;
+  }
+
+  .acr-mode-switch {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .acr-mode-btn {
+    font-size: 0.86rem;
+    padding: 0.5rem 0.45rem;
+  }
+
+  .acr-filters input,
+  .acr-filters select {
+    min-width: 100%;
   }
 }

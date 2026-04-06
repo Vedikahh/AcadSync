@@ -8,6 +8,12 @@ const PRIORITY_MAP = {
   event: 1,
 };
 
+const PRIORITY_LABEL = {
+  3: 'Critical',
+  2: 'High',
+  1: 'Normal',
+};
+
 const DEFAULT_WORKDAY_START = 9 * 60;  // 09:00
 const DEFAULT_WORKDAY_END = 18 * 60;  // 18:00
 const SUGGESTION_STEP_MIN = 30;
@@ -41,6 +47,25 @@ const formatTime = (minutes) => {
   const m = minutes % 60;
   return `${pad2(h)}:${pad2(m)}`;
 };
+
+const toIsoFromDateKey = (dateKey) => {
+  if (!dateKey) return null;
+  const iso = new Date(`${dateKey}T00:00:00.000Z`);
+  return Number.isNaN(iso.getTime()) ? null : iso.toISOString();
+};
+
+const overlapWindow = (aStart, aEnd, bStart, bEnd) => {
+  const start = Math.max(aStart, bStart);
+  const end = Math.min(aEnd, bEnd);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+  return {
+    startTime: formatTime(start),
+    endTime: formatTime(end),
+  };
+};
+
+const getBlockingReason = ({ title, type, startTime, endTime, priority }) =>
+  `${String(type || 'event').toUpperCase()} "${title}" (${startTime}-${endTime}) has ${PRIORITY_LABEL[priority] || 'higher'} priority and blocks this proposal.`;
 
 const overlap = (aStart, aEnd, bStart, bEnd) =>
   aStart < bEnd && aEnd > bStart;
@@ -84,6 +109,7 @@ const checkConflicts = async (eventDetails) => {
   const conflicts = [];
   const blockingConflicts = [];
   const occupiedIntervals = [];
+  const dateIso = toIsoFromDateKey(dateKey);
 
   // Existing approved events (one-off)
   for (const ev of existingEvents) {
@@ -97,16 +123,29 @@ const checkConflicts = async (eventDetails) => {
 
     if (overlap(evStart, evEnd, evStartMin, evEndMin)) {
       const message = `Overlaps with ${evType} "${ev.title}" from ${ev.startTime}-${ev.endTime}.`;
+      const conflictWindow = overlapWindow(evStart, evEnd, evStartMin, evEndMin);
+      const isBlocking = evPriority > incomingPriority;
       const conflict = {
         source: 'event',
         type: evType,
         title: ev.title,
         date: dateKey,
+        dateIso,
         startTime: ev.startTime,
         endTime: ev.endTime,
         priority: evPriority,
         message,
-        isBlocking: evPriority > incomingPriority,
+        isBlocking,
+        conflictWindow,
+        blockingReason: isBlocking
+          ? getBlockingReason({
+            title: ev.title,
+            type: evType,
+            startTime: ev.startTime,
+            endTime: ev.endTime,
+            priority: evPriority,
+          })
+          : null,
       };
       conflicts.push(conflict);
       if (conflict.isBlocking) blockingConflicts.push(conflict);
@@ -126,16 +165,29 @@ const checkConflicts = async (eventDetails) => {
     if (overlap(evStart, evEnd, clsStart, clsEnd)) {
       const displayTitle = cls.title || cls.subject || 'Schedule Slot';
       const message = `Overlaps with ${clsType} "${displayTitle}" from ${cls.startTime}-${cls.endTime}.`;
+      const conflictWindow = overlapWindow(evStart, evEnd, clsStart, clsEnd);
+      const isBlocking = clsPriority > incomingPriority;
       const conflict = {
         source: 'schedule',
         type: clsType,
         title: displayTitle,
         date: dateKey,
+        dateIso,
         startTime: cls.startTime,
         endTime: cls.endTime,
         priority: clsPriority,
         message,
-        isBlocking: clsPriority > incomingPriority,
+        isBlocking,
+        conflictWindow,
+        blockingReason: isBlocking
+          ? getBlockingReason({
+            title: displayTitle,
+            type: clsType,
+            startTime: cls.startTime,
+            endTime: cls.endTime,
+            priority: clsPriority,
+          })
+          : null,
       };
       conflicts.push(conflict);
       if (conflict.isBlocking) blockingConflicts.push(conflict);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./EventCard.css";
+import { formatEventDate, DATE_FALLBACK_TEXT } from "../utils/formatDate";
 import {
   Calendar,
   Clock3,
@@ -29,50 +30,40 @@ export default function EventCard({
   animationIndex = 0,
 }) {
   const status = STATUS_LABELS[event.status] || STATUS_LABELS.pending;
-  const [countdown, setCountdown] = useState("");
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   // Ownership check: createdBy might be populated object or just ID string
   const createdById = event.createdBy?._id || event.createdBy;
   const isOwner = user?.id === createdById;
 
   useEffect(() => {
-    const getEventStart = () => {
-      if (!event?.date) return null;
-      const time = event.startTime || "00:00";
-      const stamp = `${event.date}T${time}`;
-      const parsed = new Date(stamp);
-      return Number.isNaN(parsed.getTime()) ? null : parsed;
-    };
-
-    const formatCountdown = () => {
-      const start = getEventStart();
-      if (!start) return "";
-
-      const diffMs = start.getTime() - Date.now();
-      if (diffMs <= 0) return "Started";
-
-      const totalMinutes = Math.floor(diffMs / 60000);
-      const days = Math.floor(totalMinutes / (24 * 60));
-      const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
-      const mins = totalMinutes % 60;
-
-      if (days > 0) return `Starts in ${days}d ${hours}h`;
-      if (hours > 0) return `Starts in ${hours}h ${mins}m`;
-      return `Starts in ${mins}m`;
-    };
-
-    setCountdown(formatCountdown());
-    const timer = setInterval(() => setCountdown(formatCountdown()), 30000);
+    const timer = setInterval(() => setNowMs(Date.now()), 30000);
     return () => clearInterval(timer);
-  }, [event?.date, event?.startTime]);
+  }, []);
 
-  const eventDate = event.date
-    ? new Date(event.date).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "TBD";
+  let countdown = "";
+  if (event?.date) {
+    const time = event.startTime || "00:00";
+    const stamp = `${event.date}T${time}`;
+    const parsed = new Date(stamp);
+    if (!Number.isNaN(parsed.getTime())) {
+      const diffMs = parsed.getTime() - nowMs;
+      if (diffMs <= 0) {
+        countdown = "Started";
+      } else {
+        const totalMinutes = Math.floor(diffMs / 60000);
+        const days = Math.floor(totalMinutes / (24 * 60));
+        const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+        const mins = totalMinutes % 60;
+
+        if (days > 0) countdown = `Starts in ${days}d ${hours}h`;
+        else if (hours > 0) countdown = `Starts in ${hours}h ${mins}m`;
+        else countdown = `Starts in ${mins}m`;
+      }
+    }
+  }
+
+  const eventDate = formatEventDate(event.date, { fallback: DATE_FALLBACK_TEXT });
 
   const eventTime = event.startTime && event.endTime
     ? `${event.startTime} - ${event.endTime}`

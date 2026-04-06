@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getSchedules, getEvents, getDashboardStats } from "../services/api";
 import { formatTime12h } from "../utils/formatTime";
+import { formatEventDate, DATE_FALLBACK_TEXT } from "../utils/formatDate";
 import LectureCard from "../components/LectureCard";
 import ConflictCard from "../components/ConflictCard";
 import StatsCard from "../components/StatsCard";
@@ -83,16 +84,19 @@ export default function OrganizerDashboard() {
     fetchStats();
   }, [user]);
 
-  const conflictItems = events
-    .filter((event) => Array.isArray(event.conflicts) && event.conflicts.length > 0)
-    .map((event, idx) => ({
-      id: event._id || event.id || idx,
-      eventName: event.title,
-      clashWith: event.conflicts[0],
-      timeOverlap: `${event.startTime || "N/A"} - ${event.endTime || "N/A"}`,
-      date: event.date ? new Date(event.date).toLocaleDateString() : "TBD",
-      severity: event.conflicts.length > 1 ? "high" : "medium",
-    }));
+  const conflictItems = useMemo(
+    () => events
+      .filter((event) => Array.isArray(event.conflicts) && event.conflicts.length > 0)
+      .map((event, idx) => ({
+        id: event._id || event.id || idx,
+        eventName: event.title,
+        clashWith: event.conflicts[0],
+        timeOverlap: `${event.startTime || "N/A"} - ${event.endTime || "N/A"}`,
+        date: formatEventDate(event.date, { fallback: DATE_FALLBACK_TEXT }),
+        severity: event.conflicts.length > 1 ? "high" : "medium",
+      })),
+    [events]
+  );
 
   const totalConflicts = statsError ? conflictItems.length : stats.conflictAlerts;
   const highConflicts = statsError

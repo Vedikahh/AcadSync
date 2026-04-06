@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import ConflictCard from "../components/ConflictCard";
 import { createEvent, updateEvent, getEvents } from "../services/api";
-import { useAuth } from "../context/AuthContext";
 import { formatTime12h } from "../utils/formatTime";
+import { formatEventDate, formatEventDateLong, DATE_FALLBACK_TEXT } from "../utils/formatDate";
 import "./ConflictResult.css";
 
 export default function ConflictResult() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const {
     hasConflict,
     eventData,
@@ -28,6 +27,33 @@ export default function ConflictResult() {
   const [submitting, setSubmitting] = useState(false);
   const [allEvents, setAllEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(!eventData);
+  const normalizedConflicts = useMemo(
+    () => conflicts.map((item) => {
+      if (typeof item === "string") {
+        return {
+          clashWith: item,
+          eventName: eventData?.title || "Proposed event",
+          severity: "high",
+          date: eventData?.date,
+          timeOverlap: `${eventData?.startTime || "--"} - ${eventData?.endTime || "--"}`,
+        };
+      }
+
+      return {
+        eventName: eventData?.title || "Proposed event",
+        clashWith: item?.title || item?.clashWith || "Existing schedule item",
+        date: item?.dateIso || item?.date,
+        conflictWindow: item?.conflictWindow,
+        timeOverlap: item?.timeOverlap,
+        severity: item?.isBlocking ? "high" : "medium",
+        priority: item?.priority,
+        isBlocking: Boolean(item?.isBlocking),
+        blockingReason: item?.blockingReason,
+        message: item?.message,
+      };
+    }),
+    [conflicts, eventData]
+  );
 
   useEffect(() => {
     if (!eventData) {
@@ -73,11 +99,7 @@ export default function ConflictResult() {
 
   // If we have eventData, we are in the "Result" view for a specific proposal
   if (eventData) {
-    const formattedDate = eventData.date
-      ? new Date(eventData.date + "T00:00").toLocaleDateString("en-IN", {
-          weekday: "long", day: "numeric", month: "long", year: "numeric",
-        })
-      : "—";
+    const formattedDate = formatEventDateLong(eventData.date, DATE_FALLBACK_TEXT);
 
     return (
       <div className="cr-page">
@@ -205,7 +227,7 @@ export default function ConflictResult() {
                 <h2 className="cr-conflicts-title">Detected Clashes</h2>
                 <div className="cr-conflicts-list">
                   {conflicts.map((c, i) => (
-                    <ConflictCard key={i} conflict={typeof c === 'string' ? { clashWith: c, severity: "high" } : c} />
+                    <ConflictCard key={i} conflict={normalizedConflicts[i]} />
                   ))}
                 </div>
 
@@ -216,6 +238,15 @@ export default function ConflictResult() {
                       <p className="cr-action-desc">
                         Lower-priority events cannot be scheduled over exams or lectures. Please choose a different slot.
                       </p>
+                      {blockingConflicts.length > 0 && (
+                        <ul className="cr-assistant-why">
+                          {blockingConflicts.map((conflict, index) => (
+                            <li key={`${conflict.title || "blocker"}-${index}`}>
+                              {(conflict.blockingReason || conflict.message || "Higher-priority overlap detected.")}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </>
                   ) : (
                     <>
@@ -264,7 +295,7 @@ export default function ConflictResult() {
                 <div className="cr-res-header">
                   <div>
                     <h3 className="cr-res-title">{ev.title}</h3>
-                    <p className="cr-res-meta">{ev.venue} • {new Date(ev.date).toLocaleDateString()} • {formatTime12h(ev.startTime)}-{formatTime12h(ev.endTime)}</p>
+                    <p className="cr-res-meta">{ev.venue} • {formatEventDate(ev.date, { fallback: DATE_FALLBACK_TEXT })} • {formatTime12h(ev.startTime)}-{formatTime12h(ev.endTime)}</p>
                   </div>
                   <Link to="/manage-events" className="cr-res-action">Review Proposal →</Link>
                 </div>

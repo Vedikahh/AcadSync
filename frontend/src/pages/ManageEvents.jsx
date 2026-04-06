@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { getEvents, updateEventStatus, deleteEvent } from "../services/api";
 import socket from "../services/socket";
+import { formatEventDate, DATE_FALLBACK_TEXT } from "../utils/formatDate";
 import "./ManageEvents.css";
 
 const FILTERS = ["all", "pending", "approved", "rejected"];
@@ -14,7 +14,6 @@ const STATUS_BADGE = {
 };
 
 export default function ManageEvents() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -51,6 +50,16 @@ export default function ManageEvents() {
     setTimeout(() => setToast(""), 2500);
   };
 
+  const openEventDetails = (event) => {
+    const id = event?._id || event?.id;
+    if (!id) {
+      showToast("⚠ Unable to open this event right now.");
+      return;
+    }
+
+    navigate(`/events/${id}`, { state: { event, fromManageEvents: true } });
+  };
+
   const handleApprove = async (id) => {
     try {
       const noteInput = window.prompt("Optional approval note for organizer (leave blank to skip):", "");
@@ -60,7 +69,7 @@ export default function ManageEvents() {
       const updated = await updateEventStatus(id, "approved", payload);
       setEvents((prev) => prev.map((e) => (e._id === id || e.id === id) ? updated : e));
       showToast("✅ Event approved successfully!");
-    } catch (err) {
+    } catch {
       showToast("❌ Failed to approve event");
     }
   };
@@ -97,7 +106,7 @@ export default function ManageEvents() {
       await deleteEvent(id);
       setEvents((prev) => prev.filter((e) => e._id !== id && e.id !== id));
       showToast("🗑 Event deleted.");
-    } catch (err) {
+    } catch {
       showToast("❌ Failed to delete event");
     }
   };
@@ -202,11 +211,11 @@ export default function ManageEvents() {
                     key={id}
                     className="me-row"
                     style={{ cursor: "pointer", "--item-index": index }}
-                    onClick={() => navigate(`/events/${id}`, { state: { event: ev, fromManageEvents: true } })}
+                    onClick={() => openEventDetails(ev)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        navigate(`/events/${id}`, { state: { event: ev, fromManageEvents: true } });
+                        openEventDetails(ev);
                       }
                     }}
                     tabIndex={0}
@@ -214,14 +223,22 @@ export default function ManageEvents() {
                     aria-label={`Open details for ${ev.title}`}
                   >
                     <td>
-                      <p className="me-event-name">{ev.title}</p>
+                      <button
+                        type="button"
+                        className="me-event-link"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEventDetails(ev);
+                        }}
+                        aria-label={`Open event details for ${ev.title}`}
+                      >
+                        {ev.title}
+                      </button>
                       <span className="me-event-organizer">{ev.organizer || (ev.createdBy && ev.createdBy.name) || "Unknown"}</span>
                     </td>
                     <td className="me-dept" data-label="Department">{ev.department}</td>
                     <td className="me-date" data-label="Date">
-                      {ev.date ? new Date(ev.date + "T00:00").toLocaleDateString("en-IN", {
-                        day: "numeric", month: "short", year: "numeric",
-                      }) : "TBA"}
+                      {formatEventDate(ev.date, { fallback: DATE_FALLBACK_TEXT })}
                     </td>
                     <td className="me-venue" data-label="Venue">{ev.venue}</td>
                     <td className="me-participants" data-label="Participants">{ev.participants || "--"}</td>
@@ -230,15 +247,19 @@ export default function ManageEvents() {
                     </td>
                     <td onClick={e => e.stopPropagation()} data-label="Actions">
                       <div className="me-actions">
-                        {ev.status !== "approved" && (
-                          <button className="me-btn-approve" onClick={() => handleApprove(id)} title="Approve" aria-label={`Approve ${ev.title}`}>
-                            ✓
-                          </button>
-                        )}
-                        {ev.status !== "rejected" && (
-                          <button className="me-btn-reject" onClick={() => handleReject(id)} title="Reject" aria-label={`Reject ${ev.title}`}>
-                            ✗
-                          </button>
+                        {ev.status === "pending" ? (
+                          <>
+                            <button className="me-btn-approve" onClick={() => handleApprove(id)} title="Approve" aria-label={`Approve ${ev.title}`}>
+                              ✓
+                            </button>
+                            <button className="me-btn-reject" onClick={() => handleReject(id)} title="Reject" aria-label={`Reject ${ev.title}`}>
+                              ✗
+                            </button>
+                          </>
+                        ) : (
+                          <span className="me-final-state" title="Finalized event">
+                            Finalized
+                          </span>
                         )}
                         <button className="me-btn-delete" onClick={() => handleDelete(id)} title="Delete" aria-label={`Delete ${ev.title}`}>
                           🗑

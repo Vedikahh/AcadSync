@@ -183,6 +183,9 @@ exports.approveEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) throw new NotFoundError('Event not found');
+    if (event.status !== 'pending') {
+      throw new ConflictError('Only pending events can be approved.');
+    }
 
     const beforeEvent = {
       status: event.status,
@@ -282,6 +285,9 @@ exports.rejectEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) throw new NotFoundError('Event not found');
+    if (event.status !== 'pending') {
+      throw new ConflictError('Only pending events can be rejected.');
+    }
 
     const beforeEvent = {
       status: event.status,
