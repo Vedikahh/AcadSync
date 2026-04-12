@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getAuditLogs, getEvents, getDashboardStats, updateEventStatus } from "../services/api";
+import { getAuditLogs, getEvents, updateEventStatus } from "../services/api";
 import EventCard from "../components/EventCard";
 import StatsCard from "../components/StatsCard";
 import "./Dashboard.css";
@@ -11,21 +11,12 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [eventsError, setEventsError] = useState("");
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState("");
   const [logsLoading, setLogsLoading] = useState(true);
   const [logsError, setLogsError] = useState("");
   const [auditLogs, setAuditLogs] = useState([]);
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    pendingApprovals: 0,
-    approvedEvents: 0,
-    activeDepartments: 0,
-  });
 
   useEffect(() => {
     fetchEvents();
-    fetchStats();
     fetchAuditLogs();
   }, []);
 
@@ -40,25 +31,6 @@ export default function AdminDashboard() {
       setEventsError(err.message || "Failed to load events.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      setStatsLoading(true);
-      setStatsError("");
-      const data = await getDashboardStats();
-      setStats({
-        totalStudents: data?.stats?.totalStudents ?? 0,
-        pendingApprovals: data?.stats?.pendingApprovals ?? 0,
-        approvedEvents: data?.stats?.approvedEvents ?? 0,
-        activeDepartments: data?.stats?.activeDepartments ?? 0,
-      });
-    } catch (err) {
-      console.error(err);
-      setStatsError(err.message || "Failed to load dashboard stats.");
-    } finally {
-      setStatsLoading(false);
     }
   };
 
@@ -89,7 +61,17 @@ export default function AdminDashboard() {
     return date.toLocaleString();
   };
 
+  const startOfToday = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
   const pending  = events.filter((e) => e.status === "pending");
+  const approvedEventsCount = events.filter((event) => event.status === "approved").length;
+  const rejectedEventsCount = events.filter((event) => event.status === "rejected").length;
+  const reviewedEventsCount = approvedEventsCount + rejectedEventsCount;
+  const totalRequestsCount = events.length;
   
   // Calculate dynamic department activity from events
   const deptCounts = events.reduce((acc, event) => {
@@ -100,7 +82,7 @@ export default function AdminDashboard() {
   
   const DEPT_ACTIVITY = Object.entries(deptCounts).map(([dept, count]) => ({ dept, count })).slice(0, 5);
   const maxCount = Math.max(1, ...DEPT_ACTIVITY.map((d) => d.count));
-  const activeDepartmentsCount = statsError ? Object.keys(deptCounts).length : stats.activeDepartments;
+  const activeDepartmentsCount = Object.keys(deptCounts).length;
 
   const conflictsList = events
     .filter((e) => e.conflicts && e.conflicts.length > 0)
@@ -120,6 +102,22 @@ export default function AdminDashboard() {
     time: formatLogTime(log.createdAt),
   }));
 
+  const recentActivityCount = auditLogs.filter((log) => {
+    const created = log?.createdAt ? new Date(log.createdAt) : null;
+    return created && !Number.isNaN(created.getTime()) && created >= startOfToday;
+  }).length;
+
+  const reviewProgress = totalRequestsCount === 0
+    ? 0
+    : Math.round((reviewedEventsCount / totalRequestsCount) * 100);
+
+  const oldestPending = [...pending].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))[0] || null;
+
+  const totalRequestsValue = totalRequestsCount === 0 ? "No Requests" : totalRequestsCount;
+  const pendingValue = pending.length === 0 ? "Queue Clear" : pending.length;
+  const approvedValue = approvedEventsCount === 0 ? "None Yet" : approvedEventsCount;
+  const activeDeptValue = activeDepartmentsCount === 0 ? "No Data" : activeDepartmentsCount;
+
   const handleApprove = async (id) => {
     try {
       const noteInput = window.prompt("Optional approval note for organizer (leave blank to skip):", "");
@@ -131,7 +129,6 @@ export default function AdminDashboard() {
         noteInput.trim() ? { note: noteInput.trim() } : {}
       );
       setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? updated : e)));
-      fetchStats();
     } catch (err) { console.error("Failed to approve", err); }
   };
   const handleReject = async (id) => {
@@ -150,7 +147,6 @@ export default function AdminDashboard() {
         ...(noteInput.trim() ? { note: noteInput.trim() } : {}),
       });
       setEvents((prev) => prev.map((e) => ((e._id === id || e.id === id) ? updated : e)));
-      fetchStats();
     } catch (err) { console.error("Failed to reject", err); }
   };
 
@@ -169,16 +165,33 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {statsLoading && <div className="admin-inline-note">Loading dashboard stats...</div>}
-      {statsError && <div className="admin-inline-error">{statsError}</div>}
       {eventsError && <div className="admin-inline-error">{eventsError}</div>}
       {logsError && <div className="admin-inline-error">{logsError}</div>}
 
         <div className="admin-stats-grid">
-          <StatsCard value={stats.totalStudents} label="Total Students"   color="blue"   />
-          <StatsCard value={stats.pendingApprovals} label="Needs Approval"   color="orange" />
-          <StatsCard value={stats.approvedEvents} label="Approved Events"  color="green"  />
-          <StatsCard value={activeDepartmentsCount} label="Active Depts"  color="purple" />
+          <StatsCard value={totalRequestsValue} label="Total Requests" color="blue" />
+          <StatsCard value={pendingValue} label="Needs Approval" color="orange" />
+          <StatsCard value={approvedValue} label="Approved Events" color="green" />
+          <StatsCard value={activeDeptValue} label="Active Depts" color="purple" />
+        </div>
+
+        <div className="admin-snapshot-row">
+          <div className="admin-snapshot-pill">
+            <span className="admin-snapshot-k">Review Progress</span>
+            <strong className="admin-snapshot-v">{reviewedEventsCount}/{totalRequestsCount} processed ({reviewProgress}%)</strong>
+          </div>
+          <div className="admin-snapshot-pill">
+            <span className="admin-snapshot-k">Conflict Load</span>
+            <strong className="admin-snapshot-v">{conflictsList.length === 0 ? "No active conflicts" : `${conflictsList.length} active conflict reports`}</strong>
+          </div>
+          <div className="admin-snapshot-pill">
+            <span className="admin-snapshot-k">Queue + Activity</span>
+            <strong className="admin-snapshot-v">
+              {oldestPending
+                ? `Oldest pending: ${oldestPending.title || "Untitled event"}`
+                : `${recentActivityCount} audit actions logged today`}
+            </strong>
+          </div>
         </div>
 
         {/* ── Main Layout ── */}

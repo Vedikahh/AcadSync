@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Calendar, User as UserIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getEvents, getNotifications, getDashboardStats, markNotificationRead } from "../services/api";
+import { getEvents, getNotifications, markNotificationRead } from "../services/api";
 import EventCard from "../components/EventCard";
 import NotificationItem from "../components/NotificationItem";
 import StatsCard from "../components/StatsCard";
+import { formatEventDate, DATE_FALLBACK_TEXT } from "../utils/formatDate";
 import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
@@ -14,15 +15,6 @@ export default function StudentDashboard() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState("");
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState("");
-  const [stats, setStats] = useState({
-    campusEvents: 0,
-    activeDay: "Today",
-    classesToday: 0,
-    conflictAlerts: 0,
-    unreadNotifications: 0,
-  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -58,28 +50,7 @@ export default function StudentDashboard() {
       setIsLoading(false);
     };
 
-    const fetchStats = async () => {
-      try {
-        setStatsLoading(true);
-        setStatsError("");
-        const data = await getDashboardStats();
-        setStats({
-          campusEvents: data?.stats?.campusEvents ?? 0,
-          activeDay: data?.stats?.activeDay || "Today",
-          classesToday: data?.stats?.classesToday ?? 0,
-          conflictAlerts: data?.stats?.conflictAlerts ?? 0,
-          unreadNotifications: data?.stats?.unreadNotifications ?? 0,
-        });
-      } catch (err) {
-        console.error(err);
-        setStatsError(err.message || "Failed to load dashboard stats.");
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
     fetchDashboardData();
-    fetchStats();
   }, [user]);
 
   // Get today's date in YYYY-MM-DD format for comparison
@@ -102,6 +73,52 @@ export default function StudentDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const totalApproved = events.length;
+
+  const todayLabel = useMemo(
+    () => new Date().toLocaleDateString("en-US", { weekday: "long" }),
+    []
+  );
+
+  const startOfToday = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
+  const weekAhead = useMemo(() => {
+    const date = new Date(startOfToday);
+    date.setDate(date.getDate() + 7);
+    date.setHours(23, 59, 59, 999);
+    return date;
+  }, [startOfToday]);
+
+  const endOfThisMonth = useMemo(() => {
+    const date = new Date(startOfToday);
+    date.setMonth(date.getMonth() + 1, 0);
+    date.setHours(23, 59, 59, 999);
+    return date;
+  }, [startOfToday]);
+
+  const upcomingThisWeek = useMemo(
+    () => events.filter((event) => event.date && new Date(event.date) >= startOfToday && new Date(event.date) <= weekAhead).length,
+    [events, startOfToday, weekAhead]
+  );
+
+  const examsThisMonth = useMemo(
+    () => events.filter((event) => event.type === "exam" && event.date && new Date(event.date) >= startOfToday && new Date(event.date) <= endOfThisMonth).length,
+    [events, startOfToday, endOfThisMonth]
+  );
+
+  const nextEvent = useMemo(() => {
+    const candidates = events
+      .filter((event) => event.date && new Date(event.date) >= startOfToday)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    return candidates[0] || null;
+  }, [events, startOfToday]);
+
+  const campusEventsValue = totalApproved === 0 ? "No Events" : totalApproved;
+  const classesTodayValue = todayLectures.length === 0 ? "No Classes" : todayLectures.length;
+  const unreadAlertsValue = unreadCount === 0 ? "All Read" : unreadCount;
 
   const markRead = async (id) => {
     try {
@@ -131,15 +148,32 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {statsLoading && <div className="std-inline-note">Loading dashboard stats...</div>}
-      {statsError && <div className="std-inline-error">{statsError}</div>}
       {pageError && <div className="std-inline-error">{pageError}</div>}
 
         <div className="std-stats-grid">
-          <StatsCard value={statsError ? totalApproved : stats.campusEvents} label="Campus Events" color="purple" />
-          <StatsCard value={stats.activeDay} label="Active Day"    color="green"  />
-          <StatsCard value={statsError ? "-" : stats.classesToday} label="Classes Today" color="orange" />
-          <StatsCard value={statsError ? unreadCount : stats.unreadNotifications} label="Unread Alerts" color="blue"  />
+          <StatsCard value={campusEventsValue} label="Campus Events" color="purple" />
+          <StatsCard value={todayLabel} label="Active Day" color="green" />
+          <StatsCard value={classesTodayValue} label="Classes Today" color="orange" />
+          <StatsCard value={unreadAlertsValue} label="Unread Alerts" color="blue" />
+        </div>
+
+        <div className="std-snapshot-row">
+          <div className="std-snapshot-pill">
+            <span className="std-snapshot-k">This Week</span>
+            <strong className="std-snapshot-v">{upcomingThisWeek} upcoming events</strong>
+          </div>
+          <div className="std-snapshot-pill">
+            <span className="std-snapshot-k">Exams This Month</span>
+            <strong className="std-snapshot-v">{examsThisMonth === 0 ? "No exams scheduled" : `${examsThisMonth} exam events`}</strong>
+          </div>
+          <div className="std-snapshot-pill">
+            <span className="std-snapshot-k">Next Event</span>
+            <strong className="std-snapshot-v">
+              {nextEvent
+                ? `${nextEvent.title || "Event"} on ${formatEventDate(nextEvent.date, { fallback: DATE_FALLBACK_TEXT })}`
+                : "No upcoming events"}
+            </strong>
+          </div>
         </div>
 
         {/* Layout Grid */}

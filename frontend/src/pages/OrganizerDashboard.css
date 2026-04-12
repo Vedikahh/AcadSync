@@ -95,7 +95,39 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 14px;
+}
+
+.organizer-snapshot-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.organizer-snapshot-pill {
+  border: 1px solid var(--border, #E2E8F0);
+  background: linear-gradient(135deg, rgba(248,250,252,0.95), rgba(255,255,255,0.95));
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.organizer-snapshot-k {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #94A3B8);
+  font-weight: 700;
+}
+
+.organizer-snapshot-v {
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: var(--text-primary, #0F172A);
+  font-weight: 800;
 }
 
 /* ── Layout Framework ── */

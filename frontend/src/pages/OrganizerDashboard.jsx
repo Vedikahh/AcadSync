@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getSchedules, getEvents, getDashboardStats } from "../services/api";
+import { getSchedules, getEvents, getMyEvents } from "../services/api";
 import { formatTime12h } from "../utils/formatTime";
 import { formatEventDate, DATE_FALLBACK_TEXT } from "../utils/formatDate";
 import LectureCard from "../components/LectureCard";
@@ -17,34 +17,31 @@ export default function OrganizerDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("today");
   
+  const [allLectures, setAllLectures] = useState([]);
   const [lectures, setLectures] = useState([]);
   const [events, setEvents] = useState([]);
+  const [myEvents, setMyEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState("");
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState("");
-  const [stats, setStats] = useState({
-    classesToday: 0,
-    conflictAlerts: 0,
-    highPriorityConflicts: 0,
-    examsThisMonth: 0,
-  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       setPageError("");
 
-      const [schedResult, eventsResult] = await Promise.allSettled([
+      const [schedResult, eventsResult, myEventsResult] = await Promise.allSettled([
         getSchedules(),
         getEvents(),
+        getMyEvents(),
       ]);
 
       if (schedResult.status === "fulfilled") {
         const allSchedules = Array.isArray(schedResult.value) ? schedResult.value : [];
+        setAllLectures(allSchedules);
         const todaysLectures = allSchedules.filter((lecture) => lecture.day === todayDay);
         setLectures(todaysLectures);
       } else {
+        setAllLectures([]);
         setLectures([]);
         setPageError(schedResult.reason?.message || "Failed to load schedule.");
       }
@@ -58,34 +55,35 @@ export default function OrganizerDashboard() {
         setPageError((prev) => prev || eventsResult.reason?.message || "Failed to load events.");
       }
 
+      if (myEventsResult.status === "fulfilled") {
+        const userEvents = Array.isArray(myEventsResult.value) ? myEventsResult.value : [];
+        setMyEvents(userEvents);
+      } else {
+        setMyEvents([]);
+        setPageError((prev) => prev || myEventsResult.reason?.message || "Failed to load your events.");
+      }
+
       setIsLoading(false);
     };
 
-    const fetchStats = async () => {
-      try {
-        setStatsLoading(true);
-        setStatsError("");
-        const data = await getDashboardStats();
-        setStats({
-          classesToday: data?.stats?.classesToday ?? 0,
-          conflictAlerts: data?.stats?.conflictAlerts ?? 0,
-          highPriorityConflicts: data?.stats?.highPriorityConflicts ?? 0,
-          examsThisMonth: data?.stats?.examsThisMonth ?? 0,
-        });
-      } catch (err) {
-        console.error(err);
-        setStatsError(err.message || "Failed to load dashboard stats.");
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
     fetchDashboardData();
-    fetchStats();
   }, [user]);
 
+  const startOfToday = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const endOfThisMonth = useMemo(() => {
+    const d = new Date(startOfToday);
+    d.setMonth(d.getMonth() + 1, 0);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }, [startOfToday]);
+
   const conflictItems = useMemo(
-    () => events
+    () => myEvents
       .filter((event) => Array.isArray(event.conflicts) && event.conflicts.length > 0)
       .map((event, idx) => ({
         id: event._id || event.id || idx,
@@ -95,13 +93,53 @@ export default function OrganizerDashboard() {
         date: formatEventDate(event.date, { fallback: DATE_FALLBACK_TEXT }),
         severity: event.conflicts.length > 1 ? "high" : "medium",
       })),
-    [events]
+    [myEvents]
   );
 
-  const totalConflicts = statsError ? conflictItems.length : stats.conflictAlerts;
-  const highConflicts = statsError
-    ? conflictItems.filter((conflict) => conflict.severity === "high").length
-    : stats.highPriorityConflicts;
+  const pendingRequests = useMemo(
+    () => myEvents.filter((event) => event.status === "pending").length,
+    [myEvents]
+  );
+
+  const upcomingMyEvents = useMemo(
+    () => myEvents.filter((event) => event.status === "approved" && event.date && new Date(event.date) >= startOfToday).length,
+    [myEvents, startOfToday]
+  );
+
+  const examsThisMonth = useMemo(
+    () => myEvents.filter((event) => event.type === "exam" && event.date && new Date(event.date) >= startOfToday && new Date(event.date) <= endOfThisMonth).length,
+    [myEvents, startOfToday, endOfThisMonth]
+  );
+
+  const weekDayNames = useMemo(() => {
+    const names = [];
+    for (let i = 0; i < 7; i += 1) {
+      const d = new Date(startOfToday);
+      d.setDate(startOfToday.getDate() + i);
+      names.push(d.toLocaleDateString("en-US", { weekday: "long" }));
+    }
+    return names;
+  }, [startOfToday]);
+
+  const thisWeekSessions = useMemo(
+    () => allLectures.filter((lecture) => weekDayNames.includes(lecture.day)).length,
+    [allLectures, weekDayNames]
+  );
+
+  const nextUpcomingEvent = useMemo(() => {
+    const candidates = myEvents
+      .filter((event) => event.date && new Date(event.date) >= startOfToday)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    return candidates[0] || null;
+  }, [myEvents, startOfToday]);
+
+  const totalConflicts = conflictItems.length;
+  const highConflicts = conflictItems.filter((conflict) => conflict.severity === "high").length;
+
+  const classesTodayValue = lectures.length === 0 ? "Free Day" : lectures.length;
+  const pendingRequestsValue = pendingRequests === 0 ? "Clear" : pendingRequests;
+  const upcomingEventsValue = upcomingMyEvents === 0 ? "Plan" : upcomingMyEvents;
+  const examsThisMonthValue = examsThisMonth === 0 ? "No Exams" : examsThisMonth;
 
   return (
     <div className="organizer-db-page">
@@ -126,15 +164,32 @@ export default function OrganizerDashboard() {
         </div>
       </div>
 
-      {statsLoading && <div className="organizer-inline-note">Loading dashboard stats...</div>}
-      {statsError && <div className="organizer-inline-error">{statsError}</div>}
       {pageError && <div className="organizer-inline-error">{pageError}</div>}
 
         <div className="organizer-stats-grid">
-          <StatsCard value={statsError ? lectures.length : stats.classesToday} label="Classes Today"    color="blue"   />
-          <StatsCard value={totalConflicts}        label="Conflict Alerts"  color="orange" />
-          <StatsCard value={highConflicts}         label="High Priority"    color="red"    />
-          <StatsCard value={stats.examsThisMonth}  label="Exams This Month" color="purple" />
+          <StatsCard value={classesTodayValue}    label="Classes Today"    color="blue"   />
+          <StatsCard value={pendingRequestsValue} label="Pending Requests" color="orange" />
+          <StatsCard value={upcomingEventsValue}  label="Upcoming Events"  color="red"    />
+          <StatsCard value={examsThisMonthValue}  label="Exams This Month" color="purple" />
+        </div>
+
+        <div className="organizer-snapshot-row">
+          <div className="organizer-snapshot-pill">
+            <span className="organizer-snapshot-k">Weekly Sessions</span>
+            <strong className="organizer-snapshot-v">{thisWeekSessions}</strong>
+          </div>
+          <div className="organizer-snapshot-pill">
+            <span className="organizer-snapshot-k">Conflict Alerts</span>
+            <strong className="organizer-snapshot-v">{totalConflicts} total / {highConflicts} high</strong>
+          </div>
+          <div className="organizer-snapshot-pill">
+            <span className="organizer-snapshot-k">Next Event</span>
+            <strong className="organizer-snapshot-v">
+              {nextUpcomingEvent
+                ? `${nextUpcomingEvent.title || "Event"} on ${formatEventDate(nextUpcomingEvent.date, { fallback: DATE_FALLBACK_TEXT })}`
+                : "No upcoming events"}
+            </strong>
+          </div>
         </div>
 
         {/* Main Content Layout */}
