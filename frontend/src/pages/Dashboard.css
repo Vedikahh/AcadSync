@@ -470,3 +470,81 @@
   .admin-db-page { padding: 20px 16px; }
   .admin-table { display: block; overflow-x: auto; white-space: nowrap; }
 }
+
+.dark .admin-snapshot-pill {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94));
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.25);
+}
+
+.dark .admin-snapshot-k {
+  color: #94A3B8;
+}
+
+.dark .admin-snapshot-v {
+  color: #F8FAFC;
+}
+
+.dark .admin-card {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  border-color: rgba(148, 163, 184, 0.18);
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.3);
+}
+
+.dark .admin-card-header {
+  border-bottom-color: rgba(148, 163, 184, 0.14);
+}
+
+.dark .admin-card-title,
+.dark .admin-chart-label,
+.dark .admin-log-main {
+  color: #F8FAFC;
+}
+
+.dark .admin-action-btn {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(148, 163, 184, 0.14);
+  color: #E2E8F0;
+}
+
+.dark .admin-action-btn:hover {
+  background: rgba(30, 41, 59, 0.96);
+  border-color: rgba(96, 165, 250, 0.32);
+}
+
+.dark .admin-table th,
+.dark .admin-table td {
+  border-bottom-color: rgba(148, 163, 184, 0.14);
+}
+
+.dark .admin-table th {
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.dark .admin-table tbody tr:hover td {
+  background: rgba(30, 41, 59, 0.72);
+}
+
+.dark .admin-td-primary,
+.dark .admin-log-bold {
+  color: #F8FAFC;
+}
+
+.dark .admin-td-secondary,
+.dark .admin-log-meta,
+.dark .admin-empty p {
+  color: #CBD5E1;
+}
+
+.dark .admin-empty-icon {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.dark .admin-chart-bar-wrap {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 1) 100%);
+}
+
+.dark .admin-chart-tooltip {
+  background: #E2E8F0;
+  color: #0F172A;
+}

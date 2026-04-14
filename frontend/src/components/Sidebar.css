@@ -12,15 +12,18 @@
   top: 64px;
   left: 0;
   width: var(--sidebar-width);
-  height: calc(100vh - 64px);
+  bottom: 0;
+  height: auto;
   background: var(--bg-sidebar, #FAFAFA);
   border-right: 1px solid var(--border, var(--border));
+  border-bottom: 1px solid var(--border, var(--border));
   display: flex;
   flex-direction: column;
   z-index: 200;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-x: hidden;
   overflow-y: auto;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
   scrollbar-width: thin;
   scrollbar-color: var(--text-muted) transparent;
 }
@@ -308,6 +311,14 @@
   flex-shrink: 0;
   width: var(--sidebar-width);
   box-sizing: border-box;
+}
+
+.dark .sidebar {
+  box-shadow: 0 16px 36px rgba(2, 6, 23, 0.5);
+}
+
+.dark .sidebar-footer {
+  border-top-color: rgba(148, 163, 184, 0.16);
 }
 
 .sidebar-collapsed .sidebar-footer {
