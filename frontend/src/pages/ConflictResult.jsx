@@ -75,10 +75,6 @@ export default function ConflictResult() {
 
   const handleSubmitEvent = async () => {
     if (!eventData) return;
-    if (blocked) {
-      alert("This time conflicts with a higher-priority schedule. Please choose another slot.");
-      return;
-    }
     try {
       setSubmitting(true);
       const eventId = eventData.id || eventData._id;
@@ -118,14 +114,14 @@ export default function ConflictResult() {
                   {!hasConflict
                     ? "No Conflicts Found"
                     : blocked
-                      ? "Blocked by Higher-Priority Schedule"
+                      ? "Conflict Detected (Needs Admin Decision)"
                       : "Scheduling Conflict Detected"}
                 </h1>
                 <p className="cr-banner-desc">
                   {!hasConflict
                     ? "Your event schedule is clear and has been submitted for admin approval."
                     : blocked
-                      ? `This time overlaps with ${blockingConflicts.length || conflicts.length} higher-priority schedule${(blockingConflicts.length || conflicts.length) !== 1 ? "s" : ""}. Please choose another slot.`
+                      ? `This time overlaps with ${blockingConflicts.length || conflicts.length} higher-priority schedule${(blockingConflicts.length || conflicts.length) !== 1 ? "s" : ""}. You can still submit it for admin review, rejection, or rescheduling.`
                       : aiAvailable
                         ? `AI assist and rule checks detected ${conflicts.length} potential conflict${conflicts.length !== 1 ? "s" : ""} with existing schedules.`
                         : `The conflict engine detected ${conflicts.length} potential conflict${conflicts.length !== 1 ? "s" : ""} with existing schedules.`}
@@ -234,9 +230,9 @@ export default function ConflictResult() {
                 <div className="cr-action-box">
                   {blocked ? (
                     <>
-                      <h3 className="cr-action-title">Blocked by Higher Priority</h3>
+                      <h3 className="cr-action-title">Higher-Priority Conflict Found</h3>
                       <p className="cr-action-desc">
-                        Lower-priority events cannot be scheduled over exams or lectures. Please choose a different slot.
+                        This slot overlaps with higher-priority items. Submit now to let admin approve, reject, or reschedule.
                       </p>
                       {blockingConflicts.length > 0 && (
                         <ul className="cr-assistant-why">
@@ -247,6 +243,9 @@ export default function ConflictResult() {
                           ))}
                         </ul>
                       )}
+                      <button className="cr-btn-danger-outline" onClick={handleSubmitEvent} disabled={submitting}>
+                        {submitting ? "Submitting..." : "Submit for Admin Review"}
+                      </button>
                     </>
                   ) : (
                     <>

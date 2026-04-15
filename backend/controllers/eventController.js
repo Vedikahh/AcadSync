@@ -118,13 +118,8 @@ exports.createEvent = async (req, res, next) => {
     } = req.body;
 
     // Run overlap check
-    const ai = getAiConflictConfig();
     const conflictResult = await checkConflicts({ date, startTime, endTime, type });
     const conflictMessages = (conflictResult.conflicts || []).map((c) => c.message || c);
-
-    if (conflictResult.blocked) {
-      throw new ConflictError('Schedule conflict with a higher-priority item. Please choose another time slot.');
-    }
 
     const event = await Event.create({
       title,
@@ -140,7 +135,7 @@ exports.createEvent = async (req, res, next) => {
       category,
       createdBy: req.user.id,
       status: 'pending',
-      conflicts: conflictMessages // attach calculated conflicts
+      conflicts: conflictMessages
     });
 
     // Notify admins about the new event request
@@ -168,7 +163,12 @@ exports.createEvent = async (req, res, next) => {
     // Real-time Update
     socket.getIO().emit('calendarUpdate', { type: 'event', action: 'create', data: event });
 
-    res.status(201).json(event);
+    res.status(201).json({
+      ...event.toObject(),
+      hasConflict: conflictMessages.length > 0,
+      blocked: Boolean(conflictResult.blocked),
+      conflictCount: conflictMessages.length,
+    });
     logger.info(`Event created: ${event._id} by ${req.user.id}`);
 
   } catch (err) {
@@ -428,12 +428,9 @@ exports.updateEvent = async (req, res, next) => {
         date: date || event.date, 
         startTime: startTime || event.startTime, 
         endTime: endTime || event.endTime,
-        type: type || event.type
+        type: type || event.type,
+        excludeEventId: String(event._id),
       });
-
-      if (conflictResult.blocked) {
-        throw new ConflictError('Schedule conflict with a higher-priority item. Please choose another time slot.');
-      }
 
       event.conflicts = (conflictResult.conflicts || []).map((c) => c.message || c);
     }
@@ -565,8 +562,14 @@ exports.deleteEvent = async (req, res, next) => {
 exports.checkEventConflicts = async (req, res, next) => {
   try {
     const ai = getAiConflictConfig();
-    const { date, startTime, endTime, type } = req.body;
-    const { conflicts, suggestions, blockingConflicts, hasConflict, blocked } = await checkConflicts({ date, startTime, endTime, type });
+    const { date, startTime, endTime, type, excludeEventId } = req.body;
+    const { conflicts, suggestions, blockingConflicts, hasConflict, blocked } = await checkConflicts({
+      date,
+      startTime,
+      endTime,
+      type,
+      excludeEventId,
+    });
     res.json({
       conflicts,
       suggestions,

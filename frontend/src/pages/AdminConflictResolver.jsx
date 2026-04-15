@@ -112,9 +112,11 @@ export default function AdminConflictResolver() {
     try {
       setLoading(true);
       setError("");
-      const data = await getEvents();
+      const data = await getEvents({ limit: 100, offset: 0, sort: "-createdAt" });
       const list = Array.isArray(data) ? data : [];
-      const conflicting = list.filter((event) => Array.isArray(event.conflicts) && event.conflicts.length > 0);
+      const conflicting = list.filter(
+        (event) => event.status === "pending" && Array.isArray(event.conflicts) && event.conflicts.length > 0
+      );
       setEvents(conflicting);
     } catch (err) {
       setError(err.message || "Failed to load conflicts.");
@@ -139,6 +141,8 @@ export default function AdminConflictResolver() {
     const term = search.trim().toLowerCase();
     return events
       .filter((event) => {
+        if (event.status !== "pending") return false;
+        if (!Array.isArray(event.conflicts) || event.conflicts.length === 0) return false;
         if (department !== "all" && event.department !== department) return false;
 
         const detail = detailsById[event._id || event.id];
@@ -207,6 +211,7 @@ export default function AdminConflictResolver() {
         startTime: event.startTime,
         endTime: event.endTime,
         type: event.type || "event",
+        excludeEventId: eventId,
       });
       setDetailsById((prev) => ({ ...prev, [eventId]: detail }));
     } catch (err) {
@@ -321,8 +326,18 @@ export default function AdminConflictResolver() {
       setBusyAction("approve");
       const id = selectedEvent._id || selectedEvent.id;
       const payload = selectedDraft.overrideNote.trim() ? { note: selectedDraft.overrideNote.trim() } : {};
-      const updated = await updateEventStatus(id, "approved", payload);
-      setEvents((prev) => prev.map((event) => ((event._id || event.id) === id ? updated : event)));
+      await updateEventStatus(id, "approved", payload);
+      setEvents((prev) => prev.filter((event) => ((event._id || event.id) !== id)));
+      setDetailsById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setAdminAssistById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       showToast("Event approved.");
       resetDraft(id);
     } catch (err) {
@@ -346,8 +361,18 @@ export default function AdminConflictResolver() {
         rejectionReason: selectedDraft.rejectReason.trim(),
         ...(selectedDraft.overrideNote.trim() ? { note: selectedDraft.overrideNote.trim() } : {}),
       };
-      const updated = await updateEventStatus(id, "rejected", payload);
-      setEvents((prev) => prev.map((event) => ((event._id || event.id) === id ? updated : event)));
+      await updateEventStatus(id, "rejected", payload);
+      setEvents((prev) => prev.filter((event) => ((event._id || event.id) !== id)));
+      setDetailsById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setAdminAssistById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       showToast("Event rejected.");
       resetDraft(id);
     } catch (err) {

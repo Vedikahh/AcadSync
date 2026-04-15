@@ -54,6 +54,8 @@ class MailService {
     this.provider = 'smtp';
     this.smtpConfig = null;
     this.smtpVerified = false;
+    this.sendgridBlockedByIp = false;
+    this.sendgridBlockLogged = false;
     this.initializeTransport();
   }
 
@@ -173,6 +175,14 @@ class MailService {
 
       const mailProvider = this.getRequestedProvider() || this.provider || 'smtp';
 
+      if (mailProvider === 'sendgrid' && this.sendgridBlockedByIp && !this.hasSmtpConfig()) {
+        return {
+          success: false,
+          message: 'Email provider blocked by IP whitelist',
+          error: 'SendGrid rejected this server IP. Whitelist server IP or switch MAIL_PROVIDER.',
+        };
+      }
+
       if (mailProvider === 'test') {
         logger.info(`[MailService TEST] To: ${to}`);
         logger.info(`[MailService TEST] Subject: ${subject}`);
@@ -196,6 +206,8 @@ class MailService {
 
         try {
           await sgMail.send(message);
+          this.sendgridBlockedByIp = false;
+          this.sendgridBlockLogged = false;
           return {
             success: true,
             message: 'Email sent via SendGrid',
@@ -203,6 +215,19 @@ class MailService {
           };
         } catch (sendgridError) {
           const providerError = formatProviderError(sendgridError);
+
+          const lowerProviderError = String(providerError || '').toLowerCase();
+          const ipWhitelistBlocked = lowerProviderError.includes('ip address is not whitelisted')
+            || (lowerProviderError.includes('unauthorized') && lowerProviderError.includes('code=401'));
+
+          if (ipWhitelistBlocked) {
+            this.sendgridBlockedByIp = true;
+            if (!this.sendgridBlockLogged) {
+              logger.warn('[MailService] SendGrid blocked requests from this server IP. Whitelist this IP in SendGrid or use SMTP/test mode for local development.');
+              this.sendgridBlockLogged = true;
+            }
+          }
+
           logger.warn(`[MailService] SendGrid send failed for ${to}: ${providerError}`);
 
           if (this.hasSmtpConfig()) {

@@ -34,7 +34,7 @@ export default function ManageEvents() {
     try {
       setIsLoading(true);
       setError("");
-      const data = await getEvents();
+      const data = await getEvents({ limit: 100, offset: 0, sort: "-createdAt" });
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to load events", err);

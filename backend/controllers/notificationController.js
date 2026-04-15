@@ -100,10 +100,11 @@ const sendEmailNotification = async (user, notification) => {
     });
 
     if (!result?.success) {
-      throw new Error(result?.error || result?.message || 'Email delivery failed');
+      console.warn(`[NotificationController] Email not sent to ${user.email}: ${result?.error || result?.message || 'Email delivery failed'}`);
+      return;
     }
   } catch (error) {
-    console.error(`[NotificationController] Error sending email to ${user.email}:`, error.message);
+    console.warn(`[NotificationController] Error sending email to ${user.email}:`, error.message);
   }
 };
 

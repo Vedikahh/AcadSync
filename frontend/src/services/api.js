@@ -91,8 +91,27 @@ export const requestEmailVerification = (email) =>
   });
 
 // ---- Event APIs ----
-export const getEvents = async () => unwrapListResponse(await request("/api/events"));
-export const getMyEvents = async () => unwrapListResponse(await request("/api/events/my-events"));
+const buildQueryString = (params = {}) => {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
+    query.set(key, String(value));
+  });
+
+  const raw = query.toString();
+  return raw ? `?${raw}` : "";
+};
+
+export const getEvents = async (params = {}) => {
+  const suffix = buildQueryString(params);
+  return unwrapListResponse(await request(`/api/events${suffix}`));
+};
+
+export const getMyEvents = async (params = {}) => {
+  const suffix = buildQueryString(params);
+  return unwrapListResponse(await request(`/api/events/my-events${suffix}`));
+};
 
 export const checkEventConflicts = (event) =>
   request("/api/events/check-conflicts", { method: "POST", body: JSON.stringify(event) });

@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     try {
       setIsLoading(true);
       setEventsError("");
-      const data = await getEvents();
+      const data = await getEvents({ limit: 100, offset: 0, sort: "-createdAt" });
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);

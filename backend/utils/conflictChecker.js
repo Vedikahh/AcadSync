@@ -78,7 +78,7 @@ const overlap = (aStart, aEnd, bStart, bEnd) =>
  * Returns conflict details, blocking conflicts (higher priority), and suggestions.
  */
 const checkConflicts = async (eventDetails) => {
-  const { date, startTime, endTime, type } = eventDetails;
+  const { date, startTime, endTime, type, excludeEventId } = eventDetails;
 
   const dateKey = normalizeDateKey(date);
   const evStart = toMinutes(startTime);
@@ -92,11 +92,17 @@ const checkConflicts = async (eventDetails) => {
   const eventDayStr = new Date(`${dateKey}T00:00:00.000Z`).toLocaleDateString('en-US', { weekday: 'long' });
   const incomingPriority = getPriority(type || 'event');
 
+  const eventQuery = {
+    date: { $gte: dayStartUtc, $lte: dayEndUtc },
+    status: { $in: ['approved', 'pending'] },
+  };
+
+  if (excludeEventId) {
+    eventQuery._id = { $ne: excludeEventId };
+  }
+
   const [existingEvents, schedules] = await Promise.all([
-    Event.find({
-      date: { $gte: dayStartUtc, $lte: dayEndUtc },
-      status: 'approved'
-    }).lean(),
+    Event.find(eventQuery).lean(),
     Schedule.find({
       $or: [
         { date: { $gte: dayStartUtc, $lte: dayEndUtc } },
